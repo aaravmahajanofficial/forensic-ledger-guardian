@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import bcrypt from 'bcryptjs';
 import { useNavigate } from 'react-router-dom';
 import { Role } from '@/services/web3Service';
 import { useToast } from '@/hooks/use-toast';
@@ -85,9 +86,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string): Promise<boolean> => {
     // In a real app, this would be an API call
-    const foundUser = mockUsers.find(u => u.email === email && u.password === password);
+    const foundUser = mockUsers.find(u => u.email === email);
     
-    if (foundUser) {
+    if (foundUser && await bcrypt.compare(password, foundUser.password)) {
       // Remove password before storing user
       const { password: _, ...userWithoutPassword } = foundUser;
       
