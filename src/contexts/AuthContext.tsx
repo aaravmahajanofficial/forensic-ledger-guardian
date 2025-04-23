@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Role } from '@/services/web3Service';
 import { useToast } from '@/hooks/use-toast';
+import CryptoJS from 'crypto-js';
 
 // Define user types
 export interface User {
@@ -68,7 +69,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(() => {
     // Check if user is stored in localStorage
     const storedUser = localStorage.getItem('forensicLedgerUser');
-    return storedUser ? JSON.parse(storedUser) : null;
+    if (storedUser) {
+      try {
+        const bytes = CryptoJS.AES.decrypt(storedUser, process.env.REACT_APP_SECRET_KEY!);
+        const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        return decryptedData;
+      } catch (error) {
+        console.error("Failed to decrypt user data:", error);
+        return null;
+      }
+    }
+    return null;
   });
   const { toast } = useToast();
 
@@ -82,7 +93,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // Store user in state and localStorage
       setUser(userWithoutPassword);
-      localStorage.setItem('forensicLedgerUser', JSON.stringify(userWithoutPassword));
+      const encryptedData = CryptoJS.AES.encrypt(
+        JSON.stringify(userWithoutPassword),
+        process.env.REACT_APP_SECRET_KEY!
+      ).toString();
+      localStorage.setItem('forensicLedgerUser', encryptedData);
       
       toast({
         title: "Login Successful",
