@@ -1,7 +1,14 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { Role } from "@/services/web3Service";
 import { useToast } from "@/hooks/use-toast";
+import { secureStorage } from "@/utils/secureStorage";
 
 // Define user types
 export interface User {
@@ -66,20 +73,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(() => {
-    // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem("forensicLedgerUser");
-    if (storedUser) {
-      try {
-        return JSON.parse(storedUser);
-      } catch (error) {
-        console.error("Failed to parse user data:", error);
-        return null;
-      }
-    }
-    return null;
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  // Load user from secure storage on component mount
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const storedUser = await secureStorage.getItem("forensicLedgerUser");
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
+      } catch (error) {
+        console.error("Failed to load user data:", error);
+        // Clear potentially corrupted data
+        secureStorage.removeItem("forensicLedgerUser");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUser();
+  }, []);
   const login = async (email: string, password: string): Promise<boolean> => {
     // In a real app, this would be an API call
     const foundUser = mockUsers.find((u) => u.email === email);
@@ -88,19 +104,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       // Remove password before storing user
       const { password: _, ...userWithoutPassword } = foundUser;
 
-      // Store user in state and localStorage
-      setUser(userWithoutPassword);
-      localStorage.setItem(
-        "forensicLedgerUser",
-        JSON.stringify(userWithoutPassword)
-      );
+      try {
+        // Store user in state and secure storage
+        setUser(userWithoutPassword);
+        await secureStorage.setItem(
+          "forensicLedgerUser",
+          JSON.stringify(userWithoutPassword)
+        );
 
-      toast({
-        title: "Login Successful",
-        description: `Welcome back, ${userWithoutPassword.name}`,
-      });
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${userWithoutPassword.name}`,
+        });
 
-      return true;
+        return true;
+      } catch (error) {
+        console.error("Failed to store user data securely:", error);
+        // Still set user in state even if storage fails
+        setUser(userWithoutPassword);
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${userWithoutPassword.name}. Note: Session may not persist after browser restart.`,
+        });
+        return true; // Still allow login even if storage fails
+      }
     } else {
       toast({
         title: "Login Failed",
@@ -113,13 +140,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("forensicLedgerUser");
+    secureStorage.removeItem("forensicLedgerUser");
     toast({
       title: "Logged Out",
       description: "You have been logged out successfully",
     });
     navigate("/");
   };
+
+  // Show loading state while checking for stored user
+  if (isLoading) {
+    return null; // or a loading spinner
+  }
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isLoggedIn: !!user }}>
