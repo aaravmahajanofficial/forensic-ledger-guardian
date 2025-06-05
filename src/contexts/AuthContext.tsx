@@ -1,10 +1,7 @@
-
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import bcrypt from 'bcryptjs';
-import { useNavigate } from 'react-router-dom';
-import { Role } from '@/services/web3Service';
-import { useToast } from '@/hooks/use-toast';
-import CryptoJS from 'crypto-js';
+import React, { createContext, useContext, useState, ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import { Role } from "@/services/web3Service";
+import { useToast } from "@/hooks/use-toast";
 
 // Define user types
 export interface User {
@@ -19,41 +16,41 @@ export interface User {
 // Mock users for development
 const mockUsers = [
   {
-    id: '1',
-    email: 'court@example.com',
-    password: 'court123',
-    name: 'Judge Smith',
+    id: "1",
+    email: "court@example.com",
+    password: "court123",
+    name: "Judge Smith",
     role: Role.Court,
-    roleTitle: 'Court Judge',
-    address: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
+    roleTitle: "Court Judge",
+    address: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
   },
   {
-    id: '2',
-    email: 'officer@example.com',
-    password: 'officer123',
-    name: 'Officer Johnson',
+    id: "2",
+    email: "officer@example.com",
+    password: "officer123",
+    name: "Officer Johnson",
     role: Role.Officer,
-    roleTitle: 'Police Officer',
-    address: '0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2'
+    roleTitle: "Police Officer",
+    address: "0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2",
   },
   {
-    id: '3',
-    email: 'forensic@example.com',
-    password: 'forensic123',
-    name: 'Dr. Anderson',
+    id: "3",
+    email: "forensic@example.com",
+    password: "forensic123",
+    name: "Dr. Anderson",
     role: Role.Forensic,
-    roleTitle: 'Forensic Investigator',
-    address: '0x5B38Da6a701c568545dCfcB03FcB875f56beddC4'
+    roleTitle: "Forensic Investigator",
+    address: "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4",
   },
   {
-    id: '4',
-    email: 'lawyer@example.com',
-    password: 'lawyer123',
-    name: 'Attorney Davis',
+    id: "4",
+    email: "lawyer@example.com",
+    password: "lawyer123",
+    name: "Attorney Davis",
     role: Role.Lawyer,
-    roleTitle: 'Defense Attorney',
-    address: '0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db'
-  }
+    roleTitle: "Defense Attorney",
+    address: "0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db",
+  },
 ];
 
 interface AuthContextType {
@@ -65,52 +62,50 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(() => {
     // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem('forensicLedgerUser');
+    const storedUser = localStorage.getItem("forensicLedgerUser");
     if (storedUser) {
       try {
-        const bytes = CryptoJS.AES.decrypt(storedUser, process.env.REACT_APP_SECRET_KEY!);
-        const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-        return decryptedData;
+        return JSON.parse(storedUser);
       } catch (error) {
-        console.error("Failed to decrypt user data:", error);
+        console.error("Failed to parse user data:", error);
         return null;
       }
     }
     return null;
   });
   const { toast } = useToast();
-
   const login = async (email: string, password: string): Promise<boolean> => {
     // In a real app, this would be an API call
-    const foundUser = mockUsers.find(u => u.email === email);
-    
-    if (foundUser && await bcrypt.compare(password, foundUser.password)) {
+    const foundUser = mockUsers.find((u) => u.email === email);
+
+    if (foundUser && foundUser.password === password) {
       // Remove password before storing user
       const { password: _, ...userWithoutPassword } = foundUser;
-      
+
       // Store user in state and localStorage
       setUser(userWithoutPassword);
-      const encryptedData = CryptoJS.AES.encrypt(
-        JSON.stringify(userWithoutPassword),
-        process.env.REACT_APP_SECRET_KEY!
-      ).toString();
-      localStorage.setItem('forensicLedgerUser', encryptedData);
-      
+      localStorage.setItem(
+        "forensicLedgerUser",
+        JSON.stringify(userWithoutPassword)
+      );
+
       toast({
         title: "Login Successful",
         description: `Welcome back, ${userWithoutPassword.name}`,
       });
-      
+
       return true;
     } else {
       toast({
         title: "Login Failed",
         description: "Invalid email or password",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
@@ -118,12 +113,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('forensicLedgerUser');
+    localStorage.removeItem("forensicLedgerUser");
     toast({
       title: "Logged Out",
-      description: "You have been logged out successfully"
+      description: "You have been logged out successfully",
     });
-    navigate('/');
+    navigate("/");
   };
 
   return (
