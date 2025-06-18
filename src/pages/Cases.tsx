@@ -1,6 +1,5 @@
-
-import React from 'react';
-import CaseList from '@/components/cases/CaseList';
+import React from "react";
+import CaseList from "@/components/cases/CaseList";
 
 const Cases = () => {
   return <CaseList />;

@@ -1,8 +1,12 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Role } from '@/services/web3Service';
+import { APP_CONSTANTS } from "@/config";
 import { Badge } from '@/components/ui/badge';
+
+// Role type and enum-like object for convenience
+type Role = typeof APP_CONSTANTS.ROLES[keyof typeof APP_CONSTANTS.ROLES];
+const Role = APP_CONSTANTS.ROLES;
 import ForensicDashboard from './roles/ForensicDashboard';
 import CourtDashboard from './roles/CourtDashboard';
 import OfficerDashboard from './roles/OfficerDashboard';

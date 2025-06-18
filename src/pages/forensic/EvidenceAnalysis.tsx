@@ -1,26 +1,20 @@
-
-import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription, 
-  CardFooter 
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,12 +28,12 @@ import {
   Fingerprint,
   FileText,
   Network,
-  Clock
+  Clock,
 } from "lucide-react";
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/hooks/use-toast';
+import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock evidence data
 const evidenceItems = [
@@ -56,8 +50,8 @@ const evidenceItems = [
       timeframe: "Apr 8 13:20 - 15:45",
       format: "PCAP",
       analysisStatus: 75,
-      findings: "Unusual data transfer pattern detected at 14:23:15"
-    }
+      findings: "Unusual data transfer pattern detected at 14:23:15",
+    },
   },
   {
     id: "EV-2023-420",
@@ -72,8 +66,8 @@ const evidenceItems = [
       timeframe: "Apr 7 08:00 - 20:00",
       format: "TXT",
       analysisStatus: 90,
-      findings: "Unauthorized access attempts from external IP"
-    }
+      findings: "Unauthorized access attempts from external IP",
+    },
   },
   {
     id: "EV-2023-419",
@@ -88,8 +82,8 @@ const evidenceItems = [
       timeframe: "Last 30 days",
       format: "PST",
       analysisStatus: 30,
-      findings: "Analysis in progress"
-    }
+      findings: "Analysis in progress",
+    },
   },
   {
     id: "EV-2023-418",
@@ -104,8 +98,8 @@ const evidenceItems = [
       timeframe: "Full disk",
       format: "E01",
       analysisStatus: 45,
-      findings: "Multiple deleted files recovered, analyzing content"
-    }
+      findings: "Multiple deleted files recovered, analyzing content",
+    },
   },
   {
     id: "EV-2023-415",
@@ -120,19 +114,19 @@ const evidenceItems = [
       timeframe: "Full extraction",
       format: "UFDR",
       analysisStatus: 80,
-      findings: "Message exchanges of interest found in encrypted chat"
-    }
-  }
+      findings: "Message exchanges of interest found in encrypted chat",
+    },
+  },
 ];
 
 const EvidenceAnalysis = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [selectedEvidence, setSelectedEvidence] = useState(evidenceItems[0]);
-  const [activeTab, setActiveTab] = useState('details');
+  const [activeTab, setActiveTab] = useState("details");
   const [analysisRunning, setAnalysisRunning] = useState(false);
-  
-  const handleAnalyze = (item: typeof evidenceItems[0]) => {
+
+  const handleAnalyze = (item: (typeof evidenceItems)[0]) => {
     setSelectedEvidence(item);
     toast({
       title: "Evidence Selected",
@@ -167,15 +161,15 @@ const EvidenceAnalysis = () => {
       title: `${toolName} Tool`,
       description: `Opening ${toolName} tool for ${selectedEvidence.name}`,
     });
-    
+
     if (toolName === "Hash Verification") {
-      setActiveTab('metadata');
+      setActiveTab("metadata");
     }
   };
 
   const handleGenerateReport = () => {
     setAnalysisRunning(true);
-    
+
     setTimeout(() => {
       setAnalysisRunning(false);
       toast({
@@ -187,12 +181,16 @@ const EvidenceAnalysis = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <h1 className="text-2xl font-bold text-forensic-800">Evidence Analysis Workspace</h1>
-      
+      <h1 className="text-2xl font-bold text-forensic-800">
+        Evidence Analysis Workspace
+      </h1>
+
       {/* Evidence Selection */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Select Evidence for Analysis</CardTitle>
+          <CardTitle className="text-lg">
+            Select Evidence for Analysis
+          </CardTitle>
           <CardDescription>
             Choose evidence to analyze from your assigned cases
           </CardDescription>
@@ -214,31 +212,48 @@ const EvidenceAnalysis = () => {
               </TableHeader>
               <TableBody>
                 {evidenceItems.map((item) => (
-                  <TableRow key={item.id} className={selectedEvidence.id === item.id ? "bg-forensic-50" : ""}>
+                  <TableRow
+                    key={item.id}
+                    className={
+                      selectedEvidence.id === item.id ? "bg-forensic-50" : ""
+                    }
+                  >
                     <TableCell className="font-medium">{item.id}</TableCell>
                     <TableCell>{item.name}</TableCell>
                     <TableCell>
-                      <Badge className={
-                        item.type === 'log' ? "bg-forensic-accent/20 text-forensic-accent" :
-                        item.type === 'email' ? "bg-forensic-evidence/20 text-forensic-evidence" :
-                        item.type === 'disk' ? "bg-forensic-court/20 text-forensic-court" :
-                        "bg-forensic-warning/20 text-forensic-warning"
-                      }>
+                      <Badge
+                        className={
+                          item.type === "log"
+                            ? "bg-forensic-accent/20 text-forensic-accent"
+                            : item.type === "email"
+                            ? "bg-forensic-evidence/20 text-forensic-evidence"
+                            : item.type === "disk"
+                            ? "bg-forensic-court/20 text-forensic-court"
+                            : "bg-forensic-warning/20 text-forensic-warning"
+                        }
+                      >
                         {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
                       </Badge>
                     </TableCell>
                     <TableCell>{item.caseId}</TableCell>
                     <TableCell>{item.fileSize}</TableCell>
-                    <TableCell>{new Date(item.uploadedOn).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      {new Date(item.uploadedOn).toLocaleDateString()}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Progress value={item.metadata.analysisStatus} className="h-2 w-24" />
-                        <span className="text-sm">{item.metadata.analysisStatus}%</span>
+                        <Progress
+                          value={item.metadata.analysisStatus}
+                          className="h-2 w-24"
+                        />
+                        <span className="text-sm">
+                          {item.metadata.analysisStatus}%
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         className="bg-forensic-accent hover:bg-forensic-accent/90"
                         onClick={() => handleAnalyze(item)}
                       >
@@ -253,7 +268,7 @@ const EvidenceAnalysis = () => {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Analysis Workspace */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
@@ -265,22 +280,23 @@ const EvidenceAnalysis = () => {
                   Evidence Analyzer: {selectedEvidence.name}
                 </CardTitle>
                 <CardDescription>
-                  Evidence ID: {selectedEvidence.id} | Case: {selectedEvidence.caseId}
+                  Evidence ID: {selectedEvidence.id} | Case:{" "}
+                  {selectedEvidence.caseId}
                 </CardDescription>
               </div>
               <div className="space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="flex items-center gap-1"
                   onClick={handleDownload}
                 >
                   <Download className="h-4 w-4" />
                   <span>Download</span>
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="flex items-center gap-1"
                   onClick={handleShare}
                 >
@@ -291,20 +307,26 @@ const EvidenceAnalysis = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
               <TabsList className="grid grid-cols-4 mb-4">
                 <TabsTrigger value="details">Details</TabsTrigger>
                 <TabsTrigger value="metadata">Metadata</TabsTrigger>
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
                 <TabsTrigger value="report">Report</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="details" className="space-y-4">
                 <div className="bg-forensic-50 p-4 rounded-md border border-forensic-100">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-forensic-500">Evidence Hash</p>
-                      <p className="font-mono text-sm">{selectedEvidence.hash}</p>
+                      <p className="font-mono text-sm">
+                        {selectedEvidence.hash}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-forensic-500">File Size</p>
@@ -320,16 +342,17 @@ const EvidenceAnalysis = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="border border-forensic-200 rounded-md p-4 h-56 flex items-center justify-center">
                   <div className="text-center">
                     <Search className="h-8 w-8 text-forensic-300 mx-auto mb-2" />
                     <p className="text-sm text-forensic-500">
-                      Evidence preview would appear here in a real implementation
+                      Evidence preview would appear here in a real
+                      implementation
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="p-4 border border-forensic-200 rounded-md bg-forensic-50">
                   <h4 className="font-medium mb-2">Analysis Findings</h4>
                   <p className="text-forensic-600">
@@ -337,53 +360,65 @@ const EvidenceAnalysis = () => {
                   </p>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="metadata" className="space-y-4">
                 <div className="border border-forensic-200 rounded-md p-4">
                   <h4 className="font-medium mb-2">Technical Metadata</h4>
                   <div className="space-y-2">
                     <div className="grid grid-cols-3 gap-2 text-sm py-1 border-b border-forensic-100">
                       <span className="text-forensic-500">File Format</span>
-                      <span className="col-span-2">{selectedEvidence.metadata.format}</span>
+                      <span className="col-span-2">
+                        {selectedEvidence.metadata.format}
+                      </span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-sm py-1 border-b border-forensic-100">
                       <span className="text-forensic-500">Created Date</span>
-                      <span className="col-span-2">{new Date(selectedEvidence.uploadedOn).toLocaleString()}</span>
+                      <span className="col-span-2">
+                        {new Date(selectedEvidence.uploadedOn).toLocaleString()}
+                      </span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-sm py-1 border-b border-forensic-100">
                       <span className="text-forensic-500">Modified Date</span>
-                      <span className="col-span-2">{new Date().toLocaleString()}</span>
+                      <span className="col-span-2">
+                        {new Date().toLocaleString()}
+                      </span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-sm py-1 border-b border-forensic-100">
                       <span className="text-forensic-500">Hash Algorithm</span>
                       <span className="col-span-2">SHA-256</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-sm py-1">
-                      <span className="text-forensic-500">Chain of Custody</span>
-                      <span className="col-span-2">Verified (3 transactions)</span>
+                      <span className="text-forensic-500">
+                        Chain of Custody
+                      </span>
+                      <span className="col-span-2">
+                        Verified (3 transactions)
+                      </span>
                     </div>
                   </div>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="timeline">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium">Event Timeline</h4>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="flex items-center gap-1"
-                      onClick={() => toast({
-                        title: "Filter Applied",
-                        description: "Timeline events have been filtered.",
-                      })}
+                      onClick={() =>
+                        toast({
+                          title: "Filter Applied",
+                          description: "Timeline events have been filtered.",
+                        })
+                      }
                     >
                       <Clock className="h-4 w-4" />
                       <span>Filter Events</span>
                     </Button>
                   </div>
-                  
+
                   <div className="space-y-4">
                     {/* Timeline items would go here */}
                     <div className="flex gap-4">
@@ -391,43 +426,61 @@ const EvidenceAnalysis = () => {
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center justify-between">
                           <p className="font-medium">Evidence uploaded</p>
-                          <span className="text-sm text-forensic-500">{new Date(selectedEvidence.uploadedOn).toLocaleString()}</span>
+                          <span className="text-sm text-forensic-500">
+                            {new Date(
+                              selectedEvidence.uploadedOn
+                            ).toLocaleString()}
+                          </span>
                         </div>
-                        <p className="text-sm text-forensic-600">Evidence file uploaded to the system by Dr. Anderson</p>
+                        <p className="text-sm text-forensic-600">
+                          Evidence file uploaded to the system by Dr. Anderson
+                        </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex gap-4">
                       <div className="mt-1 h-2 w-2 rounded-full bg-forensic-accent"></div>
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center justify-between">
                           <p className="font-medium">Evidence hash verified</p>
-                          <span className="text-sm text-forensic-500">{new Date(selectedEvidence.uploadedOn).toLocaleString()}</span>
+                          <span className="text-sm text-forensic-500">
+                            {new Date(
+                              selectedEvidence.uploadedOn
+                            ).toLocaleString()}
+                          </span>
                         </div>
-                        <p className="text-sm text-forensic-600">Hash verification completed and recorded to blockchain</p>
+                        <p className="text-sm text-forensic-600">
+                          Hash verification completed and recorded to blockchain
+                        </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex gap-4">
                       <div className="mt-1 h-2 w-2 rounded-full bg-forensic-accent"></div>
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center justify-between">
                           <p className="font-medium">Analysis started</p>
-                          <span className="text-sm text-forensic-500">{new Date(selectedEvidence.uploadedOn).toLocaleString()}</span>
+                          <span className="text-sm text-forensic-500">
+                            {new Date(
+                              selectedEvidence.uploadedOn
+                            ).toLocaleString()}
+                          </span>
                         </div>
-                        <p className="text-sm text-forensic-600">Automated analysis process initiated</p>
+                        <p className="text-sm text-forensic-600">
+                          Automated analysis process initiated
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="report">
                 <div className="space-y-4">
                   <div className="flex justify-end space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="flex items-center gap-1"
                       onClick={handleGenerateReport}
                       disabled={analysisRunning}
@@ -435,8 +488,8 @@ const EvidenceAnalysis = () => {
                       <FileText className="h-4 w-4" />
                       <span>Generate Report</span>
                     </Button>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       className="bg-forensic-accent hover:bg-forensic-accent/90 flex items-center gap-1"
                       onClick={handleDownload}
                     >
@@ -444,21 +497,26 @@ const EvidenceAnalysis = () => {
                       <span>Export</span>
                     </Button>
                   </div>
-                  
+
                   <Card>
                     <CardContent className="p-6">
                       <div className="text-center">
                         <FileText className="h-12 w-12 text-forensic-300 mx-auto mb-2" />
-                        <h4 className="font-medium mb-1">Generate Analysis Report</h4>
+                        <h4 className="font-medium mb-1">
+                          Generate Analysis Report
+                        </h4>
                         <p className="text-sm text-forensic-500 mb-4">
-                          Create a detailed forensic analysis report for this evidence item
+                          Create a detailed forensic analysis report for this
+                          evidence item
                         </p>
-                        <Button 
+                        <Button
                           className="bg-forensic-accent hover:bg-forensic-accent/90"
                           onClick={handleGenerateReport}
                           disabled={analysisRunning}
                         >
-                          {analysisRunning ? "Generating..." : "Generate Report"}
+                          {analysisRunning
+                            ? "Generating..."
+                            : "Generate Report"}
                         </Button>
                       </div>
                     </CardContent>
@@ -474,9 +532,11 @@ const EvidenceAnalysis = () => {
                   <Clock className="h-3 w-3 mr-1" />
                   Analysis in progress
                 </Badge>
-                <span className="text-sm text-forensic-600">{selectedEvidence.metadata.analysisStatus}% Complete</span>
+                <span className="text-sm text-forensic-600">
+                  {selectedEvidence.metadata.analysisStatus}% Complete
+                </span>
               </div>
-              <Button 
+              <Button
                 className="bg-forensic-accent hover:bg-forensic-accent/90 flex items-center gap-1"
                 onClick={handleSaveAnalysis}
               >
@@ -486,65 +546,66 @@ const EvidenceAnalysis = () => {
             </div>
           </CardFooter>
         </Card>
-        
+
         {/* Analysis Tools Sidebar */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Analysis Tools</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button 
-              className="w-full justify-start" 
+            <Button
+              className="w-full justify-start"
               variant="ghost"
-              onClick={() => handleToolClick('Hash Verification')}
+              onClick={() => handleToolClick("Hash Verification")}
             >
               <Fingerprint className="h-4 w-4 mr-2" />
               <span>Hash Verification</span>
             </Button>
-            
-            <Button 
-              className="w-full justify-start" 
+
+            <Button
+              className="w-full justify-start"
               variant="ghost"
-              onClick={() => handleToolClick('Data Search')}
+              onClick={() => handleToolClick("Data Search")}
             >
               <Search className="h-4 w-4 mr-2" />
               <span>Data Search</span>
             </Button>
-            
-            <Button 
-              className="w-full justify-start" 
+
+            <Button
+              className="w-full justify-start"
               variant="ghost"
-              onClick={() => handleToolClick('Metadata Extractor')}
+              onClick={() => handleToolClick("Metadata Extractor")}
             >
               <FileText className="h-4 w-4 mr-2" />
               <span>Metadata Extractor</span>
             </Button>
-            
-            <Button 
-              className="w-full justify-start" 
+
+            <Button
+              className="w-full justify-start"
               variant="ghost"
-              onClick={() => handleToolClick('Relationship Mapping')}
+              onClick={() => handleToolClick("Relationship Mapping")}
             >
               <Network className="h-4 w-4 mr-2" />
               <span>Relationship Mapping</span>
             </Button>
-            
-            <Button 
-              className="w-full justify-start" 
+
+            <Button
+              className="w-full justify-start"
               variant="ghost"
-              onClick={() => handleToolClick('Timeline Generator')}
+              onClick={() => handleToolClick("Timeline Generator")}
             >
               <Clock className="h-4 w-4 mr-2" />
               <span>Timeline Generator</span>
             </Button>
-            
+
             <div className="p-4 bg-forensic-warning/10 border border-forensic-warning/20 rounded-md">
               <h4 className="flex items-center text-sm font-medium text-forensic-warning">
                 <CheckCircle className="h-4 w-4 mr-1" />
                 Analysis Running
               </h4>
               <p className="text-xs text-forensic-600 mt-1">
-                Automated analysis running on {selectedEvidence.name}. Estimated completion time: 25 minutes.
+                Automated analysis running on {selectedEvidence.name}. Estimated
+                completion time: 25 minutes.
               </p>
             </div>
           </CardContent>

@@ -1,41 +1,55 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Upload, 
-  FileCheck, 
-  FolderKanban, 
-  X, 
-  Loader2, 
-  FileDigit, 
-  Save 
+import { useEvidenceManager } from "@/hooks/useEvidenceManager";
+import {
+  Upload,
+  FileCheck,
+  FolderKanban,
+  X,
+  Loader2,
+  FileDigit,
+  Save,
 } from "lucide-react";
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 // Mock case data - would be fetched from API
 const cases = [
   { id: "FF-2023-104", title: "Network Intrusion at TechCorp" },
   { id: "FF-2023-092", title: "Mobile Device Analysis - Rodriguez Case" },
-  { id: "FF-2023-089", title: "Email Fraud Investigation - Acme Corp" }
+  { id: "FF-2023-089", title: "Email Fraud Investigation - Acme Corp" },
 ];
 
 const EvidenceUpload = () => {
-  const [selectedCase, setSelectedCase] = useState<string>('');
-  const [evidenceType, setEvidenceType] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [deviceSource, setDeviceSource] = useState<string>('');
-  const [location, setLocation] = useState<string>('');
+  const [selectedCase, setSelectedCase] = useState<string>("");
+  const [evidenceType, setEvidenceType] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [deviceSource, setDeviceSource] = useState<string>("");
+  const [location, setLocation] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
-  const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const { uploadFiles, isUploading, validateFiles, clearUploadProgress } =
+    useEvidenceManager();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -54,83 +68,62 @@ const EvidenceUpload = () => {
     }
   };
 
-  const simulateHash = (file: File): Promise<string> => {
-    // In a real app, this would calculate a SHA-256 hash of the file
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Mock hash calculation - this would be done with WebCrypto API
-        const mockHash = Array.from(
-          { length: 64 },
-          () => '0123456789abcdef'[Math.floor(Math.random() * 16)]
-        ).join('');
-        resolve(mockHash);
-      }, 500);
-    });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedCase) {
       toast({
         title: "Case required",
         description: "Please select a case for this evidence",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
+
     if (files.length === 0) {
       toast({
         title: "No files selected",
         description: "Please select at least one evidence file to upload",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
-    setIsUploading(true);
-    
+
+    // Validate files before upload
+    const { valid, invalid } = validateFiles(files);
+
+    if (invalid.length > 0) {
+      toast({
+        title: "Invalid files detected",
+        description: `${invalid.length} file(s) failed validation. Please check file types and sizes.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Simulate file hashing and blockchain transaction
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const progress = Math.round(((i + 1) / files.length) * 100);
-        setUploadProgress(progress);
-        
-        // Simulate file hash calculation
-        const hash = await simulateHash(file);
-        console.log(`File ${file.name} hashed: ${hash}`);
-        
-        // Simulate blockchain transaction delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-      
-      toast({
-        title: "Evidence submitted successfully",
-        description: `${files.length} file(s) uploaded and registered on the blockchain`,
-        variant: "default"
-      });
-      
-      // Reset form
+      // Upload files using the evidence manager
+      await uploadFiles(valid, selectedCase);
+
+      // Reset form on successful upload
       setFiles([]);
-      setDescription('');
-      setUploadProgress(0);
+      setDescription("");
+      setEvidenceType("");
+      setDeviceSource("");
+      setLocation("");
+      clearUploadProgress();
     } catch (error) {
-      toast({
-        title: "Upload failed",
-        description: "There was a problem uploading your evidence",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUploading(false);
+      // Error handling is managed by the hook
+      console.error("Upload failed:", error);
     }
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-forensic-800">Evidence Upload</h1>
+        <h1 className="text-2xl font-bold text-forensic-800">
+          Evidence Upload
+        </h1>
       </div>
 
       <Card className="border-forensic-200">
@@ -157,7 +150,9 @@ const EvidenceUpload = () => {
                     <SelectItem key={caseItem.id} value={caseItem.id}>
                       <div className="flex items-center">
                         <FolderKanban className="mr-2 h-4 w-4 text-forensic-accent" />
-                        <span>{caseItem.id}: {caseItem.title}</span>
+                        <span>
+                          {caseItem.id}: {caseItem.title}
+                        </span>
                       </div>
                     </SelectItem>
                   ))}
@@ -169,7 +164,10 @@ const EvidenceUpload = () => {
             <div className="space-y-2">
               <Label htmlFor="evidenceType">Evidence Type</Label>
               <Select value={evidenceType} onValueChange={setEvidenceType}>
-                <SelectTrigger id="evidenceType" className="border-forensic-200">
+                <SelectTrigger
+                  id="evidenceType"
+                  className="border-forensic-200"
+                >
                   <SelectValue placeholder="Select evidence type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -179,8 +177,12 @@ const EvidenceUpload = () => {
                   <SelectItem value="emails">Email Archives</SelectItem>
                   <SelectItem value="photos">Photographs</SelectItem>
                   <SelectItem value="documents">Documents</SelectItem>
-                  <SelectItem value="mobile_data">Mobile Device Data</SelectItem>
-                  <SelectItem value="network_captures">Network Captures</SelectItem>
+                  <SelectItem value="mobile_data">
+                    Mobile Device Data
+                  </SelectItem>
+                  <SelectItem value="network_captures">
+                    Network Captures
+                  </SelectItem>
                   <SelectItem value="other">Other Digital Evidence</SelectItem>
                 </SelectContent>
               </Select>
@@ -189,8 +191,8 @@ const EvidenceUpload = () => {
             {/* Description */}
             <div className="space-y-2">
               <Label htmlFor="description">Evidence Description</Label>
-              <Textarea 
-                id="description" 
+              <Textarea
+                id="description"
                 placeholder="Describe the evidence and its relevance to the case"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -202,7 +204,7 @@ const EvidenceUpload = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="deviceSource">Source Device/System</Label>
-                <Input 
+                <Input
                   id="deviceSource"
                   placeholder="E.g., Suspect's laptop, Server ID: SRV-001"
                   value={deviceSource}
@@ -212,7 +214,7 @@ const EvidenceUpload = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="location">Collection Location</Label>
-                <Input 
+                <Input
                   id="location"
                   placeholder="E.g., Suspect's home office, 123 Main St."
                   value={location}
@@ -225,7 +227,7 @@ const EvidenceUpload = () => {
             {/* File Upload */}
             <div className="space-y-2">
               <Label htmlFor="fileUpload">Evidence Files</Label>
-              
+
               {/* Hidden file input */}
               <input
                 type="file"
@@ -235,9 +237,9 @@ const EvidenceUpload = () => {
                 multiple
                 className="hidden"
               />
-              
+
               {/* Drop zone */}
-              <div 
+              <div
                 onClick={browseFiles}
                 className={cn(
                   "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors",
@@ -255,8 +257,8 @@ const EvidenceUpload = () => {
                       Supports any file type. Maximum 1GB per file.
                     </p>
                   </div>
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     variant="outline"
                     className="mt-2"
                     onClick={(e) => {
@@ -278,14 +280,16 @@ const EvidenceUpload = () => {
                   </div>
                   <div className="max-h-40 overflow-y-auto border rounded-md bg-forensic-50">
                     {files.map((file, index) => (
-                      <div 
-                        key={index} 
+                      <div
+                        key={index}
                         className="flex items-center justify-between p-3 border-b border-forensic-200 last:border-b-0"
                       >
                         <div className="flex items-center space-x-2">
                           <FileCheck className="h-4 w-4 text-forensic-accent" />
                           <div className="text-sm">
-                            <div className="font-medium text-forensic-800">{file.name}</div>
+                            <div className="font-medium text-forensic-800">
+                              {file.name}
+                            </div>
                             <div className="text-xs text-forensic-500">
                               {(file.size / (1024 * 1024)).toFixed(2)} MB
                             </div>
@@ -310,11 +314,7 @@ const EvidenceUpload = () => {
           </form>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isUploading}
-          >
+          <Button type="button" variant="outline" disabled={isUploading}>
             Cancel
           </Button>
           <Button
@@ -329,7 +329,7 @@ const EvidenceUpload = () => {
             {isUploading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                <span>Uploading... {uploadProgress}%</span>
+                <span>Uploading...</span>
               </>
             ) : (
               <>

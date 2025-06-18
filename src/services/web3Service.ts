@@ -1,513 +1,963 @@
+/**
+ * Web3 Service for blockchain interactions and smart contract operations
+ *
+ * @module Services/Web3Service
+ */
 
-import { ethers } from 'ethers';
-import { toast } from '@/hooks/use-toast';
+import { ethers } from "ethers";
+import { toast } from "@/hooks/use-toast";
+import { config } from "@/config";
+import {
+  logInfo,
+  logError,
+  logDebug,
+  logWarn,
+  logSecurityEvent,
+} from "@/utils/logger";
+import { ROLES } from "@/constants";
+import type {
+  Evidence,
+  Role,
+  NetworkInfo,
+  TransactionResult,
+} from "@/types/blockchain";
+import CONTRACT_ABI from "./contracts/ForensicEvidenceABI";
+import ROLE_MANAGER_ABI from "./contracts/RoleManagerABI";
 
-// ABI would be generated when compiling the smart contract
-const CONTRACT_ABI = [
-  // This would be replaced by the actual ABI from contract compilation
-  // For now, we'll include some placeholder function definitions based on our contract
-];
-
-const CONTRACT_ADDRESS = "0x123..."; // This would be the deployed contract address
-
-export enum Role {
-  None = 0,
-  Court = 1,
-  Officer = 2,
-  Forensic = 3,
-  Lawyer = 4
-}
-
-export enum EvidenceType {
-  Image = 0,
-  Video = 1,
-  Document = 2,
-  Other = 3
-}
-
-export interface Evidence {
-  evidenceId: string;
-  cidEncrypted: string;
-  hash: string;
-  evidenceType: EvidenceType;
-  submittedBy: string;
-  confirmed: boolean;
-  submittedAt: number;
-  chainOfCustody: string[];
-}
-
-export interface Case {
-  caseId: string;
-  title: string;
-  description: string;
-  createdBy: string;
-  seal: boolean;
-  open: boolean;
-  tags: string[];
-  evidenceCount: number;
-}
-
-export interface FIR {
-  firId: string;
-  filedBy: string;
-  description: string;
-  timestamp: number;
-  promotedToCase: boolean;
-  associatedCaseId: string;
-}
-
+/**
+ * Enhanced Web3 Service for Blockchain Integration
+ * Handles all interactions with the Ethereum blockchain and smart contracts
+ */
 class Web3Service {
-  private provider: ethers.providers.Web3Provider | null = null;
-  private contract: ethers.Contract | null = null;
-  private account: string | null = null;
+  /** Main ethers provider */
+  private provider: ethers.Provider | null = null;
 
+  /** Signer for authenticated transactions */
+  private signer: ethers.Signer | null = null;
+
+  /** The main forensic evidence contract instance */
+  private evidenceContract: ethers.Contract | null = null;
+
+  /** The role manager contract instance */
+  private roleManagerContract: ethers.Contract | null = null;
+
+  /** Whether contracts are initialized successfully */
+  private isInitialized = false;
+
+  /** Required network chain ID from configuration */
+  private readonly requiredChainId: number;
+
+  /**
+   * Creates a new Web3Service instance
+   */
   constructor() {
-    this.initWeb3();
+    this.requiredChainId = config.blockchain.chainId || 1; // Default to Ethereum mainnet if not specified
+    this.initializeProvider();
   }
 
-  private async initWeb3() {
-    if (typeof window !== 'undefined' && window.ethereum) {
-      try {
-        // Request account access
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        this.provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = this.provider.getSigner();
-        this.account = await signer.getAddress();
-        this.contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+  /**
+   * Initialize Web3 provider and contracts
+   */
+  private async initializeProvider(): Promise<void> {
+    try {
+      // Check if MetaMask is available
+      if (typeof window !== "undefined" && window.ethereum) {
+        this.provider = new ethers.BrowserProvider(window.ethereum);
+        logDebug("Creating browser provider for MetaMask", {}, "BLOCKCHAIN");
 
-        // Listen for account changes
-        window.ethereum.on('accountsChanged', (accounts: string[]) => {
-          if (accounts.length === 0) {
-            this.account = null;
-            toast({
-              title: "Disconnected",
-              description: "Wallet disconnected.",
-              variant: "destructive"
-            });
-          } else {
-            this.account = accounts[0];
-            this.initContract();
-            toast({
-              title: "Connected",
-              description: `Connected to account ${this.shortenAddress(accounts[0])}`
-            });
-          }
-        });
-      } catch (error) {
-        console.error("User denied account access or another error occurred:", error);
-        toast({
-          title: "Connection Failed",
-          description: "Failed to connect to Ethereum wallet.",
-          variant: "destructive"
-        });
-      }
-    } else {
-      console.error("No ethereum browser extension detected");
-      toast({
-        title: "Web3 Not Available",
-        description: "Please install MetaMask or another Ethereum wallet extension.",
-        variant: "destructive"
-      });
-    }
-  }
-
-  private initContract() {
-    if (this.provider && this.account) {
-      const signer = this.provider.getSigner();
-      this.contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-    }
-  }
-
-  private shortenAddress(address: string): string {
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-  }
-
-  public async connectWallet(): Promise<string | null> {
-    if (!this.provider) {
-      await this.initWeb3();
-    }
-    
-    if (this.provider) {
-      try {
-        const accounts = await this.provider.send('eth_requestAccounts', []);
-        if (accounts.length > 0) {
-          this.account = accounts[0];
-          this.initContract();
-          return this.account;
+        // Initialize contract if we have all required info
+        if (config.blockchain.evidenceContractAddress) {
+          await this.initializeContracts();
         }
-      } catch (error) {
-        console.error("Error connecting to wallet:", error);
-        toast({
-          title: "Connection Error",
-          description: "Could not connect to wallet.",
-          variant: "destructive"
+
+        logInfo("Web3 provider initialized successfully");
+      } else {
+        logWarn("MetaMask not detected. Using read-only provider.");
+
+        // Fallback to RPC provider for read-only operations
+        if (config.blockchain.rpcUrl) {
+          this.provider = new ethers.JsonRpcProvider(config.blockchain.rpcUrl);
+          logDebug(
+            "Created read-only JSON-RPC provider",
+            {
+              rpcUrl: config.blockchain.rpcUrl,
+            },
+            "BLOCKCHAIN"
+          );
+
+          // Try to initialize contracts in read-only mode
+          if (config.blockchain.evidenceContractAddress) {
+            await this.initializeContracts();
+          }
+        }
+      }
+    } catch (error) {
+      logError(
+        "Failed to initialize Web3 provider",
+        { provider: this.provider ? "Available" : "Unavailable" },
+        error instanceof Error ? error : new Error("Unknown provider error")
+      );
+    }
+  }
+
+  /**
+   * Initialize smart contract instances
+   */
+  private async initializeContracts(): Promise<void> {
+    try {
+      if (!this.provider) {
+        throw new Error("Web3 provider not available");
+      }
+
+      if (!config.blockchain.evidenceContractAddress) {
+        throw new Error("Evidence contract address not configured");
+      }
+
+      // Initialize evidence contract
+      this.evidenceContract = new ethers.Contract(
+        config.blockchain.evidenceContractAddress,
+        CONTRACT_ABI,
+        this.provider
+      );
+
+      logDebug(
+        "Evidence contract initialized",
+        {
+          address: config.blockchain.evidenceContractAddress,
+        },
+        "BLOCKCHAIN"
+      );
+
+      // Initialize role manager contract if available
+      if (config.blockchain.roleContractAddress) {
+        this.roleManagerContract = new ethers.Contract(
+          config.blockchain.roleContractAddress,
+          ROLE_MANAGER_ABI,
+          this.provider
+        );
+
+        logDebug(
+          "Role manager contract initialized",
+          {
+            address: config.blockchain.roleContractAddress,
+          },
+          "BLOCKCHAIN"
+        );
+      } else {
+        logWarn(
+          "Role manager contract address not configured, using evidence contract for roles"
+        );
+        // Use evidence contract for role functions as fallback
+        this.roleManagerContract = this.evidenceContract;
+      }
+
+      logInfo("Smart contracts initialized successfully");
+      this.isInitialized = true;
+    } catch (error) {
+      logError(
+        "Failed to initialize smart contracts",
+        {
+          evidenceAddress: config.blockchain.evidenceContractAddress,
+          roleAddress: config.blockchain.roleContractAddress,
+        },
+        error instanceof Error
+          ? error
+          : new Error("Contract initialization error")
+      );
+      this.isInitialized = false;
+      throw error;
+    }
+  }
+
+  /**
+   * Connect to user's wallet
+   */
+  public async connectWallet(): Promise<string> {
+    try {
+      if (!this.provider) {
+        throw new Error("Web3 provider not available");
+      }
+
+      // Request account access
+      await window.ethereum?.request({ method: "eth_requestAccounts" });
+
+      this.signer = await (this.provider as ethers.BrowserProvider).getSigner();
+      const address = await this.signer.getAddress();
+
+      // Update contracts to use signer for transactions
+      if (this.evidenceContract) {
+        this.evidenceContract = this.evidenceContract.connect(
+          this.signer
+        ) as ethers.Contract;
+      }
+
+      if (this.roleManagerContract) {
+        this.roleManagerContract = this.roleManagerContract.connect(
+          this.signer
+        ) as ethers.Contract;
+      }
+
+      // Check network to ensure we're on the right chain
+      const chainId = await this.getChainId();
+      if (chainId !== this.requiredChainId) {
+        logWarn("Connected to wrong network", {
+          currentChainId: chainId,
+          requiredChainId: this.requiredChainId,
         });
       }
+
+      logSecurityEvent("Wallet connected", { address, chainId });
+
+      return address;
+    } catch (error) {
+      logError(
+        "Failed to connect wallet",
+        {},
+        error instanceof Error ? error : new Error("Wallet connection error")
+      );
+      throw error;
     }
-    
-    return null;
   }
 
+  /**
+   * Gets the current chain ID
+   */
+  public async getChainId(): Promise<number> {
+    try {
+      if (!this.provider) {
+        throw new Error("Provider not available");
+      }
+
+      const network = await this.provider.getNetwork();
+      return Number(network.chainId);
+    } catch (error) {
+      logError(
+        "Failed to get chain ID",
+        {},
+        error instanceof Error ? error : new Error("Chain ID error")
+      );
+      return 0;
+    }
+  }
+
+  /**
+   * Gets the required chain ID for this application
+   */
+  public getRequiredChainId(): number {
+    return this.requiredChainId;
+  }
+
+  /**
+   * Attempts to switch to the required network
+   */
+  public async switchToRequiredNetwork(): Promise<void> {
+    try {
+      if (!window.ethereum) {
+        throw new Error("MetaMask not available");
+      }
+
+      const hexChainId = "0x" + this.requiredChainId.toString(16);
+
+      try {
+        // Try to switch to the network
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: hexChainId }],
+        });
+      } catch (switchError: any) {
+        // This error code indicates that the chain has not been added to MetaMask.
+        if (switchError.code === 4902) {
+          await this.addNetworkToMetaMask();
+        } else {
+          throw switchError;
+        }
+      }
+
+      logInfo("Switched to required network", {
+        chainId: this.requiredChainId,
+      });
+    } catch (error) {
+      logError(
+        "Failed to switch network",
+        { requiredChainId: this.requiredChainId },
+        error instanceof Error ? error : new Error("Network switch error")
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Adds the required network to MetaMask
+   */
+  private async addNetworkToMetaMask(): Promise<void> {
+    try {
+      if (!window.ethereum || !config.blockchain.networkParams) {
+        throw new Error(
+          "MetaMask not available or network parameters not configured"
+        );
+      }
+
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [config.blockchain.networkParams],
+      });
+
+      logInfo("Added network to MetaMask", {
+        params: config.blockchain.networkParams,
+      });
+    } catch (error) {
+      logError(
+        "Failed to add network to MetaMask",
+        { networkParams: config.blockchain.networkParams },
+        error instanceof Error ? error : new Error("Add network error")
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get current account address
+   */
   public async getCurrentAccount(): Promise<string | null> {
-    return this.account;
+    try {
+      // First try with signer if available
+      if (this.signer) {
+        return await this.signer.getAddress();
+      }
+
+      // If no signer but ethereum is available, try to get accounts
+      if (window.ethereum) {
+        const accounts = await window.ethereum.request({
+          method: "eth_accounts",
+        });
+        if (accounts && accounts.length > 0) {
+          return accounts[0];
+        }
+      }
+
+      return null;
+    } catch (error) {
+      logError(
+        "Failed to get current account",
+        {},
+        error instanceof Error ? error : new Error("Account retrieval error")
+      );
+      return null;
+    }
   }
 
+  /**
+   * Gets the user's role from the blockchain
+   */
   public async getUserRole(): Promise<Role> {
-    if (!this.contract || !this.account) return Role.None;
-    
     try {
-      const role = await this.contract.getGlobalRole(this.account);
-      return role;
+      if (!this.roleManagerContract) {
+        logWarn("Role manager contract not initialized");
+        return ROLES.None;
+      }
+
+      const address = await this.getCurrentAccount();
+      if (!address) {
+        return ROLES.None;
+      }
+
+      // Get the numeric role from the contract
+      const roleId = await this.roleManagerContract.getUserRole(address);
+
+      // Map numeric role to our role constants
+      switch (Number(roleId)) {
+        case 0:
+          return ROLES.None;
+        case 1:
+          return ROLES.PoliceOfficer;
+        case 2:
+          return ROLES.ForensicExpert;
+        case 3:
+          return ROLES.Lawyer;
+        case 4:
+          return ROLES.Judge;
+        case 5:
+          return ROLES.Court;
+        default:
+          return ROLES.None;
+      }
     } catch (error) {
-      console.error("Error getting user role:", error);
-      return Role.None;
+      logError(
+        "Failed to get user role",
+        {},
+        error instanceof Error ? error : new Error("Role retrieval error")
+      );
+      return ROLES.None;
     }
   }
 
-  public async getUserCaseRole(caseId: string): Promise<Role> {
-    if (!this.contract || !this.account) return Role.None;
-    
-    try {
-      const role = await this.contract.getMyRoleInCase(caseId);
-      return role;
-    } catch (error) {
-      console.error(`Error getting user role for case ${caseId}:`, error);
-      return Role.None;
-    }
-  }
-
-  // FIR Management
-  public async fileFIR(firId: string, description: string): Promise<boolean> {
-    if (!this.contract) return false;
-    
-    try {
-      const tx = await this.contract.fileFIR(firId, description);
-      await tx.wait();
-      return true;
-    } catch (error) {
-      console.error("Error filing FIR:", error);
-      toast({
-        title: "Transaction Failed",
-        description: "Failed to file FIR. Please try again.",
-        variant: "destructive"
-      });
-      return false;
-    }
-  }
-
-  public async getFIR(firId: string): Promise<FIR | null> {
-    if (!this.contract) return null;
-    
-    try {
-      const fir = await this.contract.getFIR(firId);
-      return {
-        firId: fir.firId,
-        filedBy: fir.filedBy,
-        description: fir.description,
-        timestamp: fir.timestamp.toNumber(),
-        promotedToCase: fir.promotedToCase,
-        associatedCaseId: fir.associatedCaseId
-      };
-    } catch (error) {
-      console.error(`Error getting FIR ${firId}:`, error);
-      return null;
-    }
-  }
-
-  // Case Management
-  public async createCaseFromFIR(
-    caseId: string,
-    firId: string,
-    title: string,
+  /**
+   * Upload evidence to blockchain
+   *
+   * @param cid - Content identifier (IPFS hash)
+   * @param hash - File integrity hash
+   * @param description - Evidence description
+   * @param caseId - Case identifier
+   * @returns Transaction result with hash and receipt
+   */
+  public async uploadEvidence(
+    cid: string,
+    hash: string,
     description: string,
-    tags: string[]
-  ): Promise<boolean> {
-    if (!this.contract) return false;
-    
+    caseId: string
+  ): Promise<TransactionResult> {
     try {
-      const tx = await this.contract.createCaseFromFIR(caseId, firId, title, description, tags);
-      await tx.wait();
-      return true;
-    } catch (error) {
-      console.error("Error creating case from FIR:", error);
-      toast({
-        title: "Transaction Failed",
-        description: "Failed to create case. Please try again.",
-        variant: "destructive"
-      });
-      return false;
-    }
-  }
+      if (!this.evidenceContract || !this.signer) {
+        throw new Error("Contract not initialized or wallet not connected");
+      }
 
-  public async assignCaseRole(caseId: string, user: string, role: Role): Promise<boolean> {
-    if (!this.contract) return false;
-    
-    try {
-      const tx = await this.contract.assignCaseRole(caseId, user, role);
-      await tx.wait();
-      return true;
-    } catch (error) {
-      console.error("Error assigning case role:", error);
-      toast({
-        title: "Transaction Failed",
-        description: "Failed to assign role. Please try again.",
-        variant: "destructive"
-      });
-      return false;
-    }
-  }
+      // Validate inputs
+      if (!cid || !hash || !description || !caseId) {
+        throw new Error("Missing required evidence information");
+      }
 
-  public async getCase(caseId: string): Promise<Case | null> {
-    if (!this.contract) return null;
-    
-    try {
-      const caseData = await this.contract.getCase(caseId);
-      return {
-        caseId: caseData.caseId,
-        title: caseData.title,
-        description: caseData.description,
-        createdBy: caseData.createdBy,
-        seal: caseData.seal,
-        open: caseData.open,
-        tags: caseData.tags,
-        evidenceCount: caseData.evidenceCount.toNumber()
-      };
-    } catch (error) {
-      console.error(`Error getting case ${caseId}:`, error);
-      return null;
-    }
-  }
-
-  public async sealCase(caseId: string): Promise<boolean> {
-    if (!this.contract) return false;
-    
-    try {
-      const tx = await this.contract.sealCase(caseId);
-      await tx.wait();
-      return true;
-    } catch (error) {
-      console.error(`Error sealing case ${caseId}:`, error);
-      toast({
-        title: "Transaction Failed",
-        description: "Failed to seal case. Please try again.",
-        variant: "destructive"
-      });
-      return false;
-    }
-  }
-
-  public async reopenCase(caseId: string): Promise<boolean> {
-    if (!this.contract) return false;
-    
-    try {
-      const tx = await this.contract.reopenCase(caseId);
-      await tx.wait();
-      return true;
-    } catch (error) {
-      console.error(`Error reopening case ${caseId}:`, error);
-      toast({
-        title: "Transaction Failed",
-        description: "Failed to reopen case. Please try again.",
-        variant: "destructive"
-      });
-      return false;
-    }
-  }
-
-  public async closeCase(caseId: string): Promise<boolean> {
-    if (!this.contract) return false;
-    
-    try {
-      const tx = await this.contract.closeCase(caseId);
-      await tx.wait();
-      return true;
-    } catch (error) {
-      console.error(`Error closing case ${caseId}:`, error);
-      toast({
-        title: "Transaction Failed",
-        description: "Failed to close case. Please try again.",
-        variant: "destructive"
-      });
-      return false;
-    }
-  }
-
-  // Evidence Management
-  public async submitCaseEvidence(
-    caseId: string,
-    evidenceId: string,
-    cidEncrypted: string,
-    hash: string,
-    evidenceType: EvidenceType
-  ): Promise<boolean> {
-    if (!this.contract) return false;
-    
-    try {
-      const tx = await this.contract.submitCaseEvidence(
+      logSecurityEvent("Uploading evidence to blockchain", {
+        cid,
+        hash: `${hash.substring(0, 10)}...`, // Only log partial hash for security
         caseId,
-        evidenceId,
-        cidEncrypted,
+        uploader: await this.signer.getAddress(),
+      });
+
+      // Send the transaction
+      const tx = await this.evidenceContract.uploadEvidence(
+        cid,
         hash,
-        evidenceType
+        description,
+        caseId,
+        { gasLimit: 500000 } // Reasonable gas limit for evidence upload
       );
-      await tx.wait();
-      return true;
-    } catch (error) {
-      console.error("Error submitting evidence:", error);
-      toast({
-        title: "Transaction Failed",
-        description: "Failed to submit evidence. Please try again.",
-        variant: "destructive"
-      });
-      return false;
-    }
-  }
 
-  public async submitFIREvidence(
-    firId: string,
-    evidenceId: string,
-    cidEncrypted: string,
-    hash: string,
-    evidenceType: EvidenceType
-  ): Promise<boolean> {
-    if (!this.contract) return false;
-    
-    try {
-      const tx = await this.contract.submitFIREvidence(
-        firId,
-        evidenceId,
-        cidEncrypted,
-        hash,
-        evidenceType
-      );
-      await tx.wait();
-      return true;
-    } catch (error) {
-      console.error("Error submitting FIR evidence:", error);
-      toast({
-        title: "Transaction Failed",
-        description: "Failed to submit FIR evidence. Please try again.",
-        variant: "destructive"
-      });
-      return false;
-    }
-  }
+      // Wait for confirmation
+      const receipt = await tx.wait();
 
-  public async confirmCaseEvidence(caseId: string, index: number): Promise<boolean> {
-    if (!this.contract) return false;
-    
-    try {
-      const tx = await this.contract.confirmCaseEvidence(caseId, index);
-      await tx.wait();
-      return true;
-    } catch (error) {
-      console.error(`Error confirming evidence index ${index}:`, error);
-      toast({
-        title: "Transaction Failed",
-        description: "Failed to confirm evidence. Please try again.",
-        variant: "destructive"
-      });
-      return false;
-    }
-  }
+      // Find the EvidenceUploaded event in the receipt
+      let evidenceId: string | undefined;
+      for (const event of receipt.logs) {
+        try {
+          const parsedLog = this.evidenceContract.interface.parseLog({
+            topics: event.topics,
+            data: event.data,
+          });
 
-  public async accessEvidenceLog(caseId: string, index: number): Promise<boolean> {
-    if (!this.contract) return false;
-    
-    try {
-      const tx = await this.contract.accessEvidenceLog(caseId, index);
-      await tx.wait();
-      return true;
-    } catch (error) {
-      console.error(`Error accessing evidence log index ${index}:`, error);
-      toast({
-        title: "Transaction Failed",
-        description: "Failed to access evidence log. Please try again.",
-        variant: "destructive"
-      });
-      return false;
-    }
-  }
+          if (parsedLog && parsedLog.name === "EvidenceUploaded") {
+            evidenceId = parsedLog.args.evidenceId.toString();
+            break;
+          }
+        } catch (e) {
+          // Skip logs that can't be parsed
+          continue;
+        }
+      }
 
-  public async getEvidence(caseId: string, index: number): Promise<Evidence | null> {
-    if (!this.contract) return null;
-    
-    try {
-      const evidence = await this.contract.getEvidence(caseId, index);
+      logInfo("Evidence uploaded successfully", {
+        transactionHash: receipt.hash,
+        evidenceId: evidenceId || "unknown",
+        cid,
+      });
+
       return {
-        evidenceId: evidence.evidenceId,
-        cidEncrypted: evidence.cidEncrypted,
-        hash: evidence.hash,
-        evidenceType: evidence.evidenceType,
-        submittedBy: evidence.submittedBy,
-        confirmed: evidence.confirmed,
-        submittedAt: evidence.submittedAt.toNumber(),
-        chainOfCustody: evidence.chainOfCustody
+        success: true,
+        hash: receipt.hash,
+        receipt,
+        extraData: { evidenceId },
       };
     } catch (error) {
-      console.error(`Error getting evidence index ${index}:`, error);
+      logError(
+        "Failed to upload evidence",
+        {},
+        error instanceof Error ? error : new Error("Evidence upload error")
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get evidence details by ID
+   *
+   * @param evidenceId - The evidence identifier
+   * @returns Evidence details or null if not found
+   */
+  public async getEvidence(evidenceId: string): Promise<Evidence | null> {
+    try {
+      if (!this.evidenceContract) {
+        throw new Error("Contract not initialized");
+      }
+
+      const evidence = await this.evidenceContract.getEvidence(evidenceId);
+
+      return {
+        id: evidenceId,
+        cid: evidence.cid,
+        hash: evidence.hash,
+        description: evidence.description,
+        caseId: evidence.caseId,
+        uploader: evidence.uploader,
+        timestamp: new Date(Number(evidence.timestamp) * 1000),
+        verified: false, // Will be set by verification process
+      };
+    } catch (error) {
+      logError(
+        "Failed to get evidence",
+        { evidenceId },
+        error instanceof Error ? error : new Error("Evidence retrieval error")
+      );
       return null;
     }
   }
 
-  // System Management
-  public async toggleSystemLock(): Promise<boolean> {
-    if (!this.contract) return false;
-    
+  /**
+   * File First Information Report (FIR) on blockchain
+   *
+   * @param firNumber - Official FIR identifier
+   * @param description - Description of the incident
+   * @param location - Location of the incident
+   * @returns Transaction result with hash and receipt
+   */
+  public async fileFIR(
+    firNumber: string,
+    description: string,
+    location: string
+  ): Promise<TransactionResult> {
     try {
-      const tx = await this.contract.toggleSystemLock();
-      await tx.wait();
-      return true;
-    } catch (error) {
-      console.error("Error toggling system lock:", error);
-      toast({
-        title: "Transaction Failed",
-        description: "Failed to toggle system lock. Please try again.",
-        variant: "destructive"
+      if (!this.evidenceContract || !this.signer) {
+        throw new Error("Contract not initialized or wallet not connected");
+      }
+
+      // Validate inputs
+      if (!firNumber || !description || !location) {
+        throw new Error("Missing required FIR information");
+      }
+
+      logSecurityEvent("Filing FIR on blockchain", {
+        firNumber,
+        location,
+        filer: await this.signer.getAddress(),
       });
+
+      // Send the transaction
+      const tx = await this.evidenceContract.fileFIR(
+        firNumber,
+        description,
+        location,
+        { gasLimit: 300000 } // Reasonable gas limit for FIR filing
+      );
+
+      // Wait for confirmation
+      const receipt = await tx.wait();
+
+      logInfo("FIR filed successfully", {
+        transactionHash: receipt.hash,
+        firNumber,
+      });
+
+      return {
+        success: true,
+        hash: receipt.hash,
+        receipt,
+      };
+    } catch (error) {
+      logError(
+        "Failed to file FIR",
+        {},
+        error instanceof Error ? error : new Error("FIR filing error")
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Verify evidence integrity
+   *
+   * @param evidenceId - The evidence identifier
+   * @param expectedHash - The expected file hash to verify against
+   * @returns Whether the evidence hash matches the expected hash
+   */
+  public async verifyEvidence(
+    evidenceId: string,
+    expectedHash: string
+  ): Promise<boolean> {
+    try {
+      if (!evidenceId || !expectedHash) {
+        logWarn("Missing evidence ID or hash for verification");
+        return false;
+      }
+
+      const evidence = await this.getEvidence(evidenceId);
+      if (!evidence) {
+        logWarn(`Evidence ${evidenceId} not found for verification`);
+        return false;
+      }
+
+      const isValid = evidence.hash === expectedHash;
+
+      logSecurityEvent("Evidence verification", {
+        evidenceId,
+        result: isValid ? "verified" : "failed",
+        storedHash: `${evidence.hash.substring(0, 10)}...`, // Partial hash for logs
+        expectedHashLength: expectedHash.length,
+      });
+
+      return isValid;
+    } catch (error) {
+      logError(
+        "Failed to verify evidence",
+        { evidenceId },
+        error instanceof Error
+          ? error
+          : new Error("Evidence verification error")
+      );
       return false;
     }
   }
 
-  public async setGlobalRole(user: string, role: Role): Promise<boolean> {
-    if (!this.contract) return false;
-    
+  /**
+   * Create a new case on the blockchain
+   *
+   * @param caseNumber - Official case number
+   * @param description - Case description
+   * @param investigatorAddress - Address of the assigned investigator (optional)
+   * @returns Transaction result with hash and receipt
+   */
+  public async createCase(
+    caseNumber: string,
+    description: string,
+    investigatorAddress?: string
+  ): Promise<TransactionResult> {
     try {
-      const tx = await this.contract.setGlobalRole(user, role);
-      await tx.wait();
-      return true;
-    } catch (error) {
-      console.error("Error setting global role:", error);
-      toast({
-        title: "Transaction Failed",
-        description: "Failed to set global role. Please try again.",
-        variant: "destructive"
+      if (!this.evidenceContract || !this.signer) {
+        throw new Error("Contract not initialized or wallet not connected");
+      }
+
+      // Use the current address as investigator if none provided
+      const investigator =
+        investigatorAddress || (await this.signer.getAddress());
+
+      logSecurityEvent("Creating case on blockchain", {
+        caseNumber,
+        investigator,
+        creator: await this.signer.getAddress(),
       });
-      return false;
+
+      // Send the transaction
+      const tx = await this.evidenceContract.createCase(
+        caseNumber,
+        description,
+        investigator,
+        { gasLimit: 300000 }
+      );
+
+      // Wait for confirmation
+      const receipt = await tx.wait();
+
+      logInfo("Case created successfully", {
+        transactionHash: receipt.hash,
+        caseNumber,
+      });
+
+      return {
+        success: true,
+        hash: receipt.hash,
+        receipt,
+      };
+    } catch (error) {
+      logError(
+        "Failed to create case",
+        {},
+        error instanceof Error ? error : new Error("Case creation error")
+      );
+      throw error;
     }
   }
 
-  // Helper Functions
-  public getRoleString(role: Role): string {
-    switch (role) {
-      case Role.Court: return "Court";
-      case Role.Officer: return "Officer";
-      case Role.Forensic: return "Forensic";
-      case Role.Lawyer: return "Lawyer";
-      default: return "None";
+  /**
+   * Transfer custody of evidence
+   *
+   * @param evidenceId - Evidence identifier
+   * @param recipientAddress - Address of the new custodian
+   * @param notes - Notes about the transfer
+   * @returns Transaction result with hash and receipt
+   */
+  public async transferCustody(
+    evidenceId: string,
+    recipientAddress: string,
+    notes: string
+  ): Promise<TransactionResult> {
+    try {
+      if (!this.evidenceContract || !this.signer) {
+        throw new Error("Contract not initialized or wallet not connected");
+      }
+
+      const currentAddress = await this.signer.getAddress();
+
+      logSecurityEvent("Transferring evidence custody", {
+        evidenceId,
+        from: currentAddress,
+        to: recipientAddress,
+      });
+
+      // Send the transaction
+      const tx = await this.evidenceContract.transferCustody(
+        evidenceId,
+        recipientAddress,
+        notes,
+        { gasLimit: 200000 }
+      );
+
+      // Wait for confirmation
+      const receipt = await tx.wait();
+
+      logInfo("Custody transferred successfully", {
+        transactionHash: receipt.hash,
+        evidenceId,
+        recipient: recipientAddress,
+      });
+
+      return {
+        success: true,
+        hash: receipt.hash,
+        receipt,
+      };
+    } catch (error) {
+      logError(
+        "Failed to transfer custody",
+        { evidenceId, recipient: recipientAddress },
+        error instanceof Error ? error : new Error("Custody transfer error")
+      );
+      throw error;
     }
   }
 
-  public getEvidenceTypeString(type: EvidenceType): string {
-    switch (type) {
-      case EvidenceType.Image: return "Image";
-      case EvidenceType.Video: return "Video";
-      case EvidenceType.Document: return "Document";
-      default: return "Other";
+  /**
+   * Get blockchain network information
+   *
+   * @returns Network information including chain ID, name, and current block
+   */
+  public async getNetworkInfo(): Promise<NetworkInfo> {
+    try {
+      if (!this.provider) {
+        throw new Error("Provider not available");
+      }
+
+      const [network, blockNumber] = await Promise.all([
+        this.provider.getNetwork(),
+        this.provider.getBlockNumber(),
+      ]);
+
+      const networkInfo: NetworkInfo = {
+        chainId: Number(network.chainId),
+        name:
+          network.name ||
+          this.getNetworkNameFromChainId(Number(network.chainId)),
+        blockNumber,
+      };
+
+      logDebug("Retrieved network info", networkInfo, "BLOCKCHAIN");
+
+      return networkInfo;
+    } catch (error) {
+      logError(
+        "Failed to get network info",
+        {},
+        error instanceof Error ? error : new Error("Network info error")
+      );
+      throw error;
     }
+  }
+
+  /**
+   * Get network name from chain ID
+   *
+   * @param chainId - The numeric chain ID
+   * @returns Human-readable network name
+   */
+  private getNetworkNameFromChainId(chainId: number): string {
+    const networkNames: Record<number, string> = {
+      1: "Ethereum Mainnet",
+      3: "Ropsten Testnet",
+      4: "Rinkeby Testnet",
+      5: "Goerli Testnet",
+      42: "Kovan Testnet",
+      56: "Binance Smart Chain",
+      137: "Polygon Mainnet",
+      80001: "Mumbai Testnet",
+      31337: "Hardhat Local",
+      1337: "Local Testnet",
+    };
+
+    return networkNames[chainId] || `Unknown Network (${chainId})`;
+  }
+
+  /**
+   * Get transaction receipt
+   *
+   * @param txHash - Transaction hash
+   * @returns Transaction receipt or null if not found
+   */
+  public async getTransactionReceipt(
+    txHash: string
+  ): Promise<ethers.TransactionReceipt | null> {
+    try {
+      if (!this.provider || !txHash) return null;
+      return await this.provider.getTransactionReceipt(txHash);
+    } catch (error) {
+      logError(
+        "Failed to get transaction receipt",
+        { txHash },
+        error instanceof Error ? error : new Error("Receipt retrieval error")
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Check if Web3 is available and connected
+   *
+   * @returns Whether the wallet is connected
+   */
+  public isConnected(): boolean {
+    return !!(this.provider && this.signer);
+  }
+
+  /**
+   * Check if contracts are available
+   *
+   * @returns Whether contracts are properly initialized
+   */
+  public isContractReady(): boolean {
+    return !!(this.evidenceContract && this.isInitialized);
+  }
+
+  /**
+   * Get a list of evidence for a specific case
+   *
+   * @param caseId - The case identifier
+   * @param limit - Maximum number of items to return
+   * @returns Array of evidence items or empty array if none found
+   */
+  public async getEvidenceByCase(
+    caseId: string,
+    limit: number = 50
+  ): Promise<Evidence[]> {
+    try {
+      if (!this.evidenceContract || !caseId) {
+        return [];
+      }
+
+      // This implementation depends on the actual contract structure
+      // For now it's a placeholder with a mock approach
+
+      // In a real implementation, you'd call a contract method like:
+      // const evidenceIds = await this.evidenceContract.getEvidenceIdsByCase(caseId, limit);
+
+      // For now, we'll use events to simulate this functionality
+      const filter = this.evidenceContract.filters.EvidenceUploaded();
+      const events = await this.evidenceContract.queryFilter(filter, -10000); // Last 10000 blocks
+
+      const evidencePromises = events.slice(0, limit).map(async (event) => {
+        const evidenceId = event.args?.evidenceId.toString();
+        return await this.getEvidence(evidenceId);
+      });
+
+      const evidenceList = await Promise.all(evidencePromises);
+
+      // Filter out null values and evidence not related to this case
+      return evidenceList.filter(
+        (evidence): evidence is Evidence =>
+          evidence !== null && evidence.caseId === caseId
+      );
+    } catch (error) {
+      logError(
+        "Failed to get evidence by case",
+        { caseId },
+        error instanceof Error ? error : new Error("Evidence retrieval error")
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Grant case access to a user
+   *
+   * @param caseId - Case identifier
+   * @param address - User address to grant access to
+   * @returns Transaction result
+   */
+  public async grantCaseAccess(
+    caseId: string,
+    address: string
+  ): Promise<TransactionResult> {
+    try {
+      if (!this.roleManagerContract || !this.signer) {
+        throw new Error("Contract not initialized or wallet not connected");
+      }
+
+      const grantor = await this.signer.getAddress();
+
+      logSecurityEvent("Granting case access", {
+        caseId,
+        to: address,
+        by: grantor,
+      });
+
+      // Send the transaction
+      const tx = await this.roleManagerContract.grantCaseAccess(
+        caseId,
+        address,
+        { gasLimit: 100000 }
+      );
+
+      // Wait for confirmation
+      const receipt = await tx.wait();
+
+      logInfo("Case access granted successfully", {
+        transactionHash: receipt.hash,
+        caseId,
+        grantee: address,
+      });
+
+      return {
+        success: true,
+        hash: receipt.hash,
+        receipt,
+      };
+    } catch (error) {
+      logError(
+        "Failed to grant case access",
+        { caseId, address },
+        error instanceof Error ? error : new Error("Access grant error")
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Disconnect wallet
+   */
+  public disconnect(): void {
+    this.signer = null;
+
+    // Reset contracts to use provider only (read-only mode)
+    if (this.evidenceContract && this.provider) {
+      this.evidenceContract = this.evidenceContract.connect(
+        this.provider
+      ) as ethers.Contract;
+    }
+
+    if (this.roleManagerContract && this.provider) {
+      this.roleManagerContract = this.roleManagerContract.connect(
+        this.provider
+      ) as ethers.Contract;
+    }
+
+    logSecurityEvent("Wallet disconnected manually");
   }
 }
 
-// Create singleton instance
+// Export singleton instance
 const web3Service = new Web3Service();
 export default web3Service;

@@ -1,63 +1,97 @@
-
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React from "react";
+import { useParams, Link } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  FileText, 
-  Calendar, 
-  User, 
-  Shield, 
-  FileDigit, 
-  Clock, 
+import {
+  FileText,
+  Calendar,
+  User,
+  Shield,
+  FileDigit,
+  Clock,
   Scale,
-  ArrowUpRight 
+  ArrowUpRight,
 } from "lucide-react";
 
 const CaseDetail = () => {
   const { caseId } = useParams();
-  
+
   // Mock data - in a real app this would be fetched from API or blockchain
   const caseData = {
-    id: caseId || 'FF-2023-123',
-    title: 'State vs. John Doe',
-    status: 'active',
-    dateCreated: 'April 15, 2023',
-    courtDate: 'October 10, 2023',
-    filingOfficer: 'Officer James Wilson',
-    assignedJudge: 'Hon. Sarah Mitchell',
-    description: 'Case involving alleged theft of digital assets worth approximately $75,000 from a cryptocurrency exchange.',
+    id: caseId || "FF-2023-123",
+    title: "State vs. John Doe",
+    status: "active",
+    dateCreated: "April 15, 2023",
+    courtDate: "October 10, 2023",
+    filingOfficer: "Officer James Wilson",
+    assignedJudge: "Hon. Sarah Mitchell",
+    description:
+      "Case involving alleged theft of digital assets worth approximately $75,000 from a cryptocurrency exchange.",
     evidenceCount: 12,
     parties: [
-      { name: 'John Doe', role: 'Defendant' },
-      { name: 'State', role: 'Prosecutor' }
+      { name: "John Doe", role: "Defendant" },
+      { name: "State", role: "Prosecutor" },
     ],
     evidenceItems: [
-      { id: 'EV-2023-001', name: 'Transaction Log', type: 'digital', status: 'verified' },
-      { id: 'EV-2023-002', name: 'Access Records', type: 'digital', status: 'verified' },
-      { id: 'EV-2023-003', name: 'Email Correspondence', type: 'digital', status: 'pending' },
+      {
+        id: "EV-2023-001",
+        name: "Transaction Log",
+        type: "digital",
+        status: "verified",
+      },
+      {
+        id: "EV-2023-002",
+        name: "Access Records",
+        type: "digital",
+        status: "verified",
+      },
+      {
+        id: "EV-2023-003",
+        name: "Email Correspondence",
+        type: "digital",
+        status: "pending",
+      },
     ],
     timeline: [
-      { date: 'April 12, 2023', event: 'Case Filed', actor: 'Officer James Wilson' },
-      { date: 'April 15, 2023', event: 'Evidence Uploaded', actor: 'Forensic Tech Sarah Johnson' },
-      { date: 'April 20, 2023', event: 'Evidence Verified', actor: 'Blockchain System' },
-      { date: 'May 5, 2023', event: 'Court Date Set', actor: 'Court Admin' },
-    ]
+      {
+        date: "April 12, 2023",
+        event: "Case Filed",
+        actor: "Officer James Wilson",
+      },
+      {
+        date: "April 15, 2023",
+        event: "Evidence Uploaded",
+        actor: "Forensic Tech Sarah Johnson",
+      },
+      {
+        date: "April 20, 2023",
+        event: "Evidence Verified",
+        actor: "Blockchain System",
+      },
+      { date: "May 5, 2023", event: "Court Date Set", actor: "Court Admin" },
+    ],
   };
 
   // Determine badge color based on status
   const getBadgeColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'bg-forensic-accent text-white';
-      case 'closed':
-        return 'bg-forensic-400 text-white';
-      case 'pending':
-        return 'bg-forensic-warning text-forensic-900';
+      case "active":
+        return "bg-forensic-accent text-white";
+      case "closed":
+        return "bg-forensic-400 text-white";
+      case "pending":
+        return "bg-forensic-warning text-forensic-900";
       default:
-        return 'bg-forensic-600 text-white';
+        return "bg-forensic-600 text-white";
     }
   };
 
@@ -67,15 +101,18 @@ const CaseDetail = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-forensic-800">{caseData.title}</h1>
+            <h1 className="text-2xl font-bold text-forensic-800">
+              {caseData.title}
+            </h1>
             <Badge className={getBadgeColor(caseData.status)}>
-              {caseData.status.charAt(0).toUpperCase() + caseData.status.slice(1)}
+              {caseData.status.charAt(0).toUpperCase() +
+                caseData.status.slice(1)}
             </Badge>
           </div>
           <p className="text-forensic-500">Case ID: {caseData.id}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button 
+          <Button
             variant="outline"
             size="sm"
             className="text-forensic-evidence"
@@ -83,11 +120,7 @@ const CaseDetail = () => {
             <FileDigit className="h-4 w-4 mr-2" />
             View Evidence
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-forensic-court"
-          >
+          <Button variant="outline" size="sm" className="text-forensic-court">
             <Scale className="h-4 w-4 mr-2" />
             Legal Documents
           </Button>
@@ -112,7 +145,7 @@ const CaseDetail = () => {
         </TabsList>
 
         {/* Overview Tab */}
-        
+
         <TabsContent value="overview" className="space-y-6">
           <Card>
             <CardHeader>
@@ -152,7 +185,9 @@ const CaseDetail = () => {
               </div>
               <div>
                 <p className="text-sm text-forensic-500">Description</p>
-                <p className="mt-1 p-2 bg-forensic-50 rounded-md">{caseData.description}</p>
+                <p className="mt-1 p-2 bg-forensic-50 rounded-md">
+                  {caseData.description}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -161,12 +196,17 @@ const CaseDetail = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Involved Parties</CardTitle>
-                <CardDescription>People associated with this case</CardDescription>
+                <CardDescription>
+                  People associated with this case
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {caseData.parties.map((party, index) => (
-                    <div key={index} className="flex items-center justify-between">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between"
+                    >
                       <div className="flex items-center">
                         <User className="h-4 w-4 text-forensic-600 mr-2" />
                         <span>{party.name}</span>
@@ -186,13 +226,20 @@ const CaseDetail = () => {
               <CardContent>
                 <div className="space-y-4">
                   {caseData.evidenceItems.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between"
+                    >
                       <div className="flex items-center">
                         <FileDigit className="h-4 w-4 text-forensic-accent mr-2" />
                         <span>{item.name}</span>
                       </div>
-                      <Badge 
-                        className={item.status === 'verified' ? 'bg-green-500' : 'bg-amber-500'}
+                      <Badge
+                        className={
+                          item.status === "verified"
+                            ? "bg-green-500"
+                            : "bg-amber-500"
+                        }
                       >
                         {item.status}
                       </Badge>
@@ -216,22 +263,33 @@ const CaseDetail = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Case Evidence</CardTitle>
-              <CardDescription>All evidence associated with this case</CardDescription>
+              <CardDescription>
+                All evidence associated with this case
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {caseData.evidenceItems.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-md">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 border border-gray-200 rounded-md"
+                  >
                     <div>
                       <div className="flex items-center">
                         <FileDigit className="h-4 w-4 text-forensic-accent mr-2" />
                         <span className="font-medium">{item.name}</span>
                       </div>
-                      <div className="text-sm text-forensic-500 mt-1">ID: {item.id} | Type: {item.type}</div>
+                      <div className="text-sm text-forensic-500 mt-1">
+                        ID: {item.id} | Type: {item.type}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge 
-                        className={item.status === 'verified' ? 'bg-green-500' : 'bg-amber-500'}
+                      <Badge
+                        className={
+                          item.status === "verified"
+                            ? "bg-green-500"
+                            : "bg-amber-500"
+                        }
                       >
                         {item.status}
                       </Badge>
@@ -268,7 +326,9 @@ const CaseDetail = () => {
                     <div>
                       <p className="text-sm text-forensic-500">{event.date}</p>
                       <p className="font-medium mt-0.5">{event.event}</p>
-                      <p className="text-sm text-forensic-600 mt-0.5">By: {event.actor}</p>
+                      <p className="text-sm text-forensic-600 mt-0.5">
+                        By: {event.actor}
+                      </p>
                     </div>
                   </div>
                 ))}

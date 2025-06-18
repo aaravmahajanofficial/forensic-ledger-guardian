@@ -1,127 +1,472 @@
-
-import React from "react";
+import React, { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  ErrorBoundary,
+  AuthErrorBoundary,
+} from "@/components/shared/ErrorBoundary";
+import {
+  ProtectedRoute,
+  CourtOnlyRoute,
+  OfficerOnlyRoute,
+  ForensicOnlyRoute,
+  LawyerOnlyRoute,
+  LawEnforcementRoute,
+  LegalRoute,
+} from "@/components/shared/ProtectedRoute";
 import Layout from "./components/layout/Layout";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import Cases from "./pages/Cases";
-import Evidence from "./pages/Evidence";
-import Upload from "./pages/Upload";
-import Verify from "./pages/Verify";
-import Help from "./pages/Help";
-import FAQ from "./pages/help/Faq";
-import NotFound from "./pages/NotFound";
 import { Web3Provider } from "./contexts/Web3Context";
 import { AuthProvider } from "./contexts/AuthContext";
-import Settings from "./pages/Settings";
-import Activity from "./pages/Activity";
+
+// Lazy loaded components for code splitting
+const Index = React.lazy(() => import("./pages/Index"));
+const Dashboard = React.lazy(() => import("./pages/Dashboard"));
+const Cases = React.lazy(() => import("./pages/Cases"));
+const Evidence = React.lazy(() => import("./pages/Evidence"));
+const Upload = React.lazy(() => import("./pages/Upload"));
+const Verify = React.lazy(() => import("./pages/Verify"));
+const Help = React.lazy(() => import("./pages/Help"));
+const FAQ = React.lazy(() => import("./pages/help/Faq"));
+const NotFound = React.lazy(() => import("./pages/NotFound"));
+const Settings = React.lazy(() => import("./pages/Settings"));
+const Activity = React.lazy(() => import("./pages/Activity"));
 
 // FIR pages
-import FIR from "./pages/fir/Fir";
+const FIR = React.lazy(() => import("./pages/fir/Fir"));
+const FIRManagement = React.lazy(() => import("./pages/officer/FIRManagement"));
 
 // Court role specific pages
-import UserManagement from "./pages/users/Manage";
-import RoleManagement from "./pages/court/RoleManagement";
-import SystemConfiguration from "./pages/court/SystemConfiguration";
-import AuditLogs from "./pages/court/AuditLogs";
-import ReportsAnalytics from "./pages/court/ReportsAnalytics";
-import CreateCase from "./pages/cases/CreateCase";
-import CasesApproval from "./pages/cases/CasesApproval";
-import CaseDetail from "./pages/cases/CaseDetail";
-import AddUser from "./pages/users/AddUser";
+const UserManagement = React.lazy(() => import("./pages/users/Manage"));
+const RoleManagement = React.lazy(() => import("./pages/court/RoleManagement"));
+const SystemConfiguration = React.lazy(
+  () => import("./pages/court/SystemConfiguration")
+);
+const AuditLogs = React.lazy(() => import("./pages/court/AuditLogs"));
+const ReportsAnalytics = React.lazy(
+  () => import("./pages/court/ReportsAnalytics")
+);
+const CreateCase = React.lazy(() => import("./pages/cases/CreateCase"));
+const CasesApproval = React.lazy(() => import("./pages/cases/CasesApproval"));
+const CaseDetail = React.lazy(() => import("./pages/cases/CaseDetail"));
+const AddUser = React.lazy(() => import("./pages/users/AddUser"));
 
 // Officer role specific pages
-import FIRManagement from "./pages/officer/FIRManagement";
-import EvidenceConfirmation from "./pages/officer/EvidenceConfirmation";
-import OfficerReports from "./pages/officer/Reports";
+const EvidenceConfirmation = React.lazy(
+  () => import("./pages/officer/EvidenceConfirmation")
+);
+const OfficerReports = React.lazy(() => import("./pages/officer/Reports"));
 
 // Forensic role specific pages
-import EvidenceAnalysis from "./pages/forensic/EvidenceAnalysis";
-import TechnicalVerification from "./pages/forensic/TechnicalVerification";
-import ForensicReports from "./pages/forensic/Reports";
+const EvidenceAnalysis = React.lazy(
+  () => import("./pages/forensic/EvidenceAnalysis")
+);
+const TechnicalVerification = React.lazy(
+  () => import("./pages/forensic/TechnicalVerification")
+);
+const ForensicReports = React.lazy(() => import("./pages/forensic/Reports"));
 
 // Lawyer role specific pages
-import LegalDocumentation from "./pages/lawyer/LegalDocumentation";
-import ChainOfCustodyVerification from "./pages/lawyer/ChainOfCustodyVerification";
-import LegalReports from "./pages/lawyer/Reports";
-import CourtPreparation from "./pages/lawyer/CourtPreparation";
-import ClientManagement from "./pages/lawyer/ClientManagement";
+const LegalDocumentation = React.lazy(
+  () => import("./pages/lawyer/LegalDocumentation")
+);
+const ChainOfCustodyVerification = React.lazy(
+  () => import("./pages/lawyer/ChainOfCustodyVerification")
+);
+const LegalReports = React.lazy(() => import("./pages/lawyer/Reports"));
+const CourtPreparation = React.lazy(
+  () => import("./pages/lawyer/CourtPreparation")
+);
+const ClientManagement = React.lazy(
+  () => import("./pages/lawyer/ClientManagement")
+);
 
-// Create a client
+// Loading component
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p className="text-gray-600">Loading...</p>
+    </div>
+  </div>
+);
+
+// Create Query Client with optimized defaults
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: false,
-      refetchOnWindowFocus: false
+      retry: (failureCount, error: unknown) => {
+        // Don't retry on 4xx errors
+        if (error && typeof error === "object" && "response" in error) {
+          const httpError = error as { response: { status: number } };
+          if (
+            httpError.response?.status >= 400 &&
+            httpError.response?.status < 500
+          ) {
+            return false;
+          }
+        }
+        return failureCount < 2;
+      },
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+    mutations: {
+      retry: 1,
     },
   },
 });
 
 const App: React.FC = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <TooltipProvider>
-          <AuthProvider>
-            <Web3Provider>
-              <Toaster />
-              <Sonner />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-                <Route path="/cases" element={<Layout><Cases /></Layout>} />
-                <Route path="/cases/:caseId" element={<Layout><CaseDetail /></Layout>} />
-                <Route path="/evidence" element={<Layout><Evidence /></Layout>} />
-                <Route path="/upload" element={<Layout><Upload /></Layout>} />
-                <Route path="/verify" element={<Layout><Verify /></Layout>} />
-                <Route path="/help" element={<Layout><Help /></Layout>} />
-                <Route path="/help/faq" element={<Layout><FAQ /></Layout>} />
-                <Route path="/settings" element={<Layout><Settings /></Layout>} />
-                <Route path="/activity" element={<Layout><Activity /></Layout>} />
-                
-                {/* FIR routes */}
-                <Route path="/fir" element={<Layout><FIR /></Layout>} />
-                <Route path="/fir/new" element={<Layout><FIRManagement mode="create" /></Layout>} />
-                
-                {/* Court role specific routes */}
-                <Route path="/users/manage" element={<Layout><UserManagement /></Layout>} />
-                <Route path="/users/add" element={<Layout><AddUser /></Layout>} />
-                <Route path="/users/roles" element={<Layout><RoleManagement /></Layout>} />
-                <Route path="/settings/security" element={<Layout><SystemConfiguration /></Layout>} />
-                <Route path="/reports" element={<Layout><ReportsAnalytics /></Layout>} />
-                <Route path="/cases/create" element={<Layout><CreateCase /></Layout>} />
-                <Route path="/cases/approval" element={<Layout><CasesApproval /></Layout>} />
-                
-                {/* Officer role specific routes */}
-                <Route path="/cases/update" element={<Layout><Cases /></Layout>} />
-                <Route path="/cases/assigned" element={<Layout><Cases /></Layout>} />
-                <Route path="/evidence/confirm" element={<Layout><EvidenceConfirmation /></Layout>} />
-                <Route path="/officer/reports" element={<Layout><OfficerReports /></Layout>} />
-                
-                {/* Forensic role specific routes */}
-                <Route path="/evidence/analysis" element={<Layout><EvidenceAnalysis /></Layout>} />
-                <Route path="/evidence/verify" element={<Layout><TechnicalVerification /></Layout>} />
-                <Route path="/forensic/reports" element={<Layout><ForensicReports /></Layout>} />
-                
-                {/* Lawyer role specific routes */}
-                <Route path="/legal/documentation" element={<Layout><LegalDocumentation /></Layout>} />
-                <Route path="/verify/custody" element={<Layout><ChainOfCustodyVerification /></Layout>} />
-                <Route path="/legal/reports" element={<Layout><LegalReports /></Layout>} />
-                <Route path="/cases/prepare" element={<Layout><CourtPreparation /></Layout>} />
-                <Route path="/clients" element={<Layout><ClientManagement /></Layout>} />
-                <Route path="/meetings" element={<Layout><ClientManagement view="meetings" /></Layout>} />
-                
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Web3Provider>
-          </AuthProvider>
-        </TooltipProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <TooltipProvider>
+            <AuthErrorBoundary>
+              <AuthProvider>
+                <Web3Provider>
+                  <Toaster />
+                  <Sonner />
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <Routes>
+                      {/* Public routes */}
+                      <Route path="/" element={<Index />} />
+                      <Route path="*" element={<NotFound />} />
+
+                      {/* Protected routes - Common */}
+                      <Route
+                        path="/dashboard"
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <Dashboard />
+                            </Layout>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/cases"
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <Cases />
+                            </Layout>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/cases/:caseId"
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <CaseDetail />
+                            </Layout>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/evidence"
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <Evidence />
+                            </Layout>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/upload"
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <Upload />
+                            </Layout>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/verify"
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <Verify />
+                            </Layout>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/help"
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <Help />
+                            </Layout>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/help/faq"
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <FAQ />
+                            </Layout>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/settings"
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <Settings />
+                            </Layout>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/activity"
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <Activity />
+                            </Layout>
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      {/* FIR routes - Officer and Court */}
+                      <Route
+                        path="/fir"
+                        element={
+                          <LawEnforcementRoute>
+                            <Layout>
+                              <FIR />
+                            </Layout>
+                          </LawEnforcementRoute>
+                        }
+                      />
+                      <Route
+                        path="/fir/new"
+                        element={
+                          <OfficerOnlyRoute>
+                            <Layout>
+                              <FIRManagement mode="create" />
+                            </Layout>
+                          </OfficerOnlyRoute>
+                        }
+                      />
+
+                      {/* Court role specific routes */}
+                      <Route
+                        path="/users/manage"
+                        element={
+                          <CourtOnlyRoute>
+                            <Layout>
+                              <UserManagement />
+                            </Layout>
+                          </CourtOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/users/add"
+                        element={
+                          <CourtOnlyRoute>
+                            <Layout>
+                              <AddUser />
+                            </Layout>
+                          </CourtOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/users/roles"
+                        element={
+                          <CourtOnlyRoute>
+                            <Layout>
+                              <RoleManagement />
+                            </Layout>
+                          </CourtOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/settings/security"
+                        element={
+                          <CourtOnlyRoute>
+                            <Layout>
+                              <SystemConfiguration />
+                            </Layout>
+                          </CourtOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/reports"
+                        element={
+                          <CourtOnlyRoute>
+                            <Layout>
+                              <ReportsAnalytics />
+                            </Layout>
+                          </CourtOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/audit"
+                        element={
+                          <CourtOnlyRoute>
+                            <Layout>
+                              <AuditLogs />
+                            </Layout>
+                          </CourtOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/cases/create"
+                        element={
+                          <LawEnforcementRoute>
+                            <Layout>
+                              <CreateCase />
+                            </Layout>
+                          </LawEnforcementRoute>
+                        }
+                      />
+                      <Route
+                        path="/cases/approval"
+                        element={
+                          <CourtOnlyRoute>
+                            <Layout>
+                              <CasesApproval />
+                            </Layout>
+                          </CourtOnlyRoute>
+                        }
+                      />
+
+                      {/* Officer role specific routes */}
+                      <Route
+                        path="/evidence/confirm"
+                        element={
+                          <OfficerOnlyRoute>
+                            <Layout>
+                              <EvidenceConfirmation />
+                            </Layout>
+                          </OfficerOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/officer/reports"
+                        element={
+                          <OfficerOnlyRoute>
+                            <Layout>
+                              <OfficerReports />
+                            </Layout>
+                          </OfficerOnlyRoute>
+                        }
+                      />
+
+                      {/* Forensic role specific routes */}
+                      <Route
+                        path="/evidence/analysis"
+                        element={
+                          <ForensicOnlyRoute>
+                            <Layout>
+                              <EvidenceAnalysis />
+                            </Layout>
+                          </ForensicOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/evidence/verify"
+                        element={
+                          <ForensicOnlyRoute>
+                            <Layout>
+                              <TechnicalVerification />
+                            </Layout>
+                          </ForensicOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/forensic/reports"
+                        element={
+                          <ForensicOnlyRoute>
+                            <Layout>
+                              <ForensicReports />
+                            </Layout>
+                          </ForensicOnlyRoute>
+                        }
+                      />
+
+                      {/* Lawyer role specific routes */}
+                      <Route
+                        path="/legal/documentation"
+                        element={
+                          <LawyerOnlyRoute>
+                            <Layout>
+                              <LegalDocumentation />
+                            </Layout>
+                          </LawyerOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/verify/custody"
+                        element={
+                          <LegalRoute>
+                            <Layout>
+                              <ChainOfCustodyVerification />
+                            </Layout>
+                          </LegalRoute>
+                        }
+                      />
+                      <Route
+                        path="/legal/reports"
+                        element={
+                          <LawyerOnlyRoute>
+                            <Layout>
+                              <LegalReports />
+                            </Layout>
+                          </LawyerOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/cases/prepare"
+                        element={
+                          <LawyerOnlyRoute>
+                            <Layout>
+                              <CourtPreparation />
+                            </Layout>
+                          </LawyerOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/clients"
+                        element={
+                          <LawyerOnlyRoute>
+                            <Layout>
+                              <ClientManagement />
+                            </Layout>
+                          </LawyerOnlyRoute>
+                        }
+                      />
+                      <Route
+                        path="/meetings"
+                        element={
+                          <LawyerOnlyRoute>
+                            <Layout>
+                              <ClientManagement view="meetings" />
+                            </Layout>
+                          </LawyerOnlyRoute>
+                        }
+                      />
+                    </Routes>
+                  </Suspense>
+                </Web3Provider>
+              </AuthProvider>
+            </AuthErrorBoundary>
+          </TooltipProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 

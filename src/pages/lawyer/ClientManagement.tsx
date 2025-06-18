@@ -1,22 +1,21 @@
-
-import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription, 
-  CardFooter 
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -24,12 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -47,11 +41,11 @@ import {
   Check,
   X,
   Clock3,
-  FileText
+  FileText,
 } from "lucide-react";
 
 interface ClientManagementProps {
-  view?: 'clients' | 'meetings';
+  view?: "clients" | "meetings";
 }
 
 // Mock client data
@@ -63,7 +57,7 @@ const clientsData = [
     phone: "555-0123",
     cases: ["FF-2023-076"],
     status: "active",
-    lastContact: "2025-04-08T14:00:00Z"
+    lastContact: "2025-04-08T14:00:00Z",
   },
   {
     id: "C002",
@@ -72,7 +66,7 @@ const clientsData = [
     phone: "555-0124",
     cases: ["FF-2023-101"],
     status: "active",
-    lastContact: "2025-04-07T10:30:00Z"
+    lastContact: "2025-04-07T10:30:00Z",
   },
   {
     id: "C003",
@@ -81,7 +75,7 @@ const clientsData = [
     phone: "555-0125",
     cases: ["FF-2023-118"],
     status: "inactive",
-    lastContact: "2025-03-29T15:45:00Z"
+    lastContact: "2025-03-29T15:45:00Z",
   },
   {
     id: "C004",
@@ -90,8 +84,8 @@ const clientsData = [
     phone: "555-0126",
     cases: [],
     status: "pending",
-    lastContact: "2025-04-09T09:15:00Z"
-  }
+    lastContact: "2025-04-09T09:15:00Z",
+  },
 ];
 
 // Mock meetings data
@@ -105,7 +99,7 @@ const meetingsData = [
     duration: 60,
     status: "scheduled",
     location: "Office Room 3A",
-    notes: "Review evidence and prepare defense strategy"
+    notes: "Review evidence and prepare defense strategy",
   },
   {
     id: "M002",
@@ -116,7 +110,7 @@ const meetingsData = [
     duration: 45,
     status: "completed",
     location: "Virtual Meeting",
-    notes: "First meeting to understand case details"
+    notes: "First meeting to understand case details",
   },
   {
     id: "M003",
@@ -127,7 +121,7 @@ const meetingsData = [
     duration: 90,
     status: "scheduled",
     location: "Conference Room B",
-    notes: "Review newly submitted evidence"
+    notes: "Review newly submitted evidence",
   },
   {
     id: "M004",
@@ -138,7 +132,7 @@ const meetingsData = [
     duration: 120,
     status: "scheduled",
     location: "Office Room 2B",
-    notes: "Prepare client for court appearance"
+    notes: "Prepare client for court appearance",
   },
   {
     id: "M005",
@@ -149,27 +143,27 @@ const meetingsData = [
     duration: 30,
     status: "completed",
     location: "Phone Call",
-    notes: "Brief update on case progress"
-  }
+    notes: "Brief update on case progress",
+  },
 ];
 
 const getClientStatusBadge = (status: string) => {
   switch (status) {
-    case 'active':
+    case "active":
       return (
         <Badge className="bg-forensic-success/20 text-forensic-success">
           <Check className="h-3 w-3 mr-1" />
           Active
         </Badge>
       );
-    case 'inactive':
+    case "inactive":
       return (
         <Badge className="bg-forensic-400/20 text-forensic-600">
           <X className="h-3 w-3 mr-1" />
           Inactive
         </Badge>
       );
-    case 'pending':
+    case "pending":
       return (
         <Badge className="bg-forensic-warning/20 text-forensic-warning">
           <Clock className="h-3 w-3 mr-1" />
@@ -178,30 +172,28 @@ const getClientStatusBadge = (status: string) => {
       );
     default:
       return (
-        <Badge className="bg-forensic-300 text-forensic-600">
-          Unknown
-        </Badge>
+        <Badge className="bg-forensic-300 text-forensic-600">Unknown</Badge>
       );
   }
 };
 
 const getMeetingStatusBadge = (status: string) => {
   switch (status) {
-    case 'scheduled':
+    case "scheduled":
       return (
         <Badge className="bg-forensic-accent/20 text-forensic-accent">
           <Calendar className="h-3 w-3 mr-1" />
           Scheduled
         </Badge>
       );
-    case 'completed':
+    case "completed":
       return (
         <Badge className="bg-forensic-success/20 text-forensic-success">
           <Check className="h-3 w-3 mr-1" />
           Completed
         </Badge>
       );
-    case 'cancelled':
+    case "cancelled":
       return (
         <Badge className="bg-forensic-danger/20 text-forensic-danger">
           <X className="h-3 w-3 mr-1" />
@@ -210,33 +202,33 @@ const getMeetingStatusBadge = (status: string) => {
       );
     default:
       return (
-        <Badge className="bg-forensic-300 text-forensic-600">
-          Unknown
-        </Badge>
+        <Badge className="bg-forensic-300 text-forensic-600">Unknown</Badge>
       );
   }
 };
 
-const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+const ClientManagement: React.FC<ClientManagementProps> = ({
+  view = "clients",
+}) => {
+  const [searchQuery, setSearchQuery] = useState("");
   const [showNewClientDialog, setShowNewClientDialog] = useState(false);
   const [showNewMeetingDialog, setShowNewMeetingDialog] = useState(false);
-  
+
   // Filter clients based on search
-  const filteredClients = clientsData.filter(client => {
+  const filteredClients = clientsData.filter((client) => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
         client.name.toLowerCase().includes(query) ||
         client.email.toLowerCase().includes(query) ||
-        client.cases.some(caseId => caseId.toLowerCase().includes(query))
+        client.cases.some((caseId) => caseId.toLowerCase().includes(query))
       );
     }
     return true;
   });
-  
+
   // Filter meetings based on search
-  const filteredMeetings = meetingsData.filter(meeting => {
+  const filteredMeetings = meetingsData.filter((meeting) => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
@@ -247,7 +239,7 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
     }
     return true;
   });
-  
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* View Tabs */}
@@ -255,17 +247,17 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-forensic-800 mb-1">
-              {view === 'clients' ? 'Client Management' : 'Client Meetings'}
+              {view === "clients" ? "Client Management" : "Client Meetings"}
             </h1>
             <p className="text-sm text-forensic-600">
-              {view === 'clients' ? 
-                'Manage client information, cases, and representation details' : 
-                'Schedule and manage client meetings and consultations'}
+              {view === "clients"
+                ? "Manage client information, cases, and representation details"
+                : "Schedule and manage client meetings and consultations"}
             </p>
           </div>
           <div>
-            {view === 'clients' ? (
-              <Button 
+            {view === "clients" ? (
+              <Button
                 className="bg-forensic-evidence hover:bg-forensic-evidence/90 flex items-center gap-2"
                 onClick={() => setShowNewClientDialog(true)}
               >
@@ -273,7 +265,7 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
                 <span>Add New Client</span>
               </Button>
             ) : (
-              <Button 
+              <Button
                 className="bg-forensic-evidence hover:bg-forensic-evidence/90 flex items-center gap-2"
                 onClick={() => setShowNewMeetingDialog(true)}
               >
@@ -284,13 +276,15 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
           </div>
         </div>
       </Tabs>
-      
+
       {/* Search & Filters */}
       <div className="flex items-center space-x-4 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-forensic-500" />
           <Input
-            placeholder={view === 'clients' ? "Search clients..." : "Search meetings..."}
+            placeholder={
+              view === "clients" ? "Search clients..." : "Search meetings..."
+            }
             className="pl-8 border-forensic-200"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -301,9 +295,9 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
           <span>Filter</span>
         </Button>
       </div>
-      
+
       {/* Clients View */}
-      {view === 'clients' && (
+      {view === "clients" && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle>Clients</CardTitle>
@@ -343,13 +337,19 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
                     </TableCell>
                     <TableCell>
                       {client.cases.length > 0 ? (
-                        client.cases.map(caseId => (
-                          <Badge key={caseId} variant="outline" className="mr-1">
+                        client.cases.map((caseId) => (
+                          <Badge
+                            key={caseId}
+                            variant="outline"
+                            className="mr-1"
+                          >
                             {caseId}
                           </Badge>
                         ))
                       ) : (
-                        <span className="text-forensic-500 text-sm">No cases</span>
+                        <span className="text-forensic-500 text-sm">
+                          No cases
+                        </span>
                       )}
                     </TableCell>
                     <TableCell>{getClientStatusBadge(client.status)}</TableCell>
@@ -358,9 +358,11 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">View</Button>
-                        <Button 
-                          size="sm" 
+                        <Button size="sm" variant="outline">
+                          View
+                        </Button>
+                        <Button
+                          size="sm"
                           className="bg-forensic-accent hover:bg-forensic-accent/90"
                           onClick={() => setShowNewMeetingDialog(true)}
                         >
@@ -372,7 +374,7 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
                 ))}
               </TableBody>
             </Table>
-            
+
             {filteredClients.length === 0 && (
               <div className="text-center py-8">
                 <Users className="h-10 w-10 text-forensic-300 mx-auto mb-2" />
@@ -385,9 +387,9 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
           </CardContent>
         </Card>
       )}
-      
+
       {/* Meetings View */}
-      {view === 'meetings' && (
+      {view === "meetings" && (
         <>
           <Card className="mb-6">
             <CardHeader className="pb-2">
@@ -410,45 +412,58 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
                 </TableHeader>
                 <TableBody>
                   {filteredMeetings
-                    .filter(meeting => meeting.status !== 'completed')
+                    .filter((meeting) => meeting.status !== "completed")
                     .map((meeting) => (
-                    <TableRow key={meeting.id}>
-                      <TableCell>
-                        <div className="font-medium">{meeting.title}</div>
-                        <div className="text-sm text-forensic-500 truncate max-w-[200px]">
-                          {meeting.notes}
-                        </div>
-                      </TableCell>
-                      <TableCell>{meeting.clientName}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1 text-forensic-500" />
-                          <span className="text-sm">{new Date(meeting.date).toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex items-center mt-1">
-                          <Clock className="h-3 w-3 mr-1 text-forensic-500" />
-                          <span className="text-sm">
-                            {new Date(meeting.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            {' '} ({meeting.duration} min)
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{meeting.location}</TableCell>
-                      <TableCell>{getMeetingStatusBadge(meeting.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">Details</Button>
-                          <Button size="sm" className="bg-forensic-accent hover:bg-forensic-accent/90">
-                            Start
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                      <TableRow key={meeting.id}>
+                        <TableCell>
+                          <div className="font-medium">{meeting.title}</div>
+                          <div className="text-sm text-forensic-500 truncate max-w-[200px]">
+                            {meeting.notes}
+                          </div>
+                        </TableCell>
+                        <TableCell>{meeting.clientName}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <Calendar className="h-3 w-3 mr-1 text-forensic-500" />
+                            <span className="text-sm">
+                              {new Date(meeting.date).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center mt-1">
+                            <Clock className="h-3 w-3 mr-1 text-forensic-500" />
+                            <span className="text-sm">
+                              {new Date(meeting.date).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}{" "}
+                              ({meeting.duration} min)
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{meeting.location}</TableCell>
+                        <TableCell>
+                          {getMeetingStatusBadge(meeting.status)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button size="sm" variant="outline">
+                              Details
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="bg-forensic-accent hover:bg-forensic-accent/90"
+                            >
+                              Start
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
-              
-              {filteredMeetings.filter(m => m.status !== 'completed').length === 0 && (
+
+              {filteredMeetings.filter((m) => m.status !== "completed")
+                .length === 0 && (
                 <div className="text-center py-8">
                   <Calendar className="h-10 w-10 text-forensic-300 mx-auto mb-2" />
                   <h3 className="font-medium text-lg">No upcoming meetings</h3>
@@ -459,7 +474,7 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
               )}
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="pb-2">
               <CardTitle>Past Meetings</CardTitle>
@@ -480,37 +495,43 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
                 </TableHeader>
                 <TableBody>
                   {filteredMeetings
-                    .filter(meeting => meeting.status === 'completed')
+                    .filter((meeting) => meeting.status === "completed")
                     .map((meeting) => (
-                    <TableRow key={meeting.id}>
-                      <TableCell>
-                        <div className="font-medium">{meeting.title}</div>
-                        <div className="text-sm text-forensic-500 truncate max-w-[200px]">
-                          {meeting.notes}
-                        </div>
-                      </TableCell>
-                      <TableCell>{meeting.clientName}</TableCell>
-                      <TableCell className="text-sm text-forensic-600">
-                        {new Date(meeting.date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>{getMeetingStatusBadge(meeting.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button size="sm" variant="outline" className="flex items-center gap-1">
-                            <FileText className="h-3 w-3" />
-                            <span>View Notes</span>
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                      <TableRow key={meeting.id}>
+                        <TableCell>
+                          <div className="font-medium">{meeting.title}</div>
+                          <div className="text-sm text-forensic-500 truncate max-w-[200px]">
+                            {meeting.notes}
+                          </div>
+                        </TableCell>
+                        <TableCell>{meeting.clientName}</TableCell>
+                        <TableCell className="text-sm text-forensic-600">
+                          {new Date(meeting.date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {getMeetingStatusBadge(meeting.status)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex items-center gap-1"
+                            >
+                              <FileText className="h-3 w-3" />
+                              <span>View Notes</span>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
         </>
       )}
-      
+
       {/* Add New Client Dialog */}
       <Dialog open={showNewClientDialog} onOpenChange={setShowNewClientDialog}>
         <DialogContent className="sm:max-w-[500px]">
@@ -520,7 +541,7 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
               Enter client details to add them to your client list.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -532,26 +553,33 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
                 <Input placeholder="Enter last name" />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Email Address</label>
               <Input type="email" placeholder="email@example.com" />
             </div>
-            
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Phone Number</label>
               <Input placeholder="555-0000" />
             </div>
-            
+
             <div className="space-y-2">
-              <label className="text-sm font-medium">Case ID (if applicable)</label>
+              <label className="text-sm font-medium">
+                Case ID (if applicable)
+              </label>
               <Input placeholder="e.g., FF-2023-000" />
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNewClientDialog(false)}>Cancel</Button>
-            <Button 
+            <Button
+              variant="outline"
+              onClick={() => setShowNewClientDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
               className="bg-forensic-evidence hover:bg-forensic-evidence/90"
               onClick={() => setShowNewClientDialog(false)}
             >
@@ -560,9 +588,12 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Schedule New Meeting Dialog */}
-      <Dialog open={showNewMeetingDialog} onOpenChange={setShowNewMeetingDialog}>
+      <Dialog
+        open={showNewMeetingDialog}
+        onOpenChange={setShowNewMeetingDialog}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Schedule Meeting</DialogTitle>
@@ -570,18 +601,18 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
               Set up a new meeting with a client.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Meeting Title</label>
               <Input placeholder="Enter meeting title" />
             </div>
-            
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Select Client</label>
               <Input placeholder="Select or search client" />
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Date</label>
@@ -592,10 +623,12 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
                 <Input type="time" />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Duration (minutes)</label>
+                <label className="text-sm font-medium">
+                  Duration (minutes)
+                </label>
                 <Input placeholder="60" />
               </div>
               <div className="space-y-2">
@@ -603,16 +636,21 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
                 <Input placeholder="Office Room / Virtual" />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Meeting Notes</label>
               <Input placeholder="Enter meeting agenda or notes" />
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNewMeetingDialog(false)}>Cancel</Button>
-            <Button 
+            <Button
+              variant="outline"
+              onClick={() => setShowNewMeetingDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
               className="bg-forensic-evidence hover:bg-forensic-evidence/90"
               onClick={() => setShowNewMeetingDialog(false)}
             >
@@ -621,7 +659,6 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
     </div>
   );
 };

@@ -1,6 +1,8 @@
+import React from "react";
+import { APP_CONSTANTS } from "@/config";
 
-import React from 'react';
-import { Role } from '@/services/web3Service';
+// Role type for convenience
+type Role = (typeof APP_CONSTANTS.ROLES)[keyof typeof APP_CONSTANTS.ROLES];
 
 interface RoleGuidesProps {
   role?: Role;

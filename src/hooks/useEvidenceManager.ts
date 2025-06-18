@@ -1,349 +1,485 @@
+/**
+ * Evidence Manager Hook
+ * Handles evidence upload, verification, and blockchain interaction
+ */
 
-import { useState, useEffect } from 'react';
-import { toast } from '@/hooks/use-toast';
-import ipfsService from '@/services/ipfsService';
-import web3Service, { EvidenceType } from '@/services/web3Service';
+import { useState, useCallback, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
+import { config, APP_CONSTANTS } from "@/config";
+import { logError, logAudit, logPerformance } from "@/utils/logger";
+import { useAuth } from "@/contexts/AuthContext";
 
-export type EvidenceItem = {
+// Type definitions
+export interface EvidenceItem {
   id: string;
   name: string;
   type: string;
+  mimeType: string;
   caseId: string;
   submittedBy: string;
   submittedDate: string;
   size: number;
   verified: boolean;
   hash?: string;
-  cidEncrypted?: string;
-};
+  ipfsHash?: string;
+  blockchainTxHash?: string;
+  chainOfCustody: ChainOfCustodyEntry[];
+  metadata?: EvidenceMetadata;
+  status: "pending" | "processing" | "verified" | "rejected";
+}
 
-// Sample dummy evidence data
-const dummyEvidence: EvidenceItem[] = [
-  {
-    id: "EV-089-001",
-    name: "Security Camera Footage.mp4",
-    type: "video",
-    caseId: "FF-2023-089",
-    submittedBy: "Officer Johnson",
-    submittedDate: "2025-04-08T09:15:00Z",
-    size: 245000000,
-    verified: true,
-    hash: "0xf8e317d2df9f2132ca89e3ab3b4880ab8322c59e159f0eb8c962cce32e4754ea",
-    cidEncrypted: "QmT5NvUtoM5n8xr689NxpQVFNRuWgZ9Gb7hXSKSs7opbgc"
-  },
-  {
-    id: "EV-089-002",
-    name: "Network Access Logs.txt",
-    type: "application",
-    caseId: "FF-2023-089",
-    submittedBy: "Dr. Emily Chen",
-    submittedDate: "2025-04-07T14:30:00Z",
-    size: 1240000,
-    verified: true,
-    hash: "0x1b642a672a5626c9c9eb2329ed3de669d2a2bc4e15c4d51c5e7ce8145654c4fa",
-    cidEncrypted: "QmX7b6SLMdJpCXExQKmSacEEKwZvLErG95Luxeh9gp7jKt"
-  },
-  {
-    id: "EV-092-001",
-    name: "Transaction Records.pdf",
-    type: "application",
-    caseId: "FF-2023-092",
-    submittedBy: "Dr. Emily Chen",
-    submittedDate: "2025-04-06T11:20:00Z",
-    size: 3520000,
-    verified: true,
-    hash: "0x8c5e8d5e2b9a2c9a6f7c8d5e2b9a2c9a6f7c8d5e2b9a2c9a6f7c8d5e2b9a2c9a",
-    cidEncrypted: "QmT8vUy8cQMBLM7RvbGNf1Wi6XzNhE2aAaQMkQT8yh2ozt"
-  },
-  {
-    id: "EV-118-001",
-    name: "Extraction Report - iPhone 13.pdf",
-    type: "application",
-    caseId: "FF-2023-118",
-    submittedBy: "Thomas Brown",
-    submittedDate: "2025-04-05T16:45:00Z",
-    size: 8750000,
-    verified: false,
-    hash: "0x9d2c8f5e1a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d",
-    cidEncrypted: "QmNcFVrThMXEZCYbD2KqPtYZxdMdLFCe8Jt5CXUp3vGSVM"
-  },
-  {
-    id: "EV-118-002",
-    name: "SMS Message Screenshots.zip",
-    type: "application",
-    caseId: "FF-2023-118",
-    submittedBy: "Thomas Brown",
-    submittedDate: "2025-04-05T17:20:00Z",
-    size: 15600000,
-    verified: false,
-    hash: "0xa1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
-    cidEncrypted: "QmY6xkTsYcVRJ9Lk5eFzDGnSFzmQJ9JzQTmjHvG1ef4oBd"
-  },
-  {
-    id: "EV-104-001",
-    name: "Source Code Comparison.zip",
-    type: "application",
-    caseId: "FF-2023-104",
-    submittedBy: "Dr. Emily Chen",
-    submittedDate: "2025-04-04T10:05:00Z",
-    size: 22540000,
-    verified: true,
-    hash: "0xd7e6f5c4b3a2d1e0f9c8b7a6d5e4f3c2b1a0d9e8f7c6b5a4d3e2f1c0b9a8d7e6",
-    cidEncrypted: "QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn"
-  },
-  {
-    id: "EV-104-002",
-    name: "Network Traffic Analysis.pcap",
-    type: "application",
-    caseId: "FF-2023-104",
-    submittedBy: "Lisa Anderson",
-    submittedDate: "2025-04-03T14:40:00Z",
-    size: 175800000,
-    verified: true,
-    hash: "0xb5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9b8a7c6d5e4f3b2a1c0d9e8f7b6c5d4",
-    cidEncrypted: "QmTgtbb6vu4G3CMGvD8Z3CMn6Hy8zN7GJHBtPiQJguwwNP"
-  },
-  {
-    id: "EV-104-003",
-    name: "Disk Image - Server02.e01",
-    type: "application",
-    caseId: "FF-2023-104",
-    submittedBy: "David Wilson",
-    submittedDate: "2025-04-02T11:25:00Z",
-    size: 536870912000,
-    verified: true,
-    hash: "0xc6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5",
-    cidEncrypted: "QmS9thfimMBR98NRhxdS6TDa3rGrwNXUYxBGJeY5wQjN68"
-  },
-  {
-    id: "EV-089-003",
-    name: "Email Exchange Backup.pst",
-    type: "application",
-    caseId: "FF-2023-089",
-    submittedBy: "Officer Johnson",
-    submittedDate: "2025-04-01T15:10:00Z",
-    size: 78500000,
-    verified: false,
-    hash: "0xd7c6b5a4e3f2d1c0b9a8d7c6b5a4e3f2d1c0b9a8d7c6b5a4e3f2d1c0b9a8d7c6",
-    cidEncrypted: "QmWmKMUiNGZS2QCiAZVpSZpKXnYAKn6CdBfGPYcK1GvXV4"
-  },
-  {
-    id: "EV-092-002",
-    name: "Database Backup - Financial System.sql",
-    type: "application",
-    caseId: "FF-2023-092",
-    submittedBy: "Alex Rivera",
-    submittedDate: "2025-03-31T09:45:00Z",
-    size: 156800000,
-    verified: false,
-    hash: "0xe8f7d6c5b4a3e2d1c0b9a8e7f6d5c4b3a2e1d0c9b8a7f6e5d4c3b2a1e0d9c8b7",
-    cidEncrypted: "QmZH5toFT4y8MM9JJfM8qksVf3GXQzuom7CLLrFNrXQF2K"
-  }
-];
+export interface ChainOfCustodyEntry {
+  id: string;
+  action: "created" | "accessed" | "modified" | "transferred" | "verified";
+  timestamp: string;
+  userId: string;
+  userName: string;
+  userRole: string;
+  details: string;
+  transactionHash?: string;
+}
 
-export const useEvidenceManager = (caseId?: string) => {
-  const [evidence, setEvidence] = useState<EvidenceItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [recentActivity, setRecentActivity] = useState<{
-    action: 'upload' | 'verify' | 'view',
-    evidenceId: string,
-    timestamp: string
-  }[]>([]);
-
-  // Function to refresh evidence
-  const refreshEvidence = () => {
-    setRefreshTrigger(prev => prev + 1);
+export interface EvidenceMetadata {
+  originalHash: string;
+  fileType: string;
+  dimensions?: { width: number; height: number };
+  duration?: number;
+  location?: { latitude: number; longitude: number };
+  deviceInfo?: string;
+  checksums: {
+    md5: string;
+    sha256: string;
+    sha512: string;
   };
+}
 
-  // Add a function to track activity
-  const trackActivity = (action: 'upload' | 'verify' | 'view', evidenceId: string) => {
-    const newActivity = {
-      action,
-      evidenceId,
-      timestamp: new Date().toISOString()
-    };
-    
-    setRecentActivity(prev => {
-      const updated = [newActivity, ...prev].slice(0, 10); // Keep only 10 most recent activities
-      localStorage.setItem('evidenceActivity', JSON.stringify(updated));
-      return updated;
-    });
-  };
+export interface UploadProgress {
+  fileId: string;
+  fileName: string;
+  progress: number;
+  status:
+    | "preparing"
+    | "uploading"
+    | "processing"
+    | "completing"
+    | "completed"
+    | "error";
+  error?: string;
+}
 
-  // Load recent activity from localStorage
-  useEffect(() => {
-    const storedActivity = localStorage.getItem('evidenceActivity');
-    if (storedActivity) {
-      try {
-        setRecentActivity(JSON.parse(storedActivity));
-      } catch (e) {
-        console.error("Failed to parse activity:", e);
-      }
-    }
-  }, []);
+interface UseEvidenceManagerOptions {
+  caseId?: string;
+  autoRefresh?: boolean;
+  refreshInterval?: number;
+}
 
-  useEffect(() => {
-    const fetchEvidence = async () => {
-      setLoading(true);
-      try {
-        // In a real implementation, this would fetch from the blockchain
-        // Get evidence from localStorage or use dummy data if none exists
-        const storedEvidence = localStorage.getItem('evidenceItems');
-        let evidenceList: EvidenceItem[] = [];
-        
-        if (storedEvidence) {
-          evidenceList = JSON.parse(storedEvidence);
-        } else {
-          // Initialize with dummy data if no evidence exists in localStorage
-          localStorage.setItem('evidenceItems', JSON.stringify(dummyEvidence));
-          evidenceList = dummyEvidence;
-        }
-        
-        if (caseId) {
-          // Filter by case ID if provided
-          setEvidence(evidenceList.filter(item => item.caseId === caseId));
-        } else {
-          setEvidence(evidenceList);
-        }
-      } catch (error) {
-        console.error("Failed to fetch evidence:", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch evidence data",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+export const useEvidenceManager = (options: UseEvidenceManagerOptions = {}) => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
 
-    fetchEvidence();
-  }, [caseId, refreshTrigger]);
+  const {
+    caseId,
+    autoRefresh = false,
+    refreshInterval = 30000, // 30 seconds
+  } = options;
 
-  const uploadEvidence = async (file: File, caseId: string, type: string) => {
-    setLoading(true);
-    try {
-      // Generate an encryption key (in a real app, this would be more secure)
-      const encryptionKey = `key-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-      
-      // Upload to IPFS
-      const { cid, hash } = await ipfsService.uploadFile(file, encryptionKey);
-      
-      // Create evidence ID
-      const evidenceId = `EV-${caseId.split('-')[1]}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
-      
-      // Map file type to evidence type enum
-      let evidenceType = EvidenceType.Other;
-      if (file.type.includes('image')) evidenceType = EvidenceType.Image;
-      else if (file.type.includes('video')) evidenceType = EvidenceType.Video;
-      else if (file.type.includes('pdf') || file.type.includes('document')) evidenceType = EvidenceType.Document;
-      
-      // In a real implementation, this would submit to the blockchain
-      // await web3Service.submitCaseEvidence(caseId, evidenceId, cid, hash, evidenceType);
-      
-      // For now, we'll store in localStorage to simulate persistence
-      const newEvidence: EvidenceItem = {
-        id: evidenceId,
-        name: file.name,
-        type: file.type.split('/')[0] || 'other',
-        caseId: caseId,
-        submittedBy: "Current User", // Would come from authentication context
-        submittedDate: new Date().toISOString(),
-        size: file.size,
-        verified: false,
-        hash,
-        cidEncrypted: cid
-      };
-      
-      // Get existing evidence
-      const storedEvidence = localStorage.getItem('evidenceItems');
-      const evidenceList: EvidenceItem[] = storedEvidence ? JSON.parse(storedEvidence) : [...dummyEvidence];
-      
-      // Add new evidence
-      evidenceList.push(newEvidence);
-      
-      // Save back to storage
-      localStorage.setItem('evidenceItems', JSON.stringify(evidenceList));
-      
-      // Track the upload activity
-      trackActivity('upload', evidenceId);
-      
-      // Refresh the evidence list
-      refreshEvidence();
-      
+  // Query for evidence list
+  const {
+    data: evidence = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["evidence", caseId],
+    queryFn: () => fetchEvidence(caseId),
+    enabled: !!user,
+    refetchInterval: autoRefresh ? refreshInterval : false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Upload mutation
+  const uploadMutation = useMutation({
+    mutationFn: async ({
+      files,
+      caseId: targetCaseId,
+    }: {
+      files: File[];
+      caseId: string;
+    }) => {
+      return uploadEvidenceFiles(files, targetCaseId, setUploadProgress);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["evidence"] });
       toast({
-        title: "Evidence Uploaded",
-        description: `${file.name} has been uploaded successfully`,
+        title: "Upload Successful",
+        description: "Evidence has been uploaded and is being processed",
       });
-      
-      return { evidenceId, cid, hash };
-    } catch (error) {
-      console.error("Failed to upload evidence:", error);
+    },
+    onError: (error) => {
+      logError(
+        "Evidence upload failed",
+        { caseId },
+        error instanceof Error ? error : new Error(String(error))
+      );
       toast({
         title: "Upload Failed",
-        description: "Failed to upload evidence file",
-        variant: "destructive"
+        description: "Failed to upload evidence. Please try again.",
+        variant: "destructive",
       });
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
-  const verifyEvidence = async (evidenceId: string) => {
-    setLoading(true);
-    try {
-      // In a real implementation, this would verify on the blockchain
-      // For now, we're updating the local state
-      const storedEvidence = localStorage.getItem('evidenceItems');
-      if (!storedEvidence) return false;
-      
-      const evidenceList: EvidenceItem[] = JSON.parse(storedEvidence);
-      const updatedList = evidenceList.map(item => 
-        item.id === evidenceId ? { ...item, verified: true } : item
-      );
-      
-      localStorage.setItem('evidenceItems', JSON.stringify(updatedList));
-      
-      // Track the verify activity
-      trackActivity('verify', evidenceId);
-      
-      // Refresh evidence to update the UI
-      refreshEvidence();
-      
-      toast({
-        title: "Evidence Verified",
-        description: `Evidence ${evidenceId} has been verified successfully`,
+  // Verification mutation
+  const verifyMutation = useMutation({
+    mutationFn: async (evidenceId: string) => {
+      return verifyEvidence(evidenceId);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["evidence"] });
+      logAudit("Evidence verified", {
+        evidenceId: data.id,
+        verifiedBy: user?.id,
       });
-      
-      return true;
-    } catch (error) {
-      console.error("Failed to verify evidence:", error);
+      toast({
+        title: "Verification Complete",
+        description: "Evidence has been successfully verified",
+      });
+    },
+    onError: (error) => {
+      logError(
+        "Evidence verification failed",
+        {},
+        error instanceof Error ? error : new Error(String(error))
+      );
       toast({
         title: "Verification Failed",
-        description: "Failed to verify evidence",
-        variant: "destructive"
+        description: "Failed to verify evidence. Please try again.",
+        variant: "destructive",
       });
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
-  // Function to view evidence (for tracking purposes)
-  const viewEvidence = (evidenceId: string) => {
-    trackActivity('view', evidenceId);
-    return evidence.find(item => item.id === evidenceId) || null;
-  };
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (evidenceId: string) => {
+      return deleteEvidence(evidenceId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["evidence"] });
+      toast({
+        title: "Evidence Deleted",
+        description: "Evidence has been removed from the system",
+      });
+    },
+    onError: (error) => {
+      logError(
+        "Evidence deletion failed",
+        {},
+        error instanceof Error ? error : new Error(String(error))
+      );
+      toast({
+        title: "Deletion Failed",
+        description: "Failed to delete evidence. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // File validation
+  const validateFiles = useCallback(
+    (
+      files: File[]
+    ): { valid: File[]; invalid: { file: File; reason: string }[] } => {
+      const valid: File[] = [];
+      const invalid: { file: File; reason: string }[] = [];
+
+      files.forEach((file) => {
+        // Check file size
+        if (file.size > config.files.maxSize) {
+          invalid.push({
+            file,
+            reason: `File size exceeds ${(
+              config.files.maxSize /
+              (1024 * 1024)
+            ).toFixed(1)}MB limit`,
+          });
+          return;
+        }
+
+        // Check file type
+        const isValidType = config.files.supportedTypes.some((type) => {
+          if (type.endsWith("/*")) {
+            return file.type.startsWith(type.replace("/*", "/"));
+          }
+          return file.type === type;
+        });
+
+        if (!isValidType) {
+          invalid.push({
+            file,
+            reason: "File type not supported",
+          });
+          return;
+        }
+
+        // Check filename length
+        if (
+          file.name.length > APP_CONSTANTS.FILE_CONSTRAINTS.MAX_FILENAME_LENGTH
+        ) {
+          invalid.push({
+            file,
+            reason: "Filename too long",
+          });
+          return;
+        }
+
+        valid.push(file);
+      });
+
+      return { valid, invalid };
+    },
+    []
+  );
+
+  // Upload files
+  const uploadFiles = useCallback(
+    async (files: File[], targetCaseId: string) => {
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to upload evidence",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { valid, invalid } = validateFiles(files);
+
+      if (invalid.length > 0) {
+        invalid.forEach(({ file, reason }) => {
+          toast({
+            title: "File Validation Failed",
+            description: `${file.name}: ${reason}`,
+            variant: "destructive",
+          });
+        });
+      }
+
+      if (valid.length > 0) {
+        uploadMutation.mutate({ files: valid, caseId: targetCaseId });
+      }
+    },
+    [user, validateFiles, uploadMutation]
+  );
+
+  // Get evidence statistics
+  const statistics = useMemo(() => {
+    return {
+      total: evidence.length,
+      verified: evidence.filter((e) => e.verified).length,
+      pending: evidence.filter((e) => e.status === "pending").length,
+      processing: evidence.filter((e) => e.status === "processing").length,
+      rejected: evidence.filter((e) => e.status === "rejected").length,
+      totalSize: evidence.reduce((sum, e) => sum + e.size, 0),
+    };
+  }, [evidence]);
+
+  // Get evidence by type
+  const evidenceByType = useMemo(() => {
+    const byType: Record<string, EvidenceItem[]> = {};
+    evidence.forEach((item) => {
+      const type = item.type || "other";
+      if (!byType[type]) byType[type] = [];
+      byType[type].push(item);
+    });
+    return byType;
+  }, [evidence]);
 
   return {
+    // Data
     evidence,
-    loading,
-    uploadEvidence,
-    verifyEvidence,
-    viewEvidence,
-    refreshEvidence,
-    recentActivity
+    statistics,
+    evidenceByType,
+    uploadProgress,
+
+    // Loading states
+    isLoading,
+    isUploading: uploadMutation.isPending,
+    isVerifying: verifyMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+
+    // Error states
+    error,
+    uploadError: uploadMutation.error,
+    verifyError: verifyMutation.error,
+    deleteError: deleteMutation.error,
+
+    // Actions
+    uploadFiles,
+    verifyEvidence: verifyMutation.mutate,
+    deleteEvidence: deleteMutation.mutate,
+    refetch,
+    validateFiles,
+
+    // Utilities
+    clearUploadProgress: () => setUploadProgress([]),
   };
 };
+
+// Helper functions (these would typically interact with actual services)
+
+async function fetchEvidence(_caseId?: string): Promise<EvidenceItem[]> {
+  // TODO: Implement actual API call
+  throw new Error("API not implemented");
+}
+
+async function uploadEvidenceFiles(
+  files: File[],
+  caseId: string,
+  setProgress: React.Dispatch<React.SetStateAction<UploadProgress[]>>
+): Promise<EvidenceItem[]> {
+  const startTime = Date.now();
+  const results: EvidenceItem[] = [];
+
+  try {
+    // Initialize progress
+    const initialProgress: UploadProgress[] = files.map((file) => ({
+      fileId: `${Date.now()}-${file.name}`,
+      fileName: file.name,
+      progress: 0,
+      status: "preparing" as const,
+    }));
+    setProgress(initialProgress);
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileId = initialProgress[i].fileId;
+
+      try {
+        // Update progress
+        setProgress((prev) =>
+          prev.map((p) =>
+            p.fileId === fileId
+              ? { ...p, status: "uploading" as const, progress: 25 }
+              : p
+          )
+        );
+
+        // TODO: Implement actual file upload to IPFS
+        // const ipfsHash = await ipfsService.uploadFile(file);
+
+        // Update progress
+        setProgress((prev) =>
+          prev.map((p) =>
+            p.fileId === fileId
+              ? { ...p, status: "processing" as const, progress: 75 }
+              : p
+          )
+        );
+
+        // TODO: Implement blockchain transaction
+        // const txHash = await web3Service.addEvidence(ipfsHash, file.name, caseId);
+
+        // Create evidence item
+        const evidenceItem: EvidenceItem = {
+          id: `EV-${Date.now()}-${i}`,
+          name: file.name,
+          type: file.type.split("/")[0],
+          mimeType: file.type,
+          caseId,
+          submittedBy: "current-user", // Would come from auth context
+          submittedDate: new Date().toISOString(),
+          size: file.size,
+          verified: false,
+          status: "pending",
+          chainOfCustody: [
+            {
+              id: `COC-${Date.now()}`,
+              action: "created",
+              timestamp: new Date().toISOString(),
+              userId: "current-user",
+              userName: "Current User",
+              userRole: "Officer",
+              details: "Evidence uploaded to system",
+            },
+          ],
+        };
+
+        results.push(evidenceItem);
+
+        // Complete progress
+        setProgress((prev) =>
+          prev.map((p) =>
+            p.fileId === fileId
+              ? { ...p, status: "completed" as const, progress: 100 }
+              : p
+          )
+        );
+      } catch (error) {
+        // Error progress
+        setProgress((prev) =>
+          prev.map((p) =>
+            p.fileId === fileId
+              ? {
+                  ...p,
+                  status: "error" as const,
+                  error: error instanceof Error ? error.message : String(error),
+                }
+              : p
+          )
+        );
+        throw error;
+      }
+    }
+
+    logPerformance("Upload evidence files", Date.now() - startTime, {
+      fileCount: files.length,
+      caseId,
+    });
+
+    return results;
+  } catch (error) {
+    logError(
+      "Evidence upload failed",
+      { caseId, fileCount: files.length },
+      error instanceof Error ? error : new Error(String(error))
+    );
+    throw error;
+  }
+}
+
+async function verifyEvidence(evidenceId: string): Promise<EvidenceItem> {
+  // TODO: Implement actual verification logic
+  // This would involve blockchain verification, hash checking, etc.
+
+  logAudit("Evidence verification initiated", { evidenceId });
+
+  // Mock implementation
+  return {
+    id: evidenceId,
+    name: "Mock Evidence",
+    type: "document",
+    mimeType: "application/pdf",
+    caseId: "FF-2023-001",
+    submittedBy: "Officer",
+    submittedDate: new Date().toISOString(),
+    size: 1024,
+    verified: true,
+    status: "verified",
+    chainOfCustody: [],
+  };
+}
+
+async function deleteEvidence(evidenceId: string): Promise<void> {
+  // TODO: Implement actual deletion logic
+  // This would involve removing from IPFS and updating blockchain
+
+  logAudit("Evidence deletion", { evidenceId });
+
+  // Mock implementation
+  return Promise.resolve();
+}
+
+export default useEvidenceManager;

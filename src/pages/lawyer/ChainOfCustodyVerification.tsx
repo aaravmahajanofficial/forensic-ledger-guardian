@@ -1,31 +1,33 @@
-
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { 
-  FileLock2, 
-  Search, 
-  FileDigit, 
-  ArrowRight, 
+import {
+  FileLock2,
+  Search,
+  FileDigit,
   Check,
   Clock,
-  Calendar,
-  User,
   FileCheck,
   Download,
   Printer,
   Share2,
-  FileText,
-  Shield,
   Lock,
-  History
+  History,
 } from "lucide-react";
-import { toast } from '@/hooks/use-toast';
-import { useEvidenceManager, EvidenceItem } from '@/hooks/useEvidenceManager';
-import ChainOfCustody from '@/components/chainOfCustody/ChainOfCustody';
+import { toast } from "@/hooks/use-toast";
+import { useEvidenceManager } from "@/hooks/useEvidenceManager";
+import { EvidenceItem } from "@/hooks/useEvidenceManager";
+import ChainOfCustody from "@/components/chainOfCustody/ChainOfCustody";
 
 type CustodyEvent = {
   actor: string;
@@ -39,28 +41,30 @@ const ChainOfCustodyVerification = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const evidenceIdParam = searchParams.get('evidenceId');
-  
-  const [evidenceId, setEvidenceId] = useState(evidenceIdParam || '');
-  const [selectedEvidence, setSelectedEvidence] = useState<EvidenceItem | null>(null);
+  const evidenceIdParam = searchParams.get("evidenceId");
+
+  const [evidenceId, setEvidenceId] = useState(evidenceIdParam || "");
+  const [selectedEvidence, setSelectedEvidence] = useState<EvidenceItem | null>(
+    null
+  );
   const [custodyChain, setCustodyChain] = useState<CustodyEvent[]>([]);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationProgress, setVerificationProgress] = useState(0);
-  
+
   const { evidence, verifyEvidence } = useEvidenceManager();
-  
+
   useEffect(() => {
     if (evidenceIdParam && evidenceIdParam !== evidenceId) {
       setEvidenceId(evidenceIdParam);
     }
   }, [evidenceIdParam]);
-  
+
   useEffect(() => {
     if (evidenceId) {
-      const found = evidence.find(item => item.id === evidenceId);
+      const found = evidence.find((item) => item.id === evidenceId);
       if (found) {
         setSelectedEvidence(found);
-        
+
         // Generate chain of custody events
         const mockChain: CustodyEvent[] = [
           {
@@ -68,23 +72,27 @@ const ChainOfCustodyVerification = () => {
             action: "Collection",
             timestamp: new Date(found.submittedDate).toISOString(),
             notes: "Initial collection of evidence",
-            verified: true
+            verified: true,
           },
           {
             actor: "Evidence Technician Smith",
             action: "Processing",
-            timestamp: new Date(new Date(found.submittedDate).getTime() + 3600000).toISOString(),
+            timestamp: new Date(
+              new Date(found.submittedDate).getTime() + 3600000
+            ).toISOString(),
             notes: "Evidence documented and prepared for analysis",
-            verified: true
+            verified: true,
           },
           {
             actor: "Forensic Analyst Chen",
             action: "Analysis",
-            timestamp: new Date(new Date(found.submittedDate).getTime() + 86400000).toISOString(),
-            verified: true
-          }
+            timestamp: new Date(
+              new Date(found.submittedDate).getTime() + 86400000
+            ).toISOString(),
+            verified: true,
+          },
         ];
-        
+
         // Add verification event if the evidence is verified
         if (found.verified) {
           mockChain.push({
@@ -92,10 +100,10 @@ const ChainOfCustodyVerification = () => {
             action: "Digital Verification",
             timestamp: new Date().toISOString(),
             notes: "Blockchain verification completed",
-            verified: true
+            verified: true,
           });
         }
-        
+
         setCustodyChain(mockChain);
       } else {
         setSelectedEvidence(null);
@@ -103,38 +111,38 @@ const ChainOfCustodyVerification = () => {
       }
     }
   }, [evidenceId, evidence]);
-  
+
   const handleSearch = () => {
     if (!evidenceId.trim()) {
       toast({
         title: "Please enter an evidence ID",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
-    const found = evidence.find(item => item.id === evidenceId);
+
+    const found = evidence.find((item) => item.id === evidenceId);
     if (!found) {
       toast({
         title: "Evidence not found",
         description: "No evidence found with that ID",
-        variant: "destructive"
+        variant: "destructive",
       });
       setSelectedEvidence(null);
       setCustodyChain([]);
     }
     // The useEffect will handle setting the evidence and chain
   };
-  
+
   const handleVerifyEvidence = async () => {
     if (!selectedEvidence) return;
-    
+
     setIsVerifying(true);
     setVerificationProgress(0);
-    
+
     // Simulate verification progress
     const interval = setInterval(() => {
-      setVerificationProgress(prev => {
+      setVerificationProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
           completeVerification();
@@ -143,94 +151,100 @@ const ChainOfCustodyVerification = () => {
         return prev + 10;
       });
     }, 300);
-    
+
     const completeVerification = async () => {
-      // Perform actual verification
-      const success = await verifyEvidence(selectedEvidence.id);
-      
-      if (success) {
+      try {
+        // Perform actual verification
+        await verifyEvidence(selectedEvidence.id);
+
         toast({
           title: "Verification Successful",
           description: "Evidence has been verified on the blockchain",
         });
-        
+
         // Update the custody chain with a new verification event
-        setCustodyChain(prev => [...prev, {
-          actor: "Lawyer Verification",
-          action: "Legal Verification",
-          timestamp: new Date().toISOString(),
-          notes: "Evidence verified by legal counsel",
-          verified: true
-        }]);
-        
+        setCustodyChain((prev) => [
+          ...prev,
+          {
+            actor: "Lawyer Verification",
+            action: "Legal Verification",
+            timestamp: new Date().toISOString(),
+            notes: "Evidence verified by legal counsel",
+            verified: true,
+          },
+        ]);
+
         // Update selected evidence to show verified status
-        const updatedEvidence = evidence.find(item => item.id === selectedEvidence.id);
+        const updatedEvidence = evidence.find(
+          (item) => item.id === selectedEvidence.id
+        );
         if (updatedEvidence) {
           setSelectedEvidence(updatedEvidence);
         }
-      } else {
+      } catch (error) {
         toast({
           title: "Verification Failed",
           description: "Could not verify the evidence",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
-      
+
       setIsVerifying(false);
     };
   };
-  
+
   const handlePrint = () => {
     toast({
       title: "Printing Chain of Custody",
-      description: "Preparing chain of custody report for printing"
+      description: "Preparing chain of custody report for printing",
     });
     window.print();
   };
-  
+
   const handleDownload = () => {
     toast({
       title: "Downloading Report",
-      description: "Downloading chain of custody report as PDF"
+      description: "Downloading chain of custody report as PDF",
     });
-    
+
     // In a real implementation, this would generate a PDF
     setTimeout(() => {
-      const filename = `custody-chain-${selectedEvidence?.id}-${new Date().toISOString().split('T')[0]}.pdf`;
+      const filename = `custody-chain-${selectedEvidence?.id}-${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
       toast({
         title: "Download Complete",
-        description: `Report saved as ${filename}`
+        description: `Report saved as ${filename}`,
       });
     }, 1500);
   };
-  
+
   const handleExport = () => {
     toast({
       title: "Exporting Chain of Custody",
-      description: "Preparing chain of custody for export"
+      description: "Preparing chain of custody for export",
     });
-    
+
     // In a real implementation, this would export the data
     setTimeout(() => {
       toast({
         title: "Export Complete",
-        description: "Chain of custody data has been exported"
+        description: "Chain of custody data has been exported",
       });
     }, 1500);
   };
-  
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-forensic-800">Chain of Custody Verification</h1>
-        <Button 
-          variant="outline"
-          onClick={() => navigate('/evidence')}
-        >
+        <h1 className="text-2xl font-bold text-forensic-800">
+          Chain of Custody Verification
+        </h1>
+        <Button variant="outline" onClick={() => navigate("/evidence")}>
           Back to Evidence
         </Button>
       </div>
-      
+
       <Card className="border border-forensic-200">
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -244,7 +258,10 @@ const ChainOfCustodyVerification = () => {
         <CardContent>
           <div className="flex flex-col md:flex-row items-end gap-4">
             <div className="space-y-2 flex-1">
-              <label htmlFor="evidenceId" className="text-sm font-medium text-forensic-700">
+              <label
+                htmlFor="evidenceId"
+                className="text-sm font-medium text-forensic-700"
+              >
                 Evidence ID
               </label>
               <Input
@@ -255,7 +272,7 @@ const ChainOfCustodyVerification = () => {
                 className="border-forensic-200"
               />
             </div>
-            <Button 
+            <Button
               onClick={handleSearch}
               className="bg-forensic-court hover:bg-forensic-court/90 w-full md:w-auto"
             >
@@ -263,25 +280,26 @@ const ChainOfCustodyVerification = () => {
               Search
             </Button>
           </div>
-          
+
           <div className="mt-4 text-sm text-forensic-600">
             <p className="flex items-center">
               <History className="h-4 w-4 mr-1 text-forensic-court" />
-              Recently searched: 
+              Recently searched:
               {evidence.slice(0, 2).map((item, index) => (
-                <span 
-                  key={item.id} 
+                <span
+                  key={item.id}
                   className="mx-1 cursor-pointer hover:text-forensic-court hover:underline"
                   onClick={() => setEvidenceId(item.id)}
                 >
-                  {item.id}{index < 1 ? "," : ""}
+                  {item.id}
+                  {index < 1 ? "," : ""}
                 </span>
               ))}
             </p>
           </div>
         </CardContent>
       </Card>
-      
+
       {selectedEvidence && (
         <>
           <Card>
@@ -316,20 +334,33 @@ const ChainOfCustodyVerification = () => {
                   </div>
                   <div>
                     <div className="text-sm text-forensic-500">Case ID</div>
-                    <div className="font-medium text-forensic-court hover:underline cursor-pointer" onClick={() => navigate(`/cases/${selectedEvidence.caseId}`)}>
+                    <div
+                      className="font-medium text-forensic-court hover:underline cursor-pointer"
+                      onClick={() =>
+                        navigate(`/cases/${selectedEvidence.caseId}`)
+                      }
+                    >
                       {selectedEvidence.caseId}
                     </div>
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <div className="text-sm text-forensic-500">Submitted By</div>
-                    <div className="font-medium">{selectedEvidence.submittedBy}</div>
+                    <div className="text-sm text-forensic-500">
+                      Submitted By
+                    </div>
+                    <div className="font-medium">
+                      {selectedEvidence.submittedBy}
+                    </div>
                   </div>
                   <div>
-                    <div className="text-sm text-forensic-500">Submission Date</div>
+                    <div className="text-sm text-forensic-500">
+                      Submission Date
+                    </div>
                     <div className="font-medium">
-                      {new Date(selectedEvidence.submittedDate).toLocaleString()}
+                      {new Date(
+                        selectedEvidence.submittedDate
+                      ).toLocaleString()}
                     </div>
                   </div>
                   <div>
@@ -342,7 +373,7 @@ const ChainOfCustodyVerification = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="border border-forensic-200">
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -361,8 +392,8 @@ const ChainOfCustodyVerification = () => {
                     <span>{verificationProgress}%</span>
                   </div>
                   <div className="h-2 bg-forensic-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-forensic-court rounded-full transition-all duration-300 ease-in-out" 
+                    <div
+                      className="h-full bg-forensic-court rounded-full transition-all duration-300 ease-in-out"
                       style={{ width: `${verificationProgress}%` }}
                     ></div>
                   </div>
@@ -371,32 +402,38 @@ const ChainOfCustodyVerification = () => {
                   </p>
                 </div>
               ) : (
-                <ChainOfCustody 
+                <ChainOfCustody
                   evidenceId={selectedEvidence.id}
                   caseId={selectedEvidence.caseId}
                   events={custodyChain.map((event, index) => ({
                     id: `${index + 1}`,
-                    type: event.action === 'Collection' 
-                      ? 'upload' 
-                      : event.action === 'Processing' 
-                        ? 'modify' 
-                        : event.action === 'Analysis' 
-                          ? 'access' 
-                          : 'verify',
+                    type:
+                      event.action === "Collection"
+                        ? "upload"
+                        : event.action === "Processing"
+                        ? "modify"
+                        : event.action === "Analysis"
+                        ? "access"
+                        : "verify",
                     timestamp: event.timestamp,
                     user: {
                       name: event.actor,
-                      role: event.actor.includes('Officer') 
-                        ? 'Officer' 
-                        : event.actor.includes('Technician') 
-                          ? 'Forensic' 
-                          : event.actor.includes('Verification') 
-                            ? 'Court' 
-                            : 'Forensic',
-                      initials: event.actor.split(' ').map(n => n[0]).join('')
+                      role: event.actor.includes("Officer")
+                        ? "Officer"
+                        : event.actor.includes("Technician")
+                        ? "Forensic"
+                        : event.actor.includes("Verification")
+                        ? "Court"
+                        : "Forensic",
+                      initials: event.actor
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join(""),
                     },
                     details: event.notes || `${event.action} of evidence`,
-                    transactionHash: `0x${Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`
+                    transactionHash: `0x${Array.from({ length: 64 }, () =>
+                      Math.floor(Math.random() * 16).toString(16)
+                    ).join("")}`,
                   }))}
                 />
               )}
@@ -411,17 +448,14 @@ const ChainOfCustodyVerification = () => {
                   Verify Evidence
                 </Button>
               )}
-              
+
               {selectedEvidence.verified && (
-                <Button
-                  variant="outline"
-                  onClick={handlePrint}
-                >
+                <Button variant="outline" onClick={handlePrint}>
                   <Printer className="h-4 w-4 mr-2" />
                   Print Report
                 </Button>
               )}
-              
+
               <div className="space-x-2">
                 <Button
                   variant="outline"
@@ -442,7 +476,7 @@ const ChainOfCustodyVerification = () => {
               </div>
             </CardFooter>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Blockchain Verification</CardTitle>
@@ -459,41 +493,56 @@ const ChainOfCustodyVerification = () => {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <div className="text-sm text-forensic-500">Transaction Hash</div>
+                      <div className="text-sm text-forensic-500">
+                        Transaction Hash
+                      </div>
                       <div className="font-mono text-xs truncate">
-                        {selectedEvidence.hash || "0x7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9"}
+                        {selectedEvidence.hash ||
+                          "0x7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9"}
                       </div>
                     </div>
                     <div>
-                      <div className="text-sm text-forensic-500">Block Number</div>
-                      <div className="font-mono text-xs">{Math.floor(Math.random() * 9000000) + 1000000}</div>
+                      <div className="text-sm text-forensic-500">
+                        Block Number
+                      </div>
+                      <div className="font-mono text-xs">
+                        {Math.floor(Math.random() * 9000000) + 1000000}
+                      </div>
                     </div>
                   </div>
                   <div className="mt-2 text-xs text-forensic-500">
-                    This evidence has been cryptographically secured on the blockchain, ensuring its authenticity and immutability.
+                    This evidence has been cryptographically secured on the
+                    blockchain, ensuring its authenticity and immutability.
                   </div>
                 </div>
-                
+
                 {selectedEvidence.verified ? (
                   <div className="p-4 bg-forensic-success/10 border border-forensic-success/30 rounded-md">
                     <div className="flex items-center">
                       <Check className="h-5 w-5 text-forensic-success mr-2" />
-                      <h3 className="font-medium text-forensic-success">Verification Successful</h3>
+                      <h3 className="font-medium text-forensic-success">
+                        Verification Successful
+                      </h3>
                     </div>
                     <p className="mt-1 text-sm">
-                      This evidence has been cryptographically verified on the blockchain. The chain of custody is complete and intact.
+                      This evidence has been cryptographically verified on the
+                      blockchain. The chain of custody is complete and intact.
                     </p>
                   </div>
                 ) : (
                   <div className="p-4 bg-forensic-warning/10 border border-forensic-warning/30 rounded-md">
                     <div className="flex items-center">
                       <Clock className="h-5 w-5 text-forensic-warning mr-2" />
-                      <h3 className="font-medium text-forensic-warning">Verification Pending</h3>
+                      <h3 className="font-medium text-forensic-warning">
+                        Verification Pending
+                      </h3>
                     </div>
                     <p className="mt-1 text-sm">
-                      This evidence has not been fully verified on the blockchain. Complete the verification process to ensure chain of custody integrity.
+                      This evidence has not been fully verified on the
+                      blockchain. Complete the verification process to ensure
+                      chain of custody integrity.
                     </p>
-                    <Button 
+                    <Button
                       className="mt-2 bg-forensic-warning hover:bg-forensic-warning/90 text-forensic-900"
                       onClick={handleVerifyEvidence}
                       disabled={isVerifying}

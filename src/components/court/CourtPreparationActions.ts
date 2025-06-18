@@ -1,6 +1,5 @@
-
-import { toast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 // Types
 export type ChecklistItem = {
@@ -36,16 +35,16 @@ export const useCourtPreparationActions = () => {
     setItems: React.Dispatch<React.SetStateAction<ChecklistItem[]>>,
     itemId: string
   ) => {
-    const updatedItems = items.map(item => 
+    const updatedItems = items.map((item) =>
       item.id === itemId ? { ...item, completed: !item.completed } : item
     );
     setItems(updatedItems);
-    
-    const item = items.find(i => i.id === itemId);
+
+    const item = items.find((i) => i.id === itemId);
     if (item) {
       toast({
         title: item.completed ? "Task Unmarked" : "Task Completed",
-        description: item.task
+        description: item.task,
       });
     }
   };
@@ -57,16 +56,16 @@ export const useCourtPreparationActions = () => {
     dueDate: string
   ) => {
     const newItem: ChecklistItem = {
-      id: `CL-${String(items.length + 1).padStart(3, '0')}`,
+      id: `CL-${String(items.length + 1).padStart(3, "0")}`,
       task,
       completed: false,
-      dueDate
+      dueDate,
     };
-    
+
     setItems([...items, newItem]);
     toast({
       title: "Task Added",
-      description: `Added "${task}" to your checklist`
+      description: `Added "${task}" to your checklist`,
     });
   };
 
@@ -76,16 +75,16 @@ export const useCourtPreparationActions = () => {
     setItems: React.Dispatch<React.SetStateAction<EvidenceItem[]>>,
     evidenceId: string
   ) => {
-    const updatedItems = items.map(item => 
+    const updatedItems = items.map((item) =>
       item.id === evidenceId ? { ...item, prepared: true } : item
     );
     setItems(updatedItems);
-    
-    const item = items.find(i => i.id === evidenceId);
+
+    const item = items.find((i) => i.id === evidenceId);
     if (item) {
       toast({
         title: "Evidence Prepared",
-        description: `${item.name} is now ready for court`
+        description: `${item.name} is now ready for court`,
       });
     }
   };
@@ -93,7 +92,7 @@ export const useCourtPreparationActions = () => {
   const previewEvidence = (evidence: EvidenceItem) => {
     toast({
       title: "Evidence Preview",
-      description: `Previewing ${evidence.name}`
+      description: `Previewing ${evidence.name}`,
     });
     // In a real implementation, this would open an evidence preview
   };
@@ -101,15 +100,15 @@ export const useCourtPreparationActions = () => {
   const downloadEvidence = (evidence: EvidenceItem) => {
     toast({
       title: "Downloading Evidence",
-      description: `Started downloading ${evidence.name}`
+      description: `Started downloading ${evidence.name}`,
     });
     // In a real implementation, this would download the evidence
   };
-  
+
   const preparePresentation = () => {
     toast({
       title: "Creating Presentation",
-      description: "Starting evidence presentation creation"
+      description: "Starting evidence presentation creation",
     });
     // In a real implementation, this would open a presentation creation tool
   };
@@ -118,32 +117,32 @@ export const useCourtPreparationActions = () => {
   const viewDocument = (document: DocumentItem) => {
     toast({
       title: "Viewing Document",
-      description: `Opening ${document.title}`
+      description: `Opening ${document.title}`,
     });
     // In a real implementation, this would open the document
   };
 
   const editDocument = (document: DocumentItem) => {
-    navigate('/legal/documentation');
+    navigate("/legal/documentation");
     toast({
       title: "Edit Document",
-      description: `Ready to edit ${document.title}`
+      description: `Ready to edit ${document.title}`,
     });
   };
 
   const downloadDocument = (document: DocumentItem) => {
     toast({
       title: "Downloading Document",
-      description: `Started downloading ${document.title}`
+      description: `Started downloading ${document.title}`,
     });
     // In a real implementation, this would download the document
   };
 
   const createDocument = (documentType: string) => {
-    navigate('/legal/documentation');
+    navigate("/legal/documentation");
     toast({
       title: "Create Document",
-      description: `Ready to create a new ${documentType}`
+      description: `Ready to create a new ${documentType}`,
     });
   };
 
@@ -151,7 +150,7 @@ export const useCourtPreparationActions = () => {
   const scheduleWitnessMeeting = () => {
     toast({
       title: "Schedule Witness Preparation",
-      description: "Opening scheduling tool"
+      description: "Opening scheduling tool",
     });
     // In a real implementation, this would open a scheduling interface
   };
@@ -159,7 +158,7 @@ export const useCourtPreparationActions = () => {
   const viewPreparationNotes = () => {
     toast({
       title: "Viewing Preparation Notes",
-      description: "Opening witness preparation notes"
+      description: "Opening witness preparation notes",
     });
     // In a real implementation, this would show preparation notes
   };
@@ -167,7 +166,7 @@ export const useCourtPreparationActions = () => {
   const viewExpertReport = () => {
     toast({
       title: "Viewing Expert Report",
-      description: "Opening expert witness report"
+      description: "Opening expert witness report",
     });
     // In a real implementation, this would show the report
   };
@@ -175,7 +174,7 @@ export const useCourtPreparationActions = () => {
   const viewWitnessStatements = () => {
     toast({
       title: "Viewing Witness Statements",
-      description: "Opening collected witness statements"
+      description: "Opening collected witness statements",
     });
     // In a real implementation, this would show the statements
   };
@@ -184,7 +183,7 @@ export const useCourtPreparationActions = () => {
   const updateStrategyBrief = () => {
     toast({
       title: "Update Strategy Brief",
-      description: "Opening strategy brief editor"
+      description: "Opening strategy brief editor",
     });
     // In a real implementation, this would open a strategy editor
   };
@@ -192,16 +191,16 @@ export const useCourtPreparationActions = () => {
   const viewStrategyDocument = (documentName: string) => {
     toast({
       title: "Viewing Strategy Document",
-      description: `Opening ${documentName}`
+      description: `Opening ${documentName}`,
     });
     // In a real implementation, this would open the document
   };
-  
+
   // Report generation
   const generateChainOfCustodyReport = () => {
     toast({
       title: "Generating Report",
-      description: "Creating chain of custody report"
+      description: "Creating chain of custody report",
     });
     // In a real implementation, this would generate a report
   };
@@ -209,7 +208,7 @@ export const useCourtPreparationActions = () => {
   const generateProgressReport = () => {
     toast({
       title: "Generating Progress Report",
-      description: "Creating court preparation progress report"
+      description: "Creating court preparation progress report",
     });
     // In a real implementation, this would generate a report
   };
@@ -238,6 +237,6 @@ export const useCourtPreparationActions = () => {
     viewStrategyDocument,
     generateChainOfCustodyReport,
     generateProgressReport,
-    navigateTo
+    navigateTo,
   };
 };

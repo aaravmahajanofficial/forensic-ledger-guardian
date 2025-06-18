@@ -1,9 +1,8 @@
-
-import React, { useState } from 'react';
-import { 
-  BarChart2, 
-  FileText, 
-  Download, 
+import React, { useState } from "react";
+import {
+  BarChart2,
+  FileText,
+  Download,
   Calendar,
   PieChart,
   ArrowRight,
@@ -12,8 +11,8 @@ import {
   Filter,
   Search,
   FileCheck,
-  Briefcase
-} from 'lucide-react';
+  Briefcase,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -24,18 +23,24 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { TabsList, TabsTrigger, Tabs, TabsContent } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Mock reports data
 const reportsList = [
@@ -46,7 +51,7 @@ const reportsList = [
     date: "2025-04-08T10:30:00Z",
     author: "James Wilson",
     status: "published",
-    type: "summary"
+    type: "summary",
   },
   {
     id: "LR-2025-002",
@@ -55,7 +60,7 @@ const reportsList = [
     date: "2025-04-06T14:15:00Z",
     author: "Sarah Johnson",
     status: "draft",
-    type: "court"
+    type: "court",
   },
   {
     id: "LR-2025-003",
@@ -64,7 +69,7 @@ const reportsList = [
     date: "2025-04-05T16:45:00Z",
     author: "James Wilson",
     status: "published",
-    type: "evidence"
+    type: "evidence",
   },
   {
     id: "LR-2025-004",
@@ -73,7 +78,7 @@ const reportsList = [
     date: "2025-04-03T09:20:00Z",
     author: "Sarah Johnson",
     status: "review",
-    type: "strategy"
+    type: "strategy",
   },
   {
     id: "LR-2025-005",
@@ -82,34 +87,39 @@ const reportsList = [
     date: "2025-04-01T11:10:00Z",
     author: "James Wilson",
     status: "published",
-    type: "witness"
-  }
+    type: "witness",
+  },
 ];
 
 // Mock chart data as a placeholder
 const analyticsData = {
   casesPerType: [
-    { name: 'Summary', value: 8 },
-    { name: 'Court', value: 5 },
-    { name: 'Evidence', value: 7 },
-    { name: 'Strategy', value: 4 },
-    { name: 'Witness', value: 3 }
+    { name: "Summary", value: 8 },
+    { name: "Court", value: 5 },
+    { name: "Evidence", value: 7 },
+    { name: "Strategy", value: 4 },
+    { name: "Witness", value: 3 },
   ],
   caseOutcomes: [
-    { name: 'Won', count: 14 },
-    { name: 'Lost', count: 6 },
-    { name: 'Settled', count: 8 },
-    { name: 'Pending', count: 12 }
-  ]
+    { name: "Won", count: 14 },
+    { name: "Lost", count: 6 },
+    { name: "Settled", count: 8 },
+    { name: "Pending", count: 12 },
+  ],
 };
 
 const LegalReports: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
-  const [selectedReport, setSelectedReport] = useState<typeof reportsList[0] | null>(null);
-  
-  const handleReportAction = (action: string, report: typeof reportsList[0]) => {
+  const [selectedReport, setSelectedReport] = useState<
+    (typeof reportsList)[0] | null
+  >(null);
+
+  const handleReportAction = (
+    action: string,
+    report: (typeof reportsList)[0]
+  ) => {
     setSelectedReport(report);
-    
+
     switch (action) {
       case "view":
         toast({
@@ -155,16 +165,25 @@ const LegalReports: React.FC = () => {
     });
   };
 
-  const filteredReports = activeTab === 'all' 
-    ? reportsList 
-    : reportsList.filter(report => report.status === activeTab || report.type === activeTab);
+  const filteredReports =
+    activeTab === "all"
+      ? reportsList
+      : reportsList.filter(
+          (report) => report.status === activeTab || report.type === activeTab
+        );
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "published":
-        return <Badge className="bg-forensic-success text-white">Published</Badge>;
+        return (
+          <Badge className="bg-forensic-success text-white">Published</Badge>
+        );
       case "draft":
-        return <Badge variant="outline" className="text-forensic-500">Draft</Badge>;
+        return (
+          <Badge variant="outline" className="text-forensic-500">
+            Draft
+          </Badge>
+        );
       case "review":
         return <Badge className="bg-forensic-warning">Under Review</Badge>;
       default:
@@ -175,15 +194,35 @@ const LegalReports: React.FC = () => {
   const getTypeBadge = (type: string) => {
     switch (type) {
       case "summary":
-        return <Badge className="bg-forensic-court/20 text-forensic-court">Case Summary</Badge>;
+        return (
+          <Badge className="bg-forensic-court/20 text-forensic-court">
+            Case Summary
+          </Badge>
+        );
       case "court":
-        return <Badge className="bg-forensic-800/20 text-forensic-800">Court Brief</Badge>;
+        return (
+          <Badge className="bg-forensic-800/20 text-forensic-800">
+            Court Brief
+          </Badge>
+        );
       case "evidence":
-        return <Badge className="bg-forensic-evidence/20 text-forensic-evidence">Evidence Analysis</Badge>;
+        return (
+          <Badge className="bg-forensic-evidence/20 text-forensic-evidence">
+            Evidence Analysis
+          </Badge>
+        );
       case "strategy":
-        return <Badge className="bg-forensic-accent/20 text-forensic-accent">Legal Strategy</Badge>;
+        return (
+          <Badge className="bg-forensic-accent/20 text-forensic-accent">
+            Legal Strategy
+          </Badge>
+        );
       case "witness":
-        return <Badge className="bg-forensic-warning/20 text-forensic-warning">Witness Analysis</Badge>;
+        return (
+          <Badge className="bg-forensic-warning/20 text-forensic-warning">
+            Witness Analysis
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{type}</Badge>;
     }
@@ -192,9 +231,13 @@ const LegalReports: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <h1 className="text-2xl font-bold text-forensic-800">Legal Reports</h1>
-      
+
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <Tabs defaultValue={activeTab} onValueChange={handleFilterChange} className="w-full md:w-auto">
+        <Tabs
+          defaultValue={activeTab}
+          onValueChange={handleFilterChange}
+          className="w-full md:w-auto"
+        >
           <TabsList>
             <TabsTrigger value="all">All Reports</TabsTrigger>
             <TabsTrigger value="published">Published</TabsTrigger>
@@ -203,8 +246,8 @@ const LegalReports: React.FC = () => {
             <TabsTrigger value="evidence">Evidence</TabsTrigger>
           </TabsList>
         </Tabs>
-        
-        <Button 
+
+        <Button
           className="bg-forensic-court hover:bg-forensic-court/90 ml-auto"
           onClick={handleCreateReport}
         >
@@ -212,7 +255,7 @@ const LegalReports: React.FC = () => {
           Create Report
         </Button>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           <Card>
@@ -236,13 +279,15 @@ const LegalReports: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col md:flex-row gap-4 mb-4">
-                <Input 
-                  placeholder="Search reports by title or case ID..." 
+                <Input
+                  placeholder="Search reports by title or case ID..."
                   className="w-full md:max-w-md"
-                  onChange={() => toast({
-                    title: "Search Active",
-                    description: "Searching through reports...",
-                  })}
+                  onChange={() =>
+                    toast({
+                      title: "Search Active",
+                      description: "Searching through reports...",
+                    })
+                  }
                 />
                 <Select defaultValue="newest">
                   <SelectTrigger className="w-full md:w-[180px]">
@@ -255,7 +300,7 @@ const LegalReports: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="rounded-md border overflow-hidden">
                 <Table>
                   <TableHeader>
@@ -272,43 +317,55 @@ const LegalReports: React.FC = () => {
                   <TableBody>
                     {filteredReports.map((report) => (
                       <TableRow key={report.id}>
-                        <TableCell className="font-medium">{report.id}</TableCell>
-                        <TableCell className="max-w-[200px] truncate">{report.title}</TableCell>
+                        <TableCell className="font-medium">
+                          {report.id}
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate">
+                          {report.title}
+                        </TableCell>
                         <TableCell>{report.caseId}</TableCell>
-                        <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          {new Date(report.date).toLocaleDateString()}
+                        </TableCell>
                         <TableCell>{getStatusBadge(report.status)}</TableCell>
                         <TableCell>{getTypeBadge(report.type)}</TableCell>
                         <TableCell>
                           <div className="flex space-x-1">
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              className="h-7 w-7" 
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7"
                               onClick={() => handleReportAction("view", report)}
                             >
                               <FileText className="h-3.5 w-3.5 text-forensic-court" />
                             </Button>
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
+                            <Button
+                              size="icon"
+                              variant="ghost"
                               className="h-7 w-7"
-                              onClick={() => handleReportAction("download", report)}
+                              onClick={() =>
+                                handleReportAction("download", report)
+                              }
                             >
                               <Download className="h-3.5 w-3.5 text-forensic-500" />
                             </Button>
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
+                            <Button
+                              size="icon"
+                              variant="ghost"
                               className="h-7 w-7"
-                              onClick={() => handleReportAction("share", report)}
+                              onClick={() =>
+                                handleReportAction("share", report)
+                              }
                             >
                               <Share2 className="h-3.5 w-3.5 text-forensic-500" />
                             </Button>
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
+                            <Button
+                              size="icon"
+                              variant="ghost"
                               className="h-7 w-7"
-                              onClick={() => handleReportAction("print", report)}
+                              onClick={() =>
+                                handleReportAction("print", report)
+                              }
                             >
                               <Printer className="h-3.5 w-3.5 text-forensic-500" />
                             </Button>
@@ -321,7 +378,7 @@ const LegalReports: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           {/* Report Preview */}
           {selectedReport && (
             <Card className="mt-6">
@@ -347,7 +404,9 @@ const LegalReports: React.FC = () => {
                     </div>
                     <div>
                       <p className="text-sm text-forensic-500">Created On</p>
-                      <p>{new Date(selectedReport.date).toLocaleDateString()}</p>
+                      <p>
+                        {new Date(selectedReport.date).toLocaleDateString()}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-forensic-500">Report Type</p>
@@ -355,14 +414,18 @@ const LegalReports: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="border border-forensic-200 rounded-md p-6">
-                  <h3 className="text-lg font-medium mb-3">{selectedReport.title}</h3>
+                  <h3 className="text-lg font-medium mb-3">
+                    {selectedReport.title}
+                  </h3>
                   <p className="text-forensic-600 mb-4">
-                    This is a preview of the {selectedReport.type} report for case {selectedReport.caseId}.
-                    The full report contains detailed legal analysis, evidence references, and actionable recommendations.
+                    This is a preview of the {selectedReport.type} report for
+                    case {selectedReport.caseId}. The full report contains
+                    detailed legal analysis, evidence references, and actionable
+                    recommendations.
                   </p>
-                  
+
                   <div className="bg-forensic-50 p-3 rounded-md border border-forensic-100 mb-4">
                     <h4 className="text-sm font-medium">Key Points</h4>
                     <ul className="list-disc list-inside text-sm mt-2">
@@ -372,25 +435,29 @@ const LegalReports: React.FC = () => {
                       <li>Recommended court strategy outlined</li>
                     </ul>
                   </div>
-                  
+
                   <div className="flex justify-center mt-4 space-x-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
-                      onClick={() => handleReportAction("download", selectedReport)}
+                      onClick={() =>
+                        handleReportAction("download", selectedReport)
+                      }
                     >
                       <Download className="h-4 w-4 mr-1" />
                       Download
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
-                      onClick={() => handleReportAction("print", selectedReport)}
+                      onClick={() =>
+                        handleReportAction("print", selectedReport)
+                      }
                     >
                       <Printer className="h-4 w-4 mr-1" />
                       Print
                     </Button>
-                    <Button 
+                    <Button
                       size="sm"
                       className="bg-forensic-court hover:bg-forensic-court/90"
                       onClick={() => handleReportAction("view", selectedReport)}
@@ -404,7 +471,7 @@ const LegalReports: React.FC = () => {
             </Card>
           )}
         </div>
-        
+
         {/* Analytics Sidebar */}
         <div className="space-y-6">
           <Card>
@@ -421,15 +488,24 @@ const LegalReports: React.FC = () => {
                 </div>
                 <div className="bg-slate-50 rounded-md border p-4">
                   {analyticsData.casesPerType.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between mb-2">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between mb-2"
+                    >
                       <div className="flex items-center">
-                        <div className={`h-3 w-3 rounded-full mr-1 ${
-                          item.name === 'Summary' ? 'bg-forensic-court' :
-                          item.name === 'Court' ? 'bg-forensic-800' :
-                          item.name === 'Evidence' ? 'bg-forensic-evidence' :
-                          item.name === 'Strategy' ? 'bg-forensic-accent' :
-                          'bg-forensic-warning'
-                        }`}></div>
+                        <div
+                          className={`h-3 w-3 rounded-full mr-1 ${
+                            item.name === "Summary"
+                              ? "bg-forensic-court"
+                              : item.name === "Court"
+                              ? "bg-forensic-800"
+                              : item.name === "Evidence"
+                              ? "bg-forensic-evidence"
+                              : item.name === "Strategy"
+                              ? "bg-forensic-accent"
+                              : "bg-forensic-warning"
+                          }`}
+                        ></div>
                         <span className="text-xs">{item.name}</span>
                       </div>
                       <span className="text-xs font-medium">{item.value}</span>
@@ -437,7 +513,7 @@ const LegalReports: React.FC = () => {
                   ))}
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium text-sm">Case Outcomes</h4>
@@ -448,42 +524,67 @@ const LegalReports: React.FC = () => {
                     <div className="space-y-1">
                       <div className="flex items-center">
                         <div className="h-3 w-3 rounded-full bg-forensic-success mr-1"></div>
-                        <span className="text-xs">Won ({analyticsData.caseOutcomes[0].count})</span>
+                        <span className="text-xs">
+                          Won ({analyticsData.caseOutcomes[0].count})
+                        </span>
                       </div>
                       <div className="flex items-center">
                         <div className="h-3 w-3 rounded-full bg-forensic-warning mr-1"></div>
-                        <span className="text-xs">Lost ({analyticsData.caseOutcomes[1].count})</span>
+                        <span className="text-xs">
+                          Lost ({analyticsData.caseOutcomes[1].count})
+                        </span>
                       </div>
                       <div className="flex items-center">
                         <div className="h-3 w-3 rounded-full bg-blue-400 mr-1"></div>
-                        <span className="text-xs">Settled ({analyticsData.caseOutcomes[2].count})</span>
+                        <span className="text-xs">
+                          Settled ({analyticsData.caseOutcomes[2].count})
+                        </span>
                       </div>
                       <div className="flex items-center">
                         <div className="h-3 w-3 rounded-full bg-gray-400 mr-1"></div>
-                        <span className="text-xs">Pending ({analyticsData.caseOutcomes[3].count})</span>
+                        <span className="text-xs">
+                          Pending ({analyticsData.caseOutcomes[3].count})
+                        </span>
                       </div>
                     </div>
                     <div className="text-2xl font-bold">
-                      {analyticsData.caseOutcomes.reduce((sum, item) => sum + item.count, 0)}
+                      {analyticsData.caseOutcomes.reduce(
+                        (sum, item) => sum + item.count,
+                        0
+                      )}
                     </div>
                   </div>
                   <div className="flex w-full h-4 mt-2 rounded-sm overflow-hidden">
-                    <div className="bg-forensic-success h-full" style={{ width: '35%' }}></div>
-                    <div className="bg-forensic-warning h-full" style={{ width: '15%' }}></div>
-                    <div className="bg-blue-400 h-full" style={{ width: '20%' }}></div>
-                    <div className="bg-gray-400 h-full" style={{ width: '30%' }}></div>
+                    <div
+                      className="bg-forensic-success h-full"
+                      style={{ width: "35%" }}
+                    ></div>
+                    <div
+                      className="bg-forensic-warning h-full"
+                      style={{ width: "15%" }}
+                    ></div>
+                    <div
+                      className="bg-blue-400 h-full"
+                      style={{ width: "20%" }}
+                    ></div>
+                    <div
+                      className="bg-gray-400 h-full"
+                      style={{ width: "30%" }}
+                    ></div>
                   </div>
                 </div>
               </div>
-              
+
               <div>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full"
-                  onClick={() => toast({
-                    title: "Advanced Analytics",
-                    description: "Opening advanced legal analytics dashboard",
-                  })}
+                  onClick={() =>
+                    toast({
+                      title: "Advanced Analytics",
+                      description: "Opening advanced legal analytics dashboard",
+                    })
+                  }
                 >
                   View Full Analytics
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -491,7 +592,7 @@ const LegalReports: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center">
@@ -503,33 +604,53 @@ const LegalReports: React.FC = () => {
               <div className="space-y-3">
                 <div className="p-2 hover:bg-forensic-50 rounded-md transition-colors">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium text-sm">Tech Corp Data Breach</span>
-                    <Badge variant="outline" className="text-xs font-normal">April 15</Badge>
+                    <span className="font-medium text-sm">
+                      Tech Corp Data Breach
+                    </span>
+                    <Badge variant="outline" className="text-xs font-normal">
+                      April 15
+                    </Badge>
                   </div>
-                  <p className="text-xs text-forensic-500 mt-1">Case #FF-2023-089 - Initial Hearing</p>
+                  <p className="text-xs text-forensic-500 mt-1">
+                    Case #FF-2023-089 - Initial Hearing
+                  </p>
                 </div>
                 <div className="p-2 hover:bg-forensic-50 rounded-md transition-colors">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium text-sm">Financial Fraud Investigation</span>
-                    <Badge variant="outline" className="text-xs font-normal">April 22</Badge>
+                    <span className="font-medium text-sm">
+                      Financial Fraud Investigation
+                    </span>
+                    <Badge variant="outline" className="text-xs font-normal">
+                      April 22
+                    </Badge>
                   </div>
-                  <p className="text-xs text-forensic-500 mt-1">Case #FF-2023-092 - Evidence Submission</p>
+                  <p className="text-xs text-forensic-500 mt-1">
+                    Case #FF-2023-092 - Evidence Submission
+                  </p>
                 </div>
                 <div className="p-2 hover:bg-forensic-50 rounded-md transition-colors">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium text-sm">Mobile Device Extraction</span>
-                    <Badge variant="outline" className="text-xs font-normal">April 29</Badge>
+                    <span className="font-medium text-sm">
+                      Mobile Device Extraction
+                    </span>
+                    <Badge variant="outline" className="text-xs font-normal">
+                      April 29
+                    </Badge>
                   </div>
-                  <p className="text-xs text-forensic-500 mt-1">Case #FF-2023-118 - Expert Testimony</p>
+                  <p className="text-xs text-forensic-500 mt-1">
+                    Case #FF-2023-118 - Expert Testimony
+                  </p>
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="w-full text-sm h-8 mt-2"
-                onClick={() => toast({
-                  title: "Court Calendar",
-                  description: "Opening full court schedule calendar",
-                })}
+                onClick={() =>
+                  toast({
+                    title: "Court Calendar",
+                    description: "Opening full court schedule calendar",
+                  })
+                }
               >
                 View Full Calendar
               </Button>

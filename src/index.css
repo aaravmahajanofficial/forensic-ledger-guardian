@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -86,10 +86,6 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
   html {
     @apply scroll-smooth;
   }
@@ -97,16 +93,16 @@
   body {
     @apply bg-background text-foreground antialiased font-inter;
   }
-  
+
   /* Responsive typography */
   h1 {
     @apply text-xl md:text-2xl lg:text-3xl font-bold tracking-tight;
   }
-  
+
   h2 {
     @apply text-lg md:text-xl lg:text-2xl font-semibold tracking-tight;
   }
-  
+
   h3 {
     @apply text-base md:text-lg font-medium tracking-tight;
   }
@@ -121,49 +117,49 @@
   .evidence-card {
     @apply bg-white shadow-md rounded-lg p-4 border border-forensic-200 hover:border-forensic-accent transition-all duration-200;
   }
-  
+
   .status-badge {
     @apply px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-medium;
   }
-  
+
   .status-badge-sealed {
     @apply bg-forensic-danger/20 text-forensic-danger;
   }
-  
+
   .status-badge-open {
     @apply bg-forensic-success/20 text-forensic-success;
   }
-  
+
   .status-badge-pending {
     @apply bg-forensic-warning/20 text-forensic-warning;
   }
-  
+
   .ethereum-gradient {
     @apply bg-gradient-to-r from-forensic-accent to-forensic-evidence text-white;
   }
-  
+
   /* Responsive layout helpers */
   .responsive-grid {
     @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
   }
-  
+
   .responsive-container {
     @apply px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4;
   }
-  
+
   .responsive-card {
     @apply p-3 sm:p-4 md:p-6;
   }
-  
+
   .responsive-flex {
     @apply flex flex-col sm:flex-row;
   }
-  
+
   /* Card with consistent responsive padding */
   .card-responsive {
     @apply bg-white rounded-lg shadow-sm border border-forensic-200 p-3 sm:p-4 md:p-6 transition-shadow hover:shadow-md;
   }
-  
+
   /* Table container for small screens */
   .table-container {
     @apply w-full overflow-x-auto rounded-md border;
@@ -204,7 +200,7 @@
   .badge-transition {
     @apply transition-all duration-300 ease-in-out transform;
   }
-  
+
   .badge-transition:hover {
     @apply scale-105;
   }
@@ -213,19 +209,19 @@
   .animate-fade-in {
     animation: fadeIn 0.5s ease-in-out;
   }
-  
+
   .animate-fadeIn {
     animation: fadeIn 0.3s ease-in-out;
   }
-  
+
   .animate-slideIn {
     animation: slideIn 0.3s ease-out;
   }
-  
+
   .animate-pulse {
     animation: pulse 2s infinite;
   }
-  
+
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -234,7 +230,7 @@
       opacity: 1;
     }
   }
-  
+
   @keyframes slideIn {
     from {
       transform: translateY(-10px);
@@ -245,9 +241,10 @@
       opacity: 1;
     }
   }
-  
+
   @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 1;
     }
     50% {

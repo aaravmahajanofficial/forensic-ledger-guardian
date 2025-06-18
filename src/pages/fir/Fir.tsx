@@ -1,15 +1,27 @@
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  FileText, 
-  Search, 
-  Plus, 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  FileText,
+  Search,
+  Plus,
   Filter,
   Clock,
   CheckCircle,
@@ -18,9 +30,9 @@ import {
   Eye,
   Pencil,
   FilePlus,
-  MoreVertical
+  MoreVertical,
 } from "lucide-react";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +40,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from '@/hooks/use-toast';
+import { toast } from "@/hooks/use-toast";
 
 // Mock FIR data
 const firData = [
@@ -40,7 +52,7 @@ const firData = [
     status: "pending",
     suspect: "Unknown",
     location: "Tech Corp HQ, 123 Main St",
-    complainant: "Tech Corp Inc."
+    complainant: "Tech Corp Inc.",
   },
   {
     id: "FF-2023-119",
@@ -50,17 +62,17 @@ const firData = [
     status: "verified",
     suspect: "Former Employee",
     location: "Finance Plus, 456 Business Ave",
-    complainant: "Finance Plus LLC"
+    complainant: "Finance Plus LLC",
   },
   {
-    id: "FF-2023-118", 
+    id: "FF-2023-118",
     title: "Ransomware Attack",
     filedBy: "John Smith",
     filedDate: "2025-04-05T09:30:45Z",
     status: "assigned",
     suspect: "Hacking Group",
     location: "City Hospital, 789 Health Dr",
-    complainant: "City General Hospital"
+    complainant: "City General Hospital",
   },
   {
     id: "FF-2023-117",
@@ -70,7 +82,7 @@ const firData = [
     status: "processed",
     suspect: "Corporate Espionage",
     location: "Innovate Inc, 101 Tech Pkwy",
-    complainant: "Innovate Inc."
+    complainant: "Innovate Inc.",
   },
   {
     id: "FF-2023-116",
@@ -80,41 +92,41 @@ const firData = [
     status: "verified",
     suspect: "Remote Attacker",
     location: "123 Residential St",
-    complainant: "Jane Citizen"
-  }
+    complainant: "Jane Citizen",
+  },
 ];
 
 const getFIRStatusBadge = (status: string) => {
   switch (status) {
-    case 'pending':
+    case "pending":
       return (
         <Badge className="bg-forensic-warning/20 text-forensic-warning">
           <Clock className="h-3 w-3 mr-1" />
           Pending
         </Badge>
       );
-    case 'verified':
+    case "verified":
       return (
         <Badge className="bg-forensic-accent/20 text-forensic-accent">
           <CheckCircle className="h-3 w-3 mr-1" />
           Verified
         </Badge>
       );
-    case 'assigned':
+    case "assigned":
       return (
         <Badge className="bg-forensic-court/20 text-forensic-court">
           <PanelRight className="h-3 w-3 mr-1" />
           Assigned
         </Badge>
       );
-    case 'processed':
+    case "processed":
       return (
         <Badge className="bg-forensic-success/20 text-forensic-success">
           <CheckCircle className="h-3 w-3 mr-1" />
           Processed
         </Badge>
       );
-    case 'rejected':
+    case "rejected":
       return (
         <Badge className="bg-forensic-danger/20 text-forensic-danger">
           <AlertTriangle className="h-3 w-3 mr-1" />
@@ -122,22 +134,18 @@ const getFIRStatusBadge = (status: string) => {
         </Badge>
       );
     default:
-      return (
-        <Badge className="bg-gray-200 text-gray-600">
-          Unknown
-        </Badge>
-      );
+      return <Badge className="bg-gray-200 text-gray-600">Unknown</Badge>;
   }
 };
 
 const FIR = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const navigate = useNavigate();
-  
+
   // Filter FIRs based on search and filter
   const filteredFIRs = firData
-    .filter(fir => {
+    .filter((fir) => {
       // Search query filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -150,14 +158,14 @@ const FIR = () => {
       }
       return true;
     })
-    .filter(fir => {
+    .filter((fir) => {
       // Status filter
-      if (statusFilter === 'all') return true;
+      if (statusFilter === "all") return true;
       return fir.status === statusFilter;
     });
 
   const handleCreateFIR = () => {
-    navigate('/fir/new');
+    navigate("/fir/new");
   };
 
   const handleViewFIR = (firId: string) => {
@@ -176,7 +184,7 @@ const FIR = () => {
   };
 
   const handleAddEvidence = (firId: string) => {
-    navigate('/upload', { state: { firId } });
+    navigate("/upload", { state: { firId } });
   };
 
   const handleRequestCaseCreation = (firId: string) => {
@@ -189,13 +197,18 @@ const FIR = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-0">
-        <h1 className="text-2xl font-bold text-forensic-800">First Information Reports</h1>
-        <Button onClick={handleCreateFIR} className="bg-forensic-800 hover:bg-forensic-800/90">
+        <h1 className="text-2xl font-bold text-forensic-800">
+          First Information Reports
+        </h1>
+        <Button
+          onClick={handleCreateFIR}
+          className="bg-forensic-800 hover:bg-forensic-800/90"
+        >
           <Plus className="h-4 w-4 mr-2" />
           <span>New FIR</span>
         </Button>
       </div>
-      
+
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="relative">
@@ -207,7 +220,7 @@ const FIR = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Filter className="h-4 w-4 text-forensic-500" />
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -225,11 +238,14 @@ const FIR = () => {
           </Select>
         </div>
       </div>
-      
+
       {/* FIR List */}
       <div className="space-y-4">
         {filteredFIRs.map((fir) => (
-          <Card key={fir.id} className="hover:shadow-md transition-all duration-200 border border-forensic-200">
+          <Card
+            key={fir.id}
+            className="hover:shadow-md transition-all duration-200 border border-forensic-200"
+          >
             <CardContent className="p-4 md:p-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between">
                 <div className="space-y-2">
@@ -239,54 +255,63 @@ const FIR = () => {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-forensic-800">{fir.id}</h3>
+                        <h3 className="font-bold text-forensic-800">
+                          {fir.id}
+                        </h3>
                         {getFIRStatusBadge(fir.status)}
                       </div>
                       <p className="text-sm text-forensic-500">
-                        Filed on {new Date(fir.filedDate).toLocaleDateString()} by {fir.filedBy}
+                        Filed on {new Date(fir.filedDate).toLocaleDateString()}{" "}
+                        by {fir.filedBy}
                       </p>
                     </div>
                   </div>
-                  
+
                   <p className="text-forensic-600 font-medium">{fir.title}</p>
-                  
+
                   <div className="flex flex-wrap items-center gap-3 text-sm text-forensic-600">
-                    <span><strong>Complainant:</strong> {fir.complainant}</span>
-                    <span><strong>Suspect:</strong> {fir.suspect}</span>
-                    <span><strong>Location:</strong> {fir.location}</span>
+                    <span>
+                      <strong>Complainant:</strong> {fir.complainant}
+                    </span>
+                    <span>
+                      <strong>Suspect:</strong> {fir.suspect}
+                    </span>
+                    <span>
+                      <strong>Location:</strong> {fir.location}
+                    </span>
                   </div>
                 </div>
-                
+
                 <div className="mt-3 md:mt-0 flex items-center gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
+                  <Button
+                    size="sm"
+                    variant="outline"
                     className="h-8 flex items-center gap-1"
                     onClick={() => handleViewFIR(fir.id)}
                   >
                     <Eye className="h-4 w-4" />
                     <span className="hidden sm:inline">View</span>
                   </Button>
-                  
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
+
+                  <Button
+                    size="sm"
+                    variant="outline"
                     className="h-8 flex items-center gap-1"
                     onClick={() => handleEditFIR(fir.id)}
                   >
                     <Pencil className="h-4 w-4" />
                     <span className="hidden sm:inline">Edit</span>
                   </Button>
-                  
-                  <Button 
-                    size="sm" 
+
+                  <Button
+                    size="sm"
                     className="bg-forensic-evidence hover:bg-forensic-evidence/90 h-8 flex items-center gap-1"
                     onClick={() => handleAddEvidence(fir.id)}
                   >
                     <FilePlus className="h-4 w-4" />
                     <span className="hidden sm:inline">Add Evidence</span>
                   </Button>
-                  
+
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -299,7 +324,7 @@ const FIR = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem>History</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         className="text-forensic-court"
                         onClick={() => handleRequestCaseCreation(fir.id)}
                       >
@@ -313,14 +338,24 @@ const FIR = () => {
           </Card>
         ))}
       </div>
-      
+
       {filteredFIRs.length === 0 && (
         <Card>
           <CardContent className="p-6 flex flex-col items-center justify-center text-center">
             <AlertTriangle className="h-12 w-12 text-forensic-400 mb-2" />
-            <h3 className="text-lg font-medium text-forensic-800">No FIRs found</h3>
-            <p className="text-forensic-500 mb-4">No first information reports match your search criteria</p>
-            <Button size="sm" onClick={() => {setSearchQuery(''); setStatusFilter('all');}}>
+            <h3 className="text-lg font-medium text-forensic-800">
+              No FIRs found
+            </h3>
+            <p className="text-forensic-500 mb-4">
+              No first information reports match your search criteria
+            </p>
+            <Button
+              size="sm"
+              onClick={() => {
+                setSearchQuery("");
+                setStatusFilter("all");
+              }}
+            >
               Reset Filters
             </Button>
           </CardContent>

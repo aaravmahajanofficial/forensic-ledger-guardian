@@ -1,28 +1,101 @@
-// Secure storage utility for encrypting sensitive data in localStorage
+/**
+ * Secure storage utility for encrypting sensitive data in localStorage
+ * Uses the Web Crypto API to provide strong encryption for client-side data
+ *
+ * @module Utils/SecureStorage
+ */
 
+import { STORAGE_KEYS } from "@/constants";
+import { logError, logSecurityEvent, logDebug } from "./logger";
+import { config } from "@/config";
+
+/**
+ * Storage item with metadata for encryption
+ */
+interface EncryptedStorageItem {
+  /** Initialization vector for AES-GCM */
+  iv: string;
+
+  /** Salt used for key derivation */
+  salt: string;
+
+  /** Encrypted data as base64 string */
+  data: string;
+
+  /** Timestamp when the data was stored */
+  timestamp: number;
+
+  /** Version of the encryption schema used */
+  version: number;
+}
+
+/**
+ * Options for secure storage operations
+ */
+interface SecureStorageOptions {
+  /** TTL in milliseconds, 0 for no expiration */
+  ttl?: number;
+
+  /** Custom encryption key */
+  encryptionKey?: string;
+
+  /** Number of PBKDF2 iterations (higher is more secure but slower) */
+  iterations?: number;
+}
+
+/**
+ * Provides encrypted storage capabilities using the Web Crypto API
+ * with AES-GCM encryption and PBKDF2 key derivation
+ */
 class SecureStorage {
+  /** Current encryption schema version */
+  private readonly CURRENT_VERSION = 1;
+
+  /** Default TTL for stored items (24 hours in ms) */
+  private readonly DEFAULT_TTL = 24 * 60 * 60 * 1000;
+
+  /** Default number of PBKDF2 iterations */
+  private readonly DEFAULT_ITERATIONS =
+    config.security.encryptionIterations || 100000;
+
+  /** Key used for encryption when no specific key is provided */
   private readonly encryptionKey: string;
 
+  /**
+   * Create a new SecureStorage instance
+   */
   constructor() {
-    // In a production environment, this key should be:
-    // 1. Generated per session
-    // 2. Derived from user credentials
-    // 3. Stored securely (not in code)
-    // For this demo, we'll use a static key with session rotation
     this.encryptionKey = this.getOrCreateSessionKey();
   }
 
+  /**
+   * Get existing session key or create a new one
+   */
   private getOrCreateSessionKey(): string {
-    // Check if we have a session key
-    let sessionKey = sessionStorage.getItem("_session_key");
-    if (!sessionKey) {
-      // Generate a new session key
-      sessionKey = this.generateRandomKey();
-      sessionStorage.setItem("_session_key", sessionKey);
+    try {
+      // Check if we have a session key
+      let sessionKey = sessionStorage.getItem("_flg_session_key");
+      if (!sessionKey) {
+        // Generate a new session key
+        sessionKey = this.generateRandomKey();
+        sessionStorage.setItem("_flg_session_key", sessionKey);
+        logDebug("Generated new session encryption key", {}, "SECURITY");
+      }
+      return sessionKey;
+    } catch (error) {
+      logError(
+        "Failed to create session key, using fallback",
+        {},
+        error instanceof Error ? error : new Error(String(error))
+      );
+      // Fallback for environments without sessionStorage
+      return "INSECURE_KEY_DO_NOT_USE_IN_PRODUCTION";
     }
-    return sessionKey;
   }
 
+  /**
+   * Generate a cryptographically secure random key
+   */
   private generateRandomKey(): string {
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
@@ -31,6 +104,9 @@ class SecureStorage {
     );
   }
 
+  /**
+   * Convert password to key material for PBKDF2
+   */
   private async getKeyMaterial(password: string): Promise<CryptoKey> {
     const enc = new TextEncoder();
     return crypto.subtle.importKey(
@@ -42,7 +118,14 @@ class SecureStorage {
     );
   }
 
-  private async getKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
+  /**
+   * Derive encryption key using PBKDF2
+   */
+  private async deriveKey(
+    password: string,
+    salt: Uint8Array,
+    iterations: number = this.DEFAULT_ITERATIONS
+  ): Promise<CryptoKey> {
     const keyMaterial = await this.getKeyMaterial(password);
     return crypto.subtle.deriveKey(
       {
@@ -134,39 +217,265 @@ class SecureStorage {
     }
   }
 
-  async setItem(key: string, value: string): Promise<void> {
+  /**
+   * Store an encrypted item in localStorage
+   *
+   * @param key - Storage key
+   * @param value - Value to store (will be encrypted)
+   * @param options - Options for encryption
+   */
+  async setItem(
+    storageKey: string,
+    value: string,
+    options?: SecureStorageOptions
+  ): Promise<void> {
     try {
-      const encryptedValue = await this.encryptData(value);
-      localStorage.setItem(key, encryptedValue);
+      if (!storageKey || value === undefined) {
+        throw new Error("Invalid key or value");
+      }
+
+      // Create storage item with metadata
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const iterations = options?.iterations || this.DEFAULT_ITERATIONS;
+      const encryptionKey = options?.encryptionKey || this.encryptionKey;
+
+      // Get the encryption key
+      const cryptoKey = await this.deriveKey(encryptionKey, salt, iterations);
+
+      // Encrypt the data
+      const enc = new TextEncoder();
+      const encodedData = enc.encode(value);
+
+      const encryptedData = await crypto.subtle.encrypt(
+        {
+          name: "AES-GCM",
+          iv: iv,
+        },
+        cryptoKey,
+        encodedData
+      );
+
+      // Convert to base64
+      const encryptedBase64 = btoa(
+        String.fromCharCode(...new Uint8Array(encryptedData))
+      );
+      const ivBase64 = btoa(String.fromCharCode(...iv));
+      const saltBase64 = btoa(String.fromCharCode(...salt));
+
+      // Create storage item
+      const storageItem: EncryptedStorageItem = {
+        iv: ivBase64,
+        salt: saltBase64,
+        data: encryptedBase64,
+        timestamp: Date.now(),
+        version: this.CURRENT_VERSION,
+      };
+
+      // Store as JSON
+      localStorage.setItem(storageKey, JSON.stringify(storageItem));
+
+      logDebug("Stored encrypted data", { key: storageKey }, "SECURITY");
     } catch (error) {
-      console.error("Failed to store encrypted data:", error);
+      logError(
+        "Failed to store encrypted data",
+        { key: storageKey },
+        error instanceof Error ? error : new Error(String(error))
+      );
       throw error;
     }
   }
 
-  async getItem(key: string): Promise<string | null> {
+  /**
+   * Retrieve and decrypt an item from localStorage
+   *
+   * @param storageKey - Storage key
+   * @param options - Options for decryption
+   * @returns Decrypted value or null if not found
+   */
+  async getItem(
+    storageKey: string,
+    options?: SecureStorageOptions
+  ): Promise<string | null> {
     try {
-      const encryptedValue = localStorage.getItem(key);
-      if (!encryptedValue) {
+      const storedItem = localStorage.getItem(storageKey);
+      if (!storedItem) {
         return null;
       }
-      return await this.decryptData(encryptedValue);
+
+      // Parse storage item
+      const storageItem: EncryptedStorageItem = JSON.parse(storedItem);
+
+      // Check if data is expired
+      if (options?.ttl && storageItem.timestamp) {
+        const expiresAt = storageItem.timestamp + options.ttl;
+        if (Date.now() > expiresAt) {
+          logDebug("Encrypted data expired", { key: storageKey }, "SECURITY");
+          localStorage.removeItem(storageKey);
+          return null;
+        }
+      }
+
+      // Get the encryption key
+      const encryptionKey = options?.encryptionKey || this.encryptionKey;
+      const iterations = options?.iterations || this.DEFAULT_ITERATIONS;
+
+      // Decode from base64
+      const iv = new Uint8Array(
+        atob(storageItem.iv)
+          .split("")
+          .map((c) => c.charCodeAt(0))
+      );
+      const salt = new Uint8Array(
+        atob(storageItem.salt)
+          .split("")
+          .map((c) => c.charCodeAt(0))
+      );
+      const encryptedData = new Uint8Array(
+        atob(storageItem.data)
+          .split("")
+          .map((c) => c.charCodeAt(0))
+      );
+
+      // Get the decryption key
+      const cryptoKey = await this.deriveKey(encryptionKey, salt, iterations);
+
+      // Decrypt the data
+      const decryptedData = await crypto.subtle.decrypt(
+        {
+          name: "AES-GCM",
+          iv: iv,
+        },
+        cryptoKey,
+        encryptedData
+      );
+
+      // Decode to string
+      const dec = new TextDecoder();
+      return dec.decode(decryptedData);
     } catch (error) {
-      console.error("Failed to retrieve encrypted data:", error);
+      logError(
+        "Failed to retrieve encrypted data",
+        { key: storageKey },
+        error instanceof Error ? error : new Error(String(error))
+      );
       // If decryption fails, remove the corrupted data
-      localStorage.removeItem(key);
+      localStorage.removeItem(storageKey);
       return null;
     }
   }
 
-  removeItem(key: string): void {
-    localStorage.removeItem(key);
+  /**
+   * Remove an item from localStorage
+   *
+   * @param storageKey - Storage key to remove
+   */
+  removeItem(storageKey: string): void {
+    localStorage.removeItem(storageKey);
+    logDebug("Removed stored item", { key: storageKey }, "SECURITY");
   }
 
-  // Clear all stored data and session key
+  /**
+   * Clear all stored data and session key
+   */
   clearAll(): void {
     localStorage.clear();
-    sessionStorage.removeItem("_session_key");
+    sessionStorage.removeItem("_flg_session_key");
+    logSecurityEvent("All stored data cleared");
+  }
+
+  // Session token methods for authentication
+
+  /**
+   * Store authentication session token
+   *
+   * @param token - JWT or session token
+   * @param remember - Whether to persist the token longer
+   */
+  async setSessionToken(
+    token: string,
+    remember: boolean = false
+  ): Promise<void> {
+    try {
+      const ttl = remember ? 30 * 24 * 60 * 60 * 1000 : this.DEFAULT_TTL; // 30 days or 24 hours
+      await this.setItem(STORAGE_KEYS.SESSION_TOKEN, token, { ttl });
+      logSecurityEvent("Session token stored", { remember });
+    } catch (error) {
+      logError(
+        "Failed to store session token",
+        {},
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
+  }
+
+  /**
+   * Retrieve authentication session token
+   *
+   * @returns Session token or null if not found
+   */
+  getSessionToken(): string | null {
+    try {
+      // Use synchronous version for simplicity
+      const storedItem = localStorage.getItem(STORAGE_KEYS.SESSION_TOKEN);
+      if (!storedItem) {
+        return null;
+      }
+
+      try {
+        // Parse storage item to check expiry
+        const storageItem: EncryptedStorageItem = JSON.parse(storedItem);
+
+        // Default TTL check (24 hours)
+        const expiresAt = storageItem.timestamp + this.DEFAULT_TTL;
+        if (Date.now() > expiresAt) {
+          logDebug("Session token expired", {}, "AUTH");
+          localStorage.removeItem(STORAGE_KEYS.SESSION_TOKEN);
+          return null;
+        }
+
+        // For synchronous use, we'll return a placeholder and expect
+        // the caller to use getSessionTokenAsync for actual value
+        return "SESSION_TOKEN_EXISTS";
+      } catch (e) {
+        // If we can't parse, just remove the corrupted token
+        localStorage.removeItem(STORAGE_KEYS.SESSION_TOKEN);
+        return null;
+      }
+    } catch (error) {
+      logError(
+        "Failed to retrieve session token",
+        {},
+        error instanceof Error ? error : new Error(String(error))
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Retrieve authentication session token asynchronously
+   *
+   * @returns Promise resolving to the session token or null
+   */
+  async getSessionTokenAsync(): Promise<string | null> {
+    try {
+      return await this.getItem(STORAGE_KEYS.SESSION_TOKEN);
+    } catch (error) {
+      logError(
+        "Failed to retrieve session token async",
+        {},
+        error instanceof Error ? error : new Error(String(error))
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Remove authentication session token
+   */
+  removeSessionToken(): void {
+    this.removeItem(STORAGE_KEYS.SESSION_TOKEN);
+    logSecurityEvent("Session token removed");
   }
 }
 
