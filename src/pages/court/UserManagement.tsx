@@ -1,3 +1,4 @@
+import React, { useState, useMemo } from "react";
 import {
   Users,
   Search,
@@ -10,7 +11,6 @@ import {
   AlertCircle,
   Building,
 } from "lucide-react";
-import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -68,7 +68,7 @@ const UserManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Mock users data
-  const users: SystemUser[] = [
+  const users: SystemUser[] = useMemo(() => [
     {
       id: "1",
       name: "Judge Sarah Wilson",
@@ -148,7 +148,7 @@ const UserManagement = () => {
       createdAt: new Date("2023-09-15"),
       permissions: ["basic_evidence_upload", "view_assigned_cases"],
     },
-  ];
+  ], []);
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {

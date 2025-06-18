@@ -140,12 +140,12 @@ const ForgotPasswordForm = ({ onBack }: { onBack: () => void }) => {
               <div className="space-y-2">
                 <h3 className="font-medium text-lg">Recovery Email Sent</h3>
                 <p className="text-muted-foreground text-sm">
-                  We've sent a password reset link to{" "}
+                  We&apos;ve sent a password reset link to{" "}
                   <span className="font-medium text-forensic-800">{email}</span>
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  If you don't see the email in your inbox, please check your
-                  spam folder.
+                  If you don&apos;t see the email in your inbox, please check
+                  your spam folder.
                 </p>
               </div>
               <Button

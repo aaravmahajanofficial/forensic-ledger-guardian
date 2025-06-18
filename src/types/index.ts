@@ -23,6 +23,7 @@ import { EthereumAddress } from "./blockchain";
  * User model represents an authenticated user
  */
 export interface User {
+  roleTitle: string;
   /** Unique identifier for the user */
   id: string;
 

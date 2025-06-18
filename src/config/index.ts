@@ -11,7 +11,7 @@
 import { ROLES, EVIDENCE_TYPES } from "@/constants";
 
 // Environment variable validation helpers
-const getEnvVar = (key: string, defaultValue: string = ""): string => {
+const getEnvVar = (key: string, defaultValue = ""): string => {
   return import.meta.env[key] || defaultValue;
 };
 
@@ -20,7 +20,7 @@ const getEnvNumber = (key: string, defaultValue: number): number => {
   return value ? parseInt(value, 10) : defaultValue;
 };
 
-const getEnvBoolean = (key: string, defaultValue: boolean = false): boolean => {
+const getEnvBoolean = (key: string, defaultValue = false): boolean => {
   const value = import.meta.env[key];
   return value ? value.toLowerCase() === "true" : defaultValue;
 };

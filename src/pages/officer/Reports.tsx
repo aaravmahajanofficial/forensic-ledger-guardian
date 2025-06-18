@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/contexts/AuthContext";
+// Auth context can be imported when needed
+// import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -27,7 +28,7 @@ import {
 } from "@/components/ui/select";
 
 const OfficerReports = () => {
-  const { user } = useAuth();
+  // No need for auth context at the moment
 
   return (
     <div className="space-y-6 animate-fade-in">

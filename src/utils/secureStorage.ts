@@ -6,8 +6,8 @@
  */
 
 import { STORAGE_KEYS } from "@/constants";
-import { logError, logSecurityEvent, logDebug } from "./logger";
 import { config } from "@/config";
+import { logError, logDebug, logSecurityEvent } from "@/utils/logger";
 
 /**
  * Storage item with metadata for encryption
@@ -79,7 +79,7 @@ class SecureStorage {
         // Generate a new session key
         sessionKey = this.generateRandomKey();
         sessionStorage.setItem("_flg_session_key", sessionKey);
-        logDebug("Generated new session encryption key", {}, "SECURITY");
+        logDebug("Generated new session encryption key", { security: true });
       }
       return sessionKey;
     } catch (error) {
@@ -124,7 +124,7 @@ class SecureStorage {
   private async deriveKey(
     password: string,
     salt: Uint8Array,
-    iterations: number = this.DEFAULT_ITERATIONS
+    _iterations: number = this.DEFAULT_ITERATIONS
   ): Promise<CryptoKey> {
     const keyMaterial = await this.getKeyMaterial(password);
     return crypto.subtle.deriveKey(
@@ -153,7 +153,7 @@ class SecureStorage {
       const iv = crypto.getRandomValues(new Uint8Array(12));
 
       // Get the encryption key
-      const key = await this.getKey(this.encryptionKey, salt);
+      const key = await this.deriveKey(this.encryptionKey, salt);
 
       // Encrypt the data
       const encryptedData = await crypto.subtle.encrypt(
@@ -196,7 +196,7 @@ class SecureStorage {
       const data = combined.slice(28);
 
       // Get the decryption key
-      const key = await this.getKey(this.encryptionKey, salt);
+      const key = await this.deriveKey(this.encryptionKey, salt);
 
       // Decrypt the data
       const decryptedData = await crypto.subtle.decrypt(
@@ -275,7 +275,7 @@ class SecureStorage {
       // Store as JSON
       localStorage.setItem(storageKey, JSON.stringify(storageItem));
 
-      logDebug("Stored encrypted data", { key: storageKey }, "SECURITY");
+      logDebug("Stored encrypted data", { key: storageKey });
     } catch (error) {
       logError(
         "Failed to store encrypted data",
@@ -310,7 +310,7 @@ class SecureStorage {
       if (options?.ttl && storageItem.timestamp) {
         const expiresAt = storageItem.timestamp + options.ttl;
         if (Date.now() > expiresAt) {
-          logDebug("Encrypted data expired", { key: storageKey }, "SECURITY");
+          logDebug("Encrypted data expired", { key: storageKey });
           localStorage.removeItem(storageKey);
           return null;
         }
@@ -372,7 +372,7 @@ class SecureStorage {
    */
   removeItem(storageKey: string): void {
     localStorage.removeItem(storageKey);
-    logDebug("Removed stored item", { key: storageKey }, "SECURITY");
+    logDebug("Removed stored item", { key: storageKey });
   }
 
   /**
@@ -392,10 +392,7 @@ class SecureStorage {
    * @param token - JWT or session token
    * @param remember - Whether to persist the token longer
    */
-  async setSessionToken(
-    token: string,
-    remember: boolean = false
-  ): Promise<void> {
+  async setSessionToken(token: string, remember = false): Promise<void> {
     try {
       const ttl = remember ? 30 * 24 * 60 * 60 * 1000 : this.DEFAULT_TTL; // 30 days or 24 hours
       await this.setItem(STORAGE_KEYS.SESSION_TOKEN, token, { ttl });
@@ -429,7 +426,7 @@ class SecureStorage {
         // Default TTL check (24 hours)
         const expiresAt = storageItem.timestamp + this.DEFAULT_TTL;
         if (Date.now() > expiresAt) {
-          logDebug("Session token expired", {}, "AUTH");
+          logDebug("Session token expired", { auth: true });
           localStorage.removeItem(STORAGE_KEYS.SESSION_TOKEN);
           return null;
         }
@@ -437,17 +434,12 @@ class SecureStorage {
         // For synchronous use, we'll return a placeholder and expect
         // the caller to use getSessionTokenAsync for actual value
         return "SESSION_TOKEN_EXISTS";
-      } catch (e) {
+      } catch {
         // If we can't parse, just remove the corrupted token
         localStorage.removeItem(STORAGE_KEYS.SESSION_TOKEN);
         return null;
       }
-    } catch (error) {
-      logError(
-        "Failed to retrieve session token",
-        {},
-        error instanceof Error ? error : new Error(String(error))
-      );
+    } catch {
       return null;
     }
   }
@@ -460,12 +452,7 @@ class SecureStorage {
   async getSessionTokenAsync(): Promise<string | null> {
     try {
       return await this.getItem(STORAGE_KEYS.SESSION_TOKEN);
-    } catch (error) {
-      logError(
-        "Failed to retrieve session token async",
-        {},
-        error instanceof Error ? error : new Error(String(error))
-      );
+    } catch {
       return null;
     }
   }
@@ -475,7 +462,6 @@ class SecureStorage {
    */
   removeSessionToken(): void {
     this.removeItem(STORAGE_KEYS.SESSION_TOKEN);
-    logSecurityEvent("Session token removed");
   }
 }
 

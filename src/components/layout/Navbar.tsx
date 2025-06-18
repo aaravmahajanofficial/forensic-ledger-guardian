@@ -12,11 +12,10 @@ import {
   Lock,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { ROLES } from "@/constants";
+import { ROLES, ROLE_NAMES } from "@/constants";
 
 // Role type and enum-like object for convenience
 type Role = (typeof ROLES)[keyof typeof ROLES];
-const Role = ROLES;
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,13 +57,13 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
 
   const getRoleBadgeColor = (role: Role) => {
     switch (role) {
-      case Role.Court:
+      case ROLES.COURT:
         return "bg-forensic-court text-white";
-      case Role.Officer:
+      case ROLES.OFFICER:
         return "bg-forensic-800 text-white";
-      case Role.Forensic:
+      case ROLES.FORENSIC:
         return "bg-forensic-accent text-white";
-      case Role.Lawyer:
+      case ROLES.LAWYER:
         return "bg-forensic-warning text-forensic-900";
       default:
         return "bg-gray-500 text-white";
@@ -143,7 +142,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
                 user.role ? getRoleBadgeColor(user.role) : "bg-gray-500"
               } px-2 py-1 hidden xs:inline-flex`}
             >
-              {user.roleTitle || "Unknown"}
+              {user.role ? ROLE_NAMES[user.role] : "Unknown"}
             </Badge>
 
             <DropdownMenu>

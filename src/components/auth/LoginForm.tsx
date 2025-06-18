@@ -196,7 +196,7 @@ const LoginForm = () => {
         </CardContent>
         <CardFooter className="justify-center">
           <p className="text-sm text-forensic-500">
-            Don't have access? Contact your administrator.
+            Don&apos;t have access? Contact your administrator.
           </p>
         </CardFooter>
       </Card>

@@ -43,7 +43,6 @@ import { ROLES } from "@/constants";
 
 // Role type for convenience
 type Role = (typeof ROLES)[keyof typeof ROLES];
-const Role = ROLES;
 
 interface UserType {
   id: string;
@@ -68,24 +67,24 @@ const CaseAccessControl = () => {
 
   // Mock data
   const users: UserType[] = [
-    { id: "1", name: "John Smith", email: "john@court.gov", role: Role.Court },
+    { id: "1", name: "John Smith", email: "john@court.gov", role: ROLES.COURT },
     {
       id: "2",
       name: "Emma Clark",
       email: "emma@police.gov",
-      role: Role.Officer,
+      role: ROLES.OFFICER,
     },
     {
       id: "3",
       name: "Michael Chen",
       email: "michael@lab.gov",
-      role: Role.Forensic,
+      role: ROLES.FORENSIC,
     },
     {
       id: "4",
       name: "Sarah Johnson",
       email: "sarah@legal.gov",
-      role: Role.Lawyer,
+      role: ROLES.LAWYER,
     },
   ];
 
@@ -130,13 +129,13 @@ const CaseAccessControl = () => {
   // Helper functions
   const getRoleBadgeColor = (role: Role) => {
     switch (role) {
-      case Role.Court:
+      case ROLES.COURT:
         return "bg-forensic-court text-white";
-      case Role.Officer:
+      case ROLES.OFFICER:
         return "bg-forensic-800 text-white";
-      case Role.Forensic:
+      case ROLES.FORENSIC:
         return "bg-forensic-accent text-white";
-      case Role.Lawyer:
+      case ROLES.LAWYER:
         return "bg-forensic-warning text-forensic-900";
       default:
         return "bg-gray-500 text-white";
@@ -145,13 +144,13 @@ const CaseAccessControl = () => {
 
   const getRoleString = (role: Role): string => {
     switch (role) {
-      case Role.Court:
+      case ROLES.COURT:
         return "Court";
-      case Role.Officer:
+      case ROLES.OFFICER:
         return "Officer";
-      case Role.Forensic:
+      case ROLES.FORENSIC:
         return "Forensic";
-      case Role.Lawyer:
+      case ROLES.LAWYER:
         return "Lawyer";
       default:
         return "Unknown";

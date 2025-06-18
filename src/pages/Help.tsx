@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Card,
   CardContent,
@@ -122,7 +121,7 @@ const Help = () => {
               <AccordionContent>
                 When evidence is uploaded, a cryptographic hash is generated and
                 stored on the blockchain. This hash acts as a digital
-                fingerprint that can later be used to verify the file hasn't
+                fingerprint that can later be used to verify the file hasn&apos;t
                 been altered. Additionally, all access to evidence is recorded
                 in an immutable chain of custody log.
               </AccordionContent>

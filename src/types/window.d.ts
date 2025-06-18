@@ -4,7 +4,9 @@
  * @module Types/Window
  */
 
-import { TransactionHash, EthereumAddress } from "./blockchain";
+import { EthereumAddress } from "./blockchain";
+// TransactionHash type will be used in future implementations
+// import { TransactionHash, EthereumAddress } from "./blockchain";
 
 /**
  * Ethereum Provider API
@@ -21,13 +23,13 @@ interface EthereumProvider {
   isWalletConnect?: boolean;
 
   /** Make a request to the provider */
-  request: (args: { method: string; params?: any[] }) => Promise<any>;
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
 
   /** Register an event handler */
-  on: (event: string, callback: (...args: any[]) => void) => void;
+  on: (event: string, callback: (...args: unknown[]) => void) => void;
 
   /** Remove a specific event handler */
-  removeListener: (event: string, callback: (...args: any[]) => void) => void;
+  removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
 
   /** Remove all event handlers for an event */
   removeAllListeners: (event: string) => void;
@@ -48,9 +50,9 @@ interface Window {
 
   /** Global channel for application logging */
   forensicLogger?: {
-    debug: (message: string, data?: Record<string, any>) => void;
-    info: (message: string, data?: Record<string, any>) => void;
-    warn: (message: string, data?: Record<string, any>) => void;
-    error: (message: string, data?: Record<string, any>, error?: Error) => void;
+    debug: (message: string, data?: Record<string, unknown>) => void;
+    info: (message: string, data?: Record<string, unknown>) => void;
+    warn: (message: string, data?: Record<string, unknown>) => void;
+    error: (message: string, data?: Record<string, unknown>, error?: Error) => void;
   };
 }

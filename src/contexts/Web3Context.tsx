@@ -67,7 +67,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({
   // State for wallet status
   const [isConnected, setIsConnected] = useState(false);
   const [account, setAccount] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<Role>(ROLES.None);
+  const [userRole, setUserRole] = useState<Role>(ROLES.NONE);
   const [connecting, setConnecting] = useState(false);
   const [chainId, setChainId] = useState<number | null>(null);
 
@@ -128,7 +128,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({
         if (accounts.length === 0) {
           setAccount(null);
           setIsConnected(false);
-          setUserRole(ROLES.None);
+          setUserRole(ROLES.NONE);
           logSecurityEvent("Wallet disconnected by user");
         } else {
           setAccount(accounts[0]);
@@ -233,7 +233,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({
 
     setAccount(null);
     setIsConnected(false);
-    setUserRole(ROLES.None);
+    setUserRole(ROLES.NONE);
     setChainId(null);
 
     toast({
@@ -248,12 +248,12 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({
   const checkRoleAccess = useCallback(
     (requiredRole: Role): boolean => {
       // Court role has highest privileges, can access anything
-      if (userRole === ROLES.Court) return true;
+      if (userRole === ROLES.COURT) return true;
 
       // Special handling for specific role requirements
       if (requiredRole === ROLES.Authenticated) {
         // Any authenticated user with valid role can access
-        return userRole !== ROLES.None;
+        return userRole !== ROLES.NONE;
       }
 
       // Otherwise, check if user has at least the required role

@@ -1,9 +1,10 @@
 import "@testing-library/jest-dom";
+import { vi } from "vitest";
 
 // Mock window.matchMedia
 Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation((query) => ({
+  value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -44,19 +45,27 @@ Object.defineProperty(global, "crypto", {
 });
 
 // Mock localStorage for testing
-const localStorageMock = {
+const localStorageMock: Storage = {
   getItem: vi.fn(),
   setItem: vi.fn(),
   removeItem: vi.fn(),
   clear: vi.fn(),
+  length: 0,
+  key: vi.fn().mockReturnValue(null),
 };
-global.localStorage = localStorageMock;
+Object.defineProperty(global, 'localStorage', {
+  value: localStorageMock
+});
 
 // Mock sessionStorage for testing
-const sessionStorageMock = {
+const sessionStorageMock: Storage = {
   getItem: vi.fn(),
   setItem: vi.fn(),
   removeItem: vi.fn(),
   clear: vi.fn(),
+  length: 0,
+  key: vi.fn().mockReturnValue(null),
 };
-global.sessionStorage = sessionStorageMock;
+Object.defineProperty(global, 'sessionStorage', {
+  value: sessionStorageMock
+});

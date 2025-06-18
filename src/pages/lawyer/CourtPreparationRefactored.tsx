@@ -5,14 +5,14 @@ import { Calendar, Gavel } from "lucide-react";
 
 // Import the new component parts
 import CourtPreparationOverview from "@/components/lawyer/CourtPreparationOverview";
-import CourtPreparationChecklist, { 
-  type ChecklistItem 
+import CourtPreparationChecklist, {
+  type ChecklistItem,
 } from "@/components/lawyer/CourtPreparationChecklist";
-import CourtPreparationEvidence, { 
-  type EvidenceItem 
+import CourtPreparationEvidence, {
+  type EvidenceItem,
 } from "@/components/lawyer/CourtPreparationEvidence";
-import CourtPreparationDocuments, { 
-  type DocumentItem 
+import CourtPreparationDocuments, {
+  type DocumentItem,
 } from "@/components/lawyer/CourtPreparationDocuments";
 
 // Mock data - would normally come from props or API
@@ -35,7 +35,7 @@ const initialChecklistItems: ChecklistItem[] = [
     priority: "high",
   },
   {
-    id: "2", 
+    id: "2",
     task: "Prepare witness statements",
     completed: false,
     dueDate: "2024-01-15",
@@ -121,7 +121,9 @@ const initialDocuments: DocumentItem[] = [
 
 const CourtPreparation: React.FC = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [checklist, setChecklist] = useState<ChecklistItem[]>(initialChecklistItems);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>(
+    initialChecklistItems
+  );
 
   const daysUntilCourt = Math.ceil(
     (new Date(caseData.hearingDate).getTime() - new Date().getTime()) /
@@ -145,7 +147,11 @@ const CourtPreparation: React.FC = () => {
         </Badge>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Gavel className="h-4 w-4" />

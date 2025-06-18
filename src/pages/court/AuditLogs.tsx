@@ -1,4 +1,3 @@
-import React, { useState, useMemo } from "react";
 import {
   Activity,
   Search,
@@ -34,6 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useMemo, useState } from "react";
 
 interface AuditLog {
   id: string;
@@ -54,7 +54,7 @@ const AuditLogs = () => {
   const [severityFilter, setSeverityFilter] = useState<string>("all");
 
   // Mock audit logs data
-  const auditLogs: AuditLog[] = [
+  const auditLogs: AuditLog[] = useMemo(() => [
     {
       id: "1",
       timestamp: new Date("2024-01-15T10:30:00"),
@@ -115,7 +115,7 @@ const AuditLogs = () => {
       userAgent: "System/1.0",
       details: "Daily backup completed successfully (250GB)",
     },
-  ];
+  ], []);
 
   const filteredLogs = useMemo(() => {
     return auditLogs.filter((log) => {

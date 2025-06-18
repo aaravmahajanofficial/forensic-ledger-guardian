@@ -104,7 +104,7 @@ const UnauthorizedAccess: React.FC = () => {
           </div>
           <CardTitle className="text-red-900">Access Denied</CardTitle>
           <CardDescription>
-            You don't have permission to access this page. Contact your
+            You don&apos;t have permission to access this page. Contact your
             administrator if you believe this is an error.
           </CardDescription>
         </CardHeader>

@@ -57,7 +57,7 @@ const ChainOfCustodyVerification = () => {
     if (evidenceIdParam && evidenceIdParam !== evidenceId) {
       setEvidenceId(evidenceIdParam);
     }
-  }, [evidenceIdParam]);
+  }, [evidenceIdParam, evidenceId]);
 
   useEffect(() => {
     if (evidenceId) {
@@ -181,7 +181,7 @@ const ChainOfCustodyVerification = () => {
         if (updatedEvidence) {
           setSelectedEvidence(updatedEvidence);
         }
-      } catch (_error) {
+      } catch {
         toast({
           title: "Verification Failed",
           description: "Could not verify the evidence",

@@ -5,7 +5,6 @@
  */
 
 import { ethers } from "ethers";
-import { toast } from "@/hooks/use-toast";
 import { config } from "@/config";
 import {
   logInfo,
@@ -129,9 +128,9 @@ class Web3Service {
       );
 
       // Initialize role manager contract if available
-      if (config.blockchain.roleContractAddress) {
+      if (config.blockchain.contractAddress) {
         this.roleManagerContract = new ethers.Contract(
-          config.blockchain.roleContractAddress,
+          config.blockchain.contractAddress,
           ROLE_MANAGER_ABI,
           this.provider
         );
@@ -139,7 +138,7 @@ class Web3Service {
         logDebug(
           "Role manager contract initialized",
           {
-            address: config.blockchain.roleContractAddress,
+            address: config.blockchain.contractAddress,
           },
           "BLOCKCHAIN"
         );
@@ -158,7 +157,7 @@ class Web3Service {
         "Failed to initialize smart contracts",
         {
           evidenceAddress: config.blockchain.evidenceContractAddress,
-          roleAddress: config.blockchain.roleContractAddress,
+          roleAddress: config.blockchain.contractAddress,
         },
         error instanceof Error
           ? error
@@ -264,9 +263,9 @@ class Web3Service {
           method: "wallet_switchEthereumChain",
           params: [{ chainId: hexChainId }],
         });
-      } catch (switchError: any) {
+      } catch (switchError: unknown) {
         // This error code indicates that the chain has not been added to MetaMask.
-        if (switchError.code === 4902) {
+        if (switchError && typeof switchError === 'object' && 'code' in switchError && switchError.code === 4902) {
           await this.addNetworkToMetaMask();
         } else {
           throw switchError;
@@ -353,12 +352,12 @@ class Web3Service {
     try {
       if (!this.roleManagerContract) {
         logWarn("Role manager contract not initialized");
-        return ROLES.None;
+        return ROLES.NONE;
       }
 
       const address = await this.getCurrentAccount();
       if (!address) {
-        return ROLES.None;
+        return ROLES.NONE;
       }
 
       // Get the numeric role from the contract
@@ -367,19 +366,19 @@ class Web3Service {
       // Map numeric role to our role constants
       switch (Number(roleId)) {
         case 0:
-          return ROLES.None;
+          return ROLES.NONE;
         case 1:
           return ROLES.PoliceOfficer;
         case 2:
           return ROLES.ForensicExpert;
         case 3:
-          return ROLES.Lawyer;
+          return ROLES.LAWYER;
         case 4:
           return ROLES.Judge;
         case 5:
-          return ROLES.Court;
+          return ROLES.COURT;
         default:
-          return ROLES.None;
+          return ROLES.NONE;
       }
     } catch (error) {
       logError(
@@ -387,7 +386,7 @@ class Web3Service {
         {},
         error instanceof Error ? error : new Error("Role retrieval error")
       );
-      return ROLES.None;
+      return ROLES.NONE;
     }
   }
 
@@ -448,7 +447,7 @@ class Web3Service {
             evidenceId = parsedLog.args.evidenceId.toString();
             break;
           }
-        } catch (e) {
+        } catch {
           // Skip logs that can't be parsed
           continue;
         }
@@ -841,7 +840,7 @@ class Web3Service {
    */
   public async getEvidenceByCase(
     caseId: string,
-    limit: number = 50
+    limit = 50
   ): Promise<Evidence[]> {
     try {
       if (!this.evidenceContract || !caseId) {

@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -42,7 +41,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -191,7 +189,7 @@ const LegalDocumentation = () => {
   });
 
   // Filter documents based on search term and filters
-  const filterDocuments = () => {
+  const filterDocuments = React.useCallback(() => {
     setLoading(true);
 
     let filtered = [...documents];
@@ -219,12 +217,12 @@ const LegalDocumentation = () => {
 
     setFilteredDocuments(filtered);
     setLoading(false);
-  };
+  }, [documents, searchTerm, statusFilter, typeFilter]);
 
   // Update filters
   React.useEffect(() => {
     filterDocuments();
-  }, [searchTerm, statusFilter, typeFilter, documents]);
+  }, [filterDocuments]);
 
   // Reset form
   const resetForm = () => {
@@ -406,7 +404,8 @@ const LegalDocumentation = () => {
     }
   };
 
-  // Update document status
+  // Update document status (kept for future use but marked as unused)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleChangeStatus = (
     documentId: string,
     newStatus: DocumentStatus

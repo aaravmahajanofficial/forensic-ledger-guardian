@@ -1,12 +1,11 @@
 
-import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { APP_CONSTANTS } from "@/config";
+import { ROLES, ROLE_NAMES } from "@/constants";
 import { Badge } from '@/components/ui/badge';
 
 // Role type and enum-like object for convenience
-type Role = typeof APP_CONSTANTS.ROLES[keyof typeof APP_CONSTANTS.ROLES];
-const Role = APP_CONSTANTS.ROLES;
+type Role = typeof ROLES[keyof typeof ROLES];
+const Role = ROLES;
 import ForensicDashboard from './roles/ForensicDashboard';
 import CourtDashboard from './roles/CourtDashboard';
 import OfficerDashboard from './roles/OfficerDashboard';
@@ -21,29 +20,29 @@ const RoleDashboard = () => {
 
   const renderRoleBadge = () => {
     const roleColors: Record<Role, string> = {
-      [Role.None]: 'bg-gray-500',
-      [Role.Court]: 'bg-forensic-court text-white',
-      [Role.Officer]: 'bg-forensic-800 text-white',
-      [Role.Forensic]: 'bg-forensic-accent text-white',
-      [Role.Lawyer]: 'bg-forensic-warning text-forensic-900',
+      [Role.NONE]: 'bg-gray-500',
+      [Role.COURT]: 'bg-forensic-court text-white',
+      [Role.OFFICER]: 'bg-forensic-800 text-white',
+      [Role.FORENSIC]: 'bg-forensic-accent text-white',
+      [Role.LAWYER]: 'bg-forensic-warning text-forensic-900',
     };
 
     return (
       <Badge className={`${roleColors[user.role]} px-3 py-1`}>
-        {user.roleTitle}
+        {ROLE_NAMES[user.role as Role]}
       </Badge>
     );
   };
 
   const renderDashboardByRole = () => {
     switch (user.role) {
-      case Role.Court:
+      case Role.COURT:
         return <CourtDashboard />;
-      case Role.Officer:
+      case Role.OFFICER:
         return <OfficerDashboard />;
-      case Role.Forensic:
+      case Role.FORENSIC:
         return <ForensicDashboard />;
-      case Role.Lawyer:
+      case Role.LAWYER:
         return <LawyerDashboard />;
       default:
         return <div>Invalid role</div>;

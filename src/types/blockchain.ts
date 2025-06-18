@@ -175,7 +175,7 @@ export interface EnhancedTransactionReceipt {
   status: number;
 
   /** Transaction events */
-  events?: Record<string, any>;
+  events?: Record<string, unknown>;
 }
 
 /**
@@ -189,10 +189,10 @@ export interface TransactionResult {
   hash: string;
 
   /** Full transaction receipt */
-  receipt: any;
+  receipt: unknown; // TODO: Define proper receipt type
 
   /** Additional data returned from transaction */
-  extraData?: Record<string, any>;
+  extraData?: Record<string, unknown>;
 }
 
 /**

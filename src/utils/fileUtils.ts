@@ -96,7 +96,7 @@ export const generateEvidenceId = (caseId: string): string => {
     randomPart = Array.from(array, (byte) =>
       byte.toString(16).padStart(2, "0")
     ).join("");
-  } catch (error) {
+  } catch {
     // Fallback to Math.random if crypto API is not available
     randomPart = Math.random().toString(36).substring(2, 8);
   }

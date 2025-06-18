@@ -22,10 +22,6 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLES } from "@/constants";
-
-// Role type and enum-like object for convenience
-type Role = (typeof ROLES)[keyof typeof ROLES];
-const Role = ROLES;
 import { Badge } from "@/components/ui/badge";
 
 interface SidebarProps {
@@ -48,7 +44,7 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
 
   const roleBasedLinks = () => {
     switch (user?.role) {
-      case Role.Court:
+      case ROLES.COURT:
         return [
           {
             to: "/users/roles",
@@ -71,7 +67,7 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
             icon: <BarChart3 size={18} />,
           },
         ];
-      case Role.Officer:
+      case ROLES.OFFICER:
         return [
           {
             to: "/fir",
@@ -94,10 +90,10 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
             icon: <BarChart3 size={18} />,
           },
         ];
-      case Role.Forensic:
+      case ROLES.FORENSIC:
         // Removed the duplicate Upload button from Role Specific links
         return [];
-      case Role.Lawyer:
+      case ROLES.LAWYER:
         return [];
       default:
         return [];
@@ -112,7 +108,7 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
     ];
 
     // For Lawyer (Defense Attorney) role - only show Cases and Evidence
-    if (user?.role === Role.Lawyer) {
+    if (user?.role === ROLES.LAWYER) {
       baseLinks.push({
         to: "/evidence",
         label: "Evidence",
@@ -122,7 +118,7 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
     }
 
     // Don't show Evidence link for Court role
-    if (user?.role !== Role.Court) {
+    if (user?.role !== ROLES.COURT) {
       baseLinks.push({
         to: "/evidence",
         label: "Evidence",
@@ -131,9 +127,9 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
     }
 
     // Don't show Upload and Verify for Court role
-    if (user?.role !== Role.Court) {
+    if (user?.role !== ROLES.COURT) {
       // Add Upload button for Forensic role
-      if (user?.role === Role.Forensic || user?.role === Role.Officer) {
+      if (user?.role === ROLES.FORENSIC || user?.role === ROLES.OFFICER) {
         baseLinks.push({
           to: "/upload",
           label: "Upload",
@@ -142,7 +138,7 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
       }
 
       // Keep Verify for Officer role and others except Court and Forensic
-      if (user?.role !== Role.Forensic) {
+      if (user?.role !== ROLES.FORENSIC) {
         baseLinks.push({
           to: "/verify",
           label: "Verify",

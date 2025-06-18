@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Card,
   CardContent,
@@ -282,7 +281,7 @@ const FAQ = () => {
         <CardHeader>
           <CardTitle className="flex items-center">
             <Mail className="h-5 w-5 mr-2 text-forensic-court" />
-            Didn't Find Your Answer?
+            Didn&apos;t Find Your Answer?
           </CardTitle>
           <CardDescription>
             Our support team is ready to assist you with any questions
