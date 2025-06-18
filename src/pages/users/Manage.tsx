@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ROLES } from "@/constants";
+import { ROLES, ROLE_NAMES, type RoleType } from "@/constants";
 import {
   Dialog,
   DialogContent,
@@ -51,6 +51,7 @@ const userData: User[] = [
     status: "active",
     added: "2025-01-15T10:00:00Z",
     caseCount: 38,
+    roleTitle: ROLE_NAMES[ROLES.COURT],
   },
   {
     id: "0xA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0",
@@ -60,6 +61,7 @@ const userData: User[] = [
     status: "active",
     added: "2025-01-20T10:00:00Z",
     caseCount: 15,
+    roleTitle: ROLE_NAMES[ROLES.OFFICER],
   },
   {
     id: "0x2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1A",
@@ -69,6 +71,7 @@ const userData: User[] = [
     status: "active",
     added: "2025-01-25T10:00:00Z",
     caseCount: 22,
+    roleTitle: ROLE_NAMES[ROLES.FORENSIC],
   },
   {
     id: "0xB2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0A1",
@@ -78,6 +81,7 @@ const userData: User[] = [
     status: "active",
     added: "2025-01-30T10:00:00Z",
     caseCount: 12,
+    roleTitle: ROLE_NAMES[ROLES.LAWYER],
   },
   {
     id: "0x3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1A2B",
@@ -87,6 +91,7 @@ const userData: User[] = [
     status: "active",
     added: "2025-02-05T10:00:00Z",
     caseCount: 8,
+    roleTitle: ROLE_NAMES[ROLES.OFFICER],
   },
   {
     id: "0xC4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1A2B3",
@@ -96,6 +101,7 @@ const userData: User[] = [
     status: "inactive",
     added: "2025-02-10T10:00:00Z",
     caseCount: 0,
+    roleTitle: ROLE_NAMES[ROLES.FORENSIC],
   },
   {
     id: "0x4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1A2B3C",
@@ -105,6 +111,7 @@ const userData: User[] = [
     status: "active",
     added: "2025-02-15T10:00:00Z",
     caseCount: 5,
+    roleTitle: ""
   },
 ];
 
@@ -185,7 +192,7 @@ const EditUserDialog = ({
   }, [open, user]);
 
   const handleSave = () => {
-    onSave({ ...user, ...formData, role: parseInt(formData.role) });
+    onSave({ ...user, ...formData, role: parseInt(formData.role) as RoleType });
     onOpenChange(false);
   };
 
@@ -428,9 +435,14 @@ const ManageUsersPage = () => {
   };
 
   const handleChangeRole = (userId: string, newRoleId: number) => {
+    const roleType = newRoleId as RoleType;
     setUsers(
       users.map((user) =>
-        user.id === userId ? { ...user, role: newRoleId } : user
+        user.id === userId ? { 
+          ...user, 
+          role: roleType,
+          roleTitle: ROLE_NAMES[roleType]
+        } : user
       )
     );
     toast({

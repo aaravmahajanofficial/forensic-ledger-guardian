@@ -26,10 +26,18 @@ interface EthereumProvider {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
 
   /** Register an event handler */
-  on: (event: string, callback: (...args: unknown[]) => void) => void;
+  on: {
+    (event: "accountsChanged", callback: (accounts: string[]) => void): void;
+    (event: "chainChanged", callback: (chainId: string) => void): void;
+    (event: string, callback: (...args: unknown[]) => void): void;
+  };
 
   /** Remove a specific event handler */
-  removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
+  removeListener: {
+    (event: "accountsChanged", callback: (accounts: string[]) => void): void;
+    (event: "chainChanged", callback: (chainId: string) => void): void;
+    (event: string, callback: (...args: unknown[]) => void): void;
+  };
 
   /** Remove all event handlers for an event */
   removeAllListeners: (event: string) => void;
@@ -44,15 +52,17 @@ interface EthereumProvider {
 /**
  * Web3/Ethereum window extension
  */
-interface Window {
-  /** Ethereum provider injected by browser extensions like MetaMask */
-  ethereum?: EthereumProvider;
+declare global {
+  interface Window {
+    /** Ethereum provider injected by browser extensions like MetaMask */
+    ethereum?: EthereumProvider;
 
-  /** Global channel for application logging */
-  forensicLogger?: {
-    debug: (message: string, data?: Record<string, unknown>) => void;
-    info: (message: string, data?: Record<string, unknown>) => void;
-    warn: (message: string, data?: Record<string, unknown>) => void;
-    error: (message: string, data?: Record<string, unknown>, error?: Error) => void;
-  };
+    /** Global channel for application logging */
+    forensicLogger?: {
+      debug: (message: string, data?: Record<string, unknown>) => void;
+      info: (message: string, data?: Record<string, unknown>) => void;
+      warn: (message: string, data?: Record<string, unknown>) => void;
+      error: (message: string, data?: Record<string, unknown>, error?: Error) => void;
+    };
+  }
 }

@@ -98,15 +98,12 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({
           setUserRole(role);
           setChainId(networkChainId);
 
-          logDebug(
-            "Wallet reconnected",
-            {
-              account: currentAccount,
-              role,
-              chainId: networkChainId,
-            },
-            "BLOCKCHAIN"
-          );
+          logDebug("Wallet reconnected", {
+            account: currentAccount,
+            role,
+            chainId: networkChainId,
+            blockchain: true,
+          });
         }
       } catch (error) {
         logError(
@@ -150,14 +147,11 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({
         const numericChainId = parseInt(newChainId, 16);
         setChainId(numericChainId);
 
-        logDebug(
-          "Network changed",
-          {
-            chainId: numericChainId,
-            requiredChainId: web3Service.getRequiredChainId(),
-          },
-          "BLOCKCHAIN"
-        );
+        logDebug("Network changed", {
+          chainId: numericChainId,
+          requiredChainId: web3Service.getRequiredChainId(),
+          blockchain: true,
+        });
 
         // Refresh page on chain change as recommended by MetaMask
         window.location.reload();
@@ -249,12 +243,6 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({
     (requiredRole: Role): boolean => {
       // Court role has highest privileges, can access anything
       if (userRole === ROLES.COURT) return true;
-
-      // Special handling for specific role requirements
-      if (requiredRole === ROLES.Authenticated) {
-        // Any authenticated user with valid role can access
-        return userRole !== ROLES.NONE;
-      }
 
       // Otherwise, check if user has at least the required role
       return userRole >= requiredRole;

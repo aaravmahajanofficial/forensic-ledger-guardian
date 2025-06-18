@@ -43,6 +43,9 @@ class MockAuthService {
         email: email,
         role: 1, // Court role
         roleTitle: "Court Administrator",
+        status: "active",
+        added: new Date().toISOString(),
+        caseCount: 0,
         createdAt: new Date(),
         lastLoginAt: new Date(),
       };

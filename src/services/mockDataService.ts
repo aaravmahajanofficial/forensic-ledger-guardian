@@ -18,6 +18,9 @@ export const mockUsers: (User & { password: string })[] = [
     role: ROLES.COURT,
     roleTitle: "Court Judge",
     address: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+    status: "active",
+    added: "2023-04-10T08:00:00Z",
+    caseCount: 2,
   },
   {
     id: "2",
@@ -27,6 +30,9 @@ export const mockUsers: (User & { password: string })[] = [
     role: ROLES.OFFICER,
     roleTitle: "Police Officer",
     address: "0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2",
+    status: "active",
+    added: "2023-04-10T08:05:00Z",
+    caseCount: 2,
   },
   {
     id: "3",
@@ -36,6 +42,9 @@ export const mockUsers: (User & { password: string })[] = [
     role: ROLES.FORENSIC,
     roleTitle: "Forensic Investigator",
     address: "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4",
+    status: "active",
+    added: "2023-04-10T08:10:00Z",
+    caseCount: 1,
   },
   {
     id: "4",
@@ -45,6 +54,9 @@ export const mockUsers: (User & { password: string })[] = [
     role: ROLES.LAWYER,
     roleTitle: "Defense Attorney",
     address: "0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db",
+    status: "active",
+    added: "2023-04-10T08:15:00Z",
+    caseCount: 0,
   },
 ];
 

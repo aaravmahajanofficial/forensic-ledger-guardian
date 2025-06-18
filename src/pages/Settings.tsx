@@ -62,23 +62,23 @@ const Settings = () => {
   const [isSecuritySaving, setIsSecuritySaving] = useState(false);
 
   // Handle profile data changes
-  const handleProfileChange = (e) => {
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setProfileData((prev) => ({ ...prev, [id]: value }));
   };
 
   // Handle notification toggle changes
-  const handleNotificationToggle = (key) => {
+  const handleNotificationToggle = (key: keyof typeof notificationPrefs) => {
     setNotificationPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   // Handle security settings changes
-  const handleSecurityChange = (key, value) => {
+  const handleSecurityChange = (key: keyof typeof securitySettings, value: boolean | string) => {
     setSecuritySettings((prev) => ({ ...prev, [key]: value }));
   };
 
   // Handle wallet settings changes
-  const handleWalletChange = (key, value) => {
+  const handleWalletChange = (key: keyof typeof walletSettings, value: string | boolean) => {
     setWalletSettings((prev) => ({ ...prev, [key]: value }));
   };
 

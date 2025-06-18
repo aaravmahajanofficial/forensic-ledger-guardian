@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileDigit, ArrowUpRight } from "lucide-react";
-import { Evidence } from "@/types";
 import { EvidenceItem } from "@/types/case";
 
 interface CaseEvidenceProps {

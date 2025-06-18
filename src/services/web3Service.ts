@@ -62,7 +62,7 @@ class Web3Service {
       // Check if MetaMask is available
       if (typeof window !== "undefined" && window.ethereum) {
         this.provider = new ethers.BrowserProvider(window.ethereum);
-        logDebug("Creating browser provider for MetaMask", {}, "BLOCKCHAIN");
+        logDebug("Creating browser provider for MetaMask", { blockchain: true });
 
         // Initialize contract if we have all required info
         if (config.blockchain.evidenceContractAddress) {
@@ -76,13 +76,10 @@ class Web3Service {
         // Fallback to RPC provider for read-only operations
         if (config.blockchain.rpcUrl) {
           this.provider = new ethers.JsonRpcProvider(config.blockchain.rpcUrl);
-          logDebug(
-            "Created read-only JSON-RPC provider",
-            {
-              rpcUrl: config.blockchain.rpcUrl,
-            },
-            "BLOCKCHAIN"
-          );
+          logDebug("Created read-only JSON-RPC provider", {
+            rpcUrl: config.blockchain.rpcUrl,
+            blockchain: true,
+          });
 
           // Try to initialize contracts in read-only mode
           if (config.blockchain.evidenceContractAddress) {
@@ -123,8 +120,7 @@ class Web3Service {
         "Evidence contract initialized",
         {
           address: config.blockchain.evidenceContractAddress,
-        },
-        "BLOCKCHAIN"
+        }
       );
 
       // Initialize role manager contract if available
@@ -139,8 +135,7 @@ class Web3Service {
           "Role manager contract initialized",
           {
             address: config.blockchain.contractAddress,
-          },
-          "BLOCKCHAIN"
+          }
         );
       } else {
         logWarn(
@@ -290,24 +285,33 @@ class Web3Service {
    */
   private async addNetworkToMetaMask(): Promise<void> {
     try {
-      if (!window.ethereum || !config.blockchain.networkParams) {
-        throw new Error(
-          "MetaMask not available or network parameters not configured"
-        );
+      if (!window.ethereum) {
+        throw new Error("MetaMask not available");
       }
+
+      const networkParams = {
+        chainId: `0x${config.blockchain.chainId.toString(16)}`,
+        chainName: `Local Network (${config.blockchain.chainId})`,
+        rpcUrls: [config.blockchain.rpcUrl],
+        nativeCurrency: {
+          name: "ETH",
+          symbol: "ETH",
+          decimals: 18,
+        },
+      };
 
       await window.ethereum.request({
         method: "wallet_addEthereumChain",
-        params: [config.blockchain.networkParams],
+        params: [networkParams],
       });
 
       logInfo("Added network to MetaMask", {
-        params: config.blockchain.networkParams,
+        params: networkParams,
       });
     } catch (error) {
       logError(
         "Failed to add network to MetaMask",
-        { networkParams: config.blockchain.networkParams },
+        { chainId: config.blockchain.chainId },
         error instanceof Error ? error : new Error("Add network error")
       );
       throw error;
@@ -328,7 +332,7 @@ class Web3Service {
       if (window.ethereum) {
         const accounts = await window.ethereum.request({
           method: "eth_accounts",
-        });
+        }) as string[];
         if (accounts && accounts.length > 0) {
           return accounts[0];
         }
@@ -368,13 +372,13 @@ class Web3Service {
         case 0:
           return ROLES.NONE;
         case 1:
-          return ROLES.PoliceOfficer;
+          return ROLES.OFFICER;
         case 2:
-          return ROLES.ForensicExpert;
+          return ROLES.FORENSIC;
         case 3:
           return ROLES.LAWYER;
         case 4:
-          return ROLES.Judge;
+          return ROLES.COURT;
         case 5:
           return ROLES.COURT;
         default:
@@ -755,7 +759,11 @@ class Web3Service {
         blockNumber,
       };
 
-      logDebug("Retrieved network info", networkInfo, "BLOCKCHAIN");
+      logDebug("Retrieved network info", {
+        chainId: networkInfo.chainId,
+        name: networkInfo.name,
+        blockNumber: networkInfo.blockNumber,
+      });
 
       return networkInfo;
     } catch (error) {
@@ -858,8 +866,11 @@ class Web3Service {
       const events = await this.evidenceContract.queryFilter(filter, -10000); // Last 10000 blocks
 
       const evidencePromises = events.slice(0, limit).map(async (event) => {
-        const evidenceId = event.args?.evidenceId.toString();
-        return await this.getEvidence(evidenceId);
+        if ('args' in event) {
+          const evidenceId = event.args?.evidenceId.toString();
+          return await this.getEvidence(evidenceId);
+        }
+        return null;
       });
 
       const evidenceList = await Promise.all(evidencePromises);

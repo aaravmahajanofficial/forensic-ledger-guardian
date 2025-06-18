@@ -73,12 +73,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        logDebug("Initializing authentication...", {}, "AUTH");
+        logDebug("Initializing authentication...", { auth: true });
 
         // Check for session token
         const token = secureStorage.getSessionToken();
         if (!token) {
-          logDebug("No session token found", {}, "AUTH");
+          logDebug("No session token found", { auth: true });
           setIsLoading(false);
           return;
         }
