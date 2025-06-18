@@ -5,7 +5,6 @@ import {
   Shield,
   Filter,
   Search,
-  FileText,
   Eye,
   ExternalLink,
 } from "lucide-react";

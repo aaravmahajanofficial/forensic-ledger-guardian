@@ -5,19 +5,14 @@ import {
   Download,
   Filter,
   Calendar,
-  PieChart,
   ArrowRight,
   Share2,
   Printer,
-  Clock,
-  Search,
-  FileCheck,
 } from "lucide-react";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -32,7 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { TabsList, TabsTrigger, Tabs, TabsContent } from "@/components/ui/tabs";
+import { TabsList, TabsTrigger, Tabs } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 
 // Mock reports data

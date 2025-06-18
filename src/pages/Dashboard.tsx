@@ -2,13 +2,7 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import RoleDashboard from "@/components/dashboard/RoleDashboard";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+// UI components imports have been cleaned up
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EvidenceVerifier from "@/components/verification/EvidenceVerifier";
 import RoleGuides from "@/components/help/RoleGuides";

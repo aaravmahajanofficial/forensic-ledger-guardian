@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -17,58 +17,87 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { APP_CONSTANTS } from "@/config";
-
-// Role type and enum-like object for convenience
-type Role = (typeof APP_CONSTANTS.ROLES)[keyof typeof APP_CONSTANTS.ROLES];
-const Role = APP_CONSTANTS.ROLES;
+import { ROLES } from "@/constants";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { UserPlus, Mail, User, Shield, Building, Key } from "lucide-react";
 
-const AddUser = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState("");
-  const [organization, setOrganization] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+// Helper function moved outside for better performance and separation of concerns
+const getRoleTitle = (roleId: string): string => {
+  const roleKey = Object.keys(ROLES).find(
+    (key) => ROLES[key as keyof typeof ROLES].toString() === roleId
+  );
+  switch (roleKey) {
+    case "Court":
+      return "Court Judge";
+    case "Officer":
+      return "Police Officer";
+    case "Forensic":
+      return "Forensic Investigator";
+    case "Lawyer":
+      return "Defense Attorney";
+    default:
+      return "Unknown Role";
+  }
+};
 
+const AddUser = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    role: "",
+    organization: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    // Validation
+  const handleRoleChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, role: value }));
+  };
+
+  const validateForm = () => {
+    const { name, email, role, password, confirmPassword } = formData;
     if (!name || !email || !role || !password || !confirmPassword) {
       toast({
         title: "Missing Fields",
         description: "Please fill in all required fields.",
         variant: "destructive",
       });
-      setIsSubmitting(false);
-      return;
+      return false;
     }
-
     if (password !== confirmPassword) {
       toast({
         title: "Password Mismatch",
         description: "Passwords do not match. Please try again.",
         variant: "destructive",
       });
-      setIsSubmitting(false);
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) {
       return;
     }
 
-    // Mock user creation (would connect to API/blockchain in real implementation)
+    setIsSubmitting(true);
+
+    // Mock user creation
     setTimeout(() => {
       toast({
         title: "User Created",
-        description: `${name} has been added as a ${getRoleTitle(
-          parseInt(role)
+        description: `${formData.name} has been added as a ${getRoleTitle(
+          formData.role
         )}.`,
       });
       setIsSubmitting(false);
@@ -76,163 +105,145 @@ const AddUser = () => {
     }, 1500);
   };
 
-  const getRoleTitle = (roleId: number): string => {
-    switch (roleId) {
-      case Role.Court:
-        return "Court Judge";
-      case Role.Officer:
-        return "Police Officer";
-      case Role.Forensic:
-        return "Forensic Investigator";
-      case Role.Lawyer:
-        return "Defense Attorney";
-      default:
-        return "Unknown Role";
-    }
-  };
-
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-forensic-800">Add New User</h1>
-      </div>
-
-      <Card>
+    <div className="container mx-auto max-w-3xl py-10">
+      <Card className="border-2 border-forensic-200/50 shadow-lg">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5 text-forensic-court" />
-            Create User Account
-          </CardTitle>
-          <CardDescription>
-            Add a new user to the forensic evidence platform
-          </CardDescription>
+          <div className="flex items-center space-x-4">
+            <div className="rounded-full bg-forensic-500 p-3 text-white">
+              <UserPlus size={24} />
+            </div>
+            <div>
+              <CardTitle className="text-2xl font-bold text-forensic-800">
+                Create a New User
+              </CardTitle>
+              <CardDescription className="text-gray-600">
+                Fill out the form to add a new user to the system.
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="space-y-6 pt-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="name" className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-forensic-600" />
+                <Label htmlFor="name">
+                  <User className="mr-2 inline-block h-4 w-4" />
                   Full Name
                 </Label>
                 <Input
                   id="name"
+                  name="name"
                   placeholder="Enter full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={formData.name}
+                  onChange={handleChange}
                   required
+                  className="w-full"
                 />
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-forensic-600" />
+                <Label htmlFor="email">
+                  <Mail className="mr-2 inline-block h-4 w-4" />
                   Email Address
                 </Label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="Enter email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={formData.email}
+                  onChange={handleChange}
                   required
+                  className="w-full"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="role" className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-forensic-600" />
-                  Role
+                <Label htmlFor="role">
+                  <Shield className="mr-2 inline-block h-4 w-4" />
+                  Assign Role
                 </Label>
-                <Select value={role} onValueChange={setRole}>
+                <Select
+                  name="role"
+                  onValueChange={handleRoleChange}
+                  value={formData.role}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
+                    <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={Role.Court.toString()}>
-                      Court Judge
-                    </SelectItem>
-                    <SelectItem value={Role.Officer.toString()}>
-                      Police Officer
-                    </SelectItem>
-                    <SelectItem value={Role.Forensic.toString()}>
-                      Forensic Investigator
-                    </SelectItem>
-                    <SelectItem value={Role.Lawyer.toString()}>
-                      Defense Attorney
-                    </SelectItem>
+                    {Object.entries(ROLES).map(([key, value]) => (
+                      <SelectItem key={key} value={value.toString()}>
+                        {getRoleTitle(value.toString())}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
-                <Label
-                  htmlFor="organization"
-                  className="flex items-center gap-2"
-                >
-                  <Building className="h-4 w-4 text-forensic-600" />
-                  Organization
+                <Label htmlFor="organization">
+                  <Building className="mr-2 inline-block h-4 w-4" />
+                  Organization (Optional)
                 </Label>
                 <Input
                   id="organization"
-                  placeholder="Enter organization name"
-                  value={organization}
-                  onChange={(e) => setOrganization(e.target.value)}
+                  name="organization"
+                  placeholder="Enter organization"
+                  value={formData.organization}
+                  onChange={handleChange}
+                  className="w-full"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="password" className="flex items-center gap-2">
-                  <Key className="h-4 w-4 text-forensic-600" />
+                <Label htmlFor="password">
+                  <Key className="mr-2 inline-block h-4 w-4" />
                   Password
                 </Label>
                 <Input
                   id="password"
+                  name="password"
                   type="password"
-                  placeholder="Enter password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Create a password"
+                  value={formData.password}
+                  onChange={handleChange}
                   required
+                  className="w-full"
                 />
               </div>
-
               <div className="space-y-2">
-                <Label
-                  htmlFor="confirmPassword"
-                  className="flex items-center gap-2"
-                >
-                  <Key className="h-4 w-4 text-forensic-600" />
+                <Label htmlFor="confirmPassword">
+                  <Key className="mr-2 inline-block h-4 w-4" />
                   Confirm Password
                 </Label>
                 <Input
                   id="confirmPassword"
+                  name="confirmPassword"
                   type="password"
-                  placeholder="Confirm password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
                   required
+                  className="w-full"
                 />
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between">
+          <CardFooter className="flex justify-end space-x-4 border-t px-6 py-4">
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate("/users/manage")}
+              onClick={() => navigate(-1)}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className="bg-forensic-court hover:bg-forensic-court/90"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Creating..." : "Create User"}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Creating User..." : "Create User"}
             </Button>
           </CardFooter>
         </form>

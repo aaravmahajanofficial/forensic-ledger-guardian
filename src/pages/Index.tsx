@@ -18,12 +18,7 @@ import {
   ClipboardCheck,
   Sparkles,
 } from "lucide-react";
-import {
-  NavigationMenu,
-  NavigationMenuList,
-  NavigationMenuItem,
-  NavigationMenuLink,
-} from "@/components/ui/navigation-menu";
+// Navigation components have been removed as they're not being used
 
 const Index = () => {
   // Scroll to section if hash in URL

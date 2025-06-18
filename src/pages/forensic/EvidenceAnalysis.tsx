@@ -30,7 +30,6 @@ import {
   Network,
   Clock,
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
@@ -121,7 +120,7 @@ const evidenceItems = [
 
 const EvidenceAnalysis = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  // ...existing code...
   const [selectedEvidence, setSelectedEvidence] = useState(evidenceItems[0]);
   const [activeTab, setActiveTab] = useState("details");
   const [analysisRunning, setAnalysisRunning] = useState(false);

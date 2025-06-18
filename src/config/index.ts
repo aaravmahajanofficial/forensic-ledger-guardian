@@ -8,7 +8,7 @@
  * environment variables, safe defaults, and type definitions.
  */
 
-import { ROLES, EVIDENCE_TYPES, CASE_STATUS, CASE_PRIORITY } from "@/constants";
+import { ROLES, EVIDENCE_TYPES } from "@/constants";
 
 // Environment variable validation helpers
 const getEnvVar = (key: string, defaultValue: string = ""): string => {
@@ -148,14 +148,6 @@ export const config = {
     INTERNAL_SERVER_ERROR: 500,
   },
 } as const;
-
-// Re-export constants for backward compatibility
-export const APP_CONSTANTS = {
-  ROLES,
-  EVIDENCE_TYPES,
-  CASE_STATUS,
-  CASE_PRIORITY,
-};
 
 // Type exports for better TypeScript support
 export type Role = (typeof ROLES)[keyof typeof ROLES];

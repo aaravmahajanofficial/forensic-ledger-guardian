@@ -181,7 +181,7 @@ const ChainOfCustodyVerification = () => {
         if (updatedEvidence) {
           setSelectedEvidence(updatedEvidence);
         }
-      } catch (error) {
+      } catch (_error) {
         toast({
           title: "Verification Failed",
           description: "Could not verify the evidence",

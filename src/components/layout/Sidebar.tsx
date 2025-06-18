@@ -21,11 +21,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
-import { APP_CONSTANTS } from "@/config";
+import { ROLES } from "@/constants";
 
 // Role type and enum-like object for convenience
-type Role = (typeof APP_CONSTANTS.ROLES)[keyof typeof APP_CONSTANTS.ROLES];
-const Role = APP_CONSTANTS.ROLES;
+type Role = (typeof ROLES)[keyof typeof ROLES];
+const Role = ROLES;
 import { Badge } from "@/components/ui/badge";
 
 interface SidebarProps {

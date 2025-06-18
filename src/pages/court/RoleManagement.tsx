@@ -20,64 +20,76 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import web3Service from "@/services/web3Service";
-import { APP_CONSTANTS } from "@/config";
-
-// Role type and enum-like object for convenience
-type Role = (typeof APP_CONSTANTS.ROLES)[keyof typeof APP_CONSTANTS.ROLES];
-const Role = APP_CONSTANTS.ROLES;
-import { useAuth } from "@/contexts/AuthContext";
+import { ROLES, ROLE_NAMES } from "@/constants";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import CaseAccessControl from "@/components/court/CaseAccessControl";
 
+// Utility function to convert role number to string
+const getRoleString = (role: number): string => {
+  return ROLE_NAMES[role as keyof typeof ROLE_NAMES] || "Unknown";
+};
+
+// Type for user object
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: number;
+  caseAccess: string[];
+}
+
+// Type for new user form
+interface NewUser {
+  name: string;
+  email: string;
+  address: string;
+  role: number;
+}
+
 const RoleManagement = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
   const isMobile = useIsMobile();
 
-  const [users, setUsers] = useState([
+  const [users, setUsers] = useState<User[]>([
     {
       id: "1",
       name: "John Smith",
       email: "john@court.gov",
-      role: Role.Court,
+      role: ROLES.COURT,
       caseAccess: ["C-2023-001", "C-2023-005"],
     },
     {
       id: "2",
       name: "Emma Clark",
       email: "emma@police.gov",
-      role: Role.Officer,
+      role: ROLES.OFFICER,
       caseAccess: ["C-2023-001", "C-2023-002"],
     },
     {
       id: "3",
       name: "Michael Chen",
       email: "michael@lab.gov",
-      role: Role.Forensic,
+      role: ROLES.FORENSIC,
       caseAccess: ["C-2023-002"],
     },
     {
       id: "4",
       name: "Sarah Johnson",
       email: "sarah@legal.gov",
-      role: Role.Lawyer,
+      role: ROLES.LAWYER,
       caseAccess: ["C-2023-001", "C-2023-005"],
     },
   ]);
 
-  const [newUser, setNewUser] = useState({
+  const [newUser, setNewUser] = useState<NewUser>({
     name: "",
     email: "",
     address: "",
-    role: Role.None,
+    role: ROLES.NONE,
   });
   const [showAddForm, setShowAddForm] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [editMode, setEditMode] = useState(false);
 
   const handleSaveRoles = () => {
     toast({
@@ -107,7 +119,7 @@ const RoleManagement = () => {
       },
     ]);
 
-    setNewUser({ name: "", email: "", address: "", role: Role.None });
+    setNewUser({ name: "", email: "", address: "", role: ROLES.NONE });
     setShowAddForm(false);
 
     toast({
@@ -116,7 +128,7 @@ const RoleManagement = () => {
     });
   };
 
-  const handleRemoveUser = (id) => {
+  const handleRemoveUser = (id: string) => {
     setUsers(users.filter((user) => user.id !== id));
     toast({
       title: "User Removed",
@@ -124,31 +136,23 @@ const RoleManagement = () => {
     });
   };
 
-  const getRoleBadgeColor = (role) => {
+  const getRoleBadgeColor = (role: number) => {
     switch (role) {
-      case Role.Court:
+      case ROLES.COURT:
         return "bg-forensic-court text-white";
-      case Role.Officer:
+      case ROLES.OFFICER:
         return "bg-forensic-800 text-white";
-      case Role.Forensic:
+      case ROLES.FORENSIC:
         return "bg-forensic-accent text-white";
-      case Role.Lawyer:
+      case ROLES.LAWYER:
         return "bg-forensic-warning text-forensic-900";
       default:
         return "bg-gray-500 text-white";
     }
   };
 
-  const handleRoleChange = (userId, newRole) => {
-    setUsers(
-      users.map((user) =>
-        user.id === userId ? { ...user, role: newRole } : user
-      )
-    );
-  };
-
   // Render mobile-specific card for each user
-  const renderUserCard = (user) => (
+  const renderUserCard = (user: User) => (
     <Card key={user.id} className="mb-4">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
@@ -157,7 +161,7 @@ const RoleManagement = () => {
             <CardDescription className="text-xs">{user.email}</CardDescription>
           </div>
           <Badge className={getRoleBadgeColor(user.role)}>
-            {web3Service.getRoleString(user.role)}
+            {getRoleString(user.role)}
           </Badge>
         </div>
       </CardHeader>
@@ -291,11 +295,11 @@ const RoleManagement = () => {
                       }
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
-                      <option value={Role.None}>Select Role</option>
-                      <option value={Role.Court}>Court</option>
-                      <option value={Role.Officer}>Officer</option>
-                      <option value={Role.Forensic}>Forensic</option>
-                      <option value={Role.Lawyer}>Lawyer</option>
+                      <option value={ROLES.NONE}>Select Role</option>
+                      <option value={ROLES.COURT}>Court</option>
+                      <option value={ROLES.OFFICER}>Officer</option>
+                      <option value={ROLES.FORENSIC}>Forensic</option>
+                      <option value={ROLES.LAWYER}>Lawyer</option>
                     </select>
                   </div>
                 </div>
@@ -344,7 +348,7 @@ const RoleManagement = () => {
                           <TableCell>
                             <div className="inline-flex items-center">
                               <Badge className={getRoleBadgeColor(user.role)}>
-                                {web3Service.getRoleString(user.role)}
+                                {getRoleString(user.role)}
                               </Badge>
                             </div>
                           </TableCell>

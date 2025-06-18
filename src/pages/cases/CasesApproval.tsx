@@ -12,8 +12,6 @@ import {
   Search,
   Filter,
   FileText,
-  ChevronRight,
-  ChevronDown,
   CheckCircle,
   XCircle,
   Clock,
@@ -27,9 +25,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Checkbox } from "@/components/ui/checkbox";
+// ...existing code...
 import {
   Popover,
   PopoverContent,

@@ -15,7 +15,6 @@ import {
   Clock,
   Calendar,
   User,
-  FileCheck,
   Lock,
   AlertCircle,
   Flag,
@@ -46,7 +45,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
-import { Checkbox } from "@/components/ui/checkbox";
+// Checkbox is removed as it's not being used
 
 // Mock activity data
 const activityData = [
@@ -402,7 +401,11 @@ const Activity = () => {
             <CalendarComponent
               mode="range"
               selected={dateRange}
-              onSelect={(range) => setDateRange(range as any)}
+              onSelect={(range) =>
+                setDateRange(
+                  range as { from: Date | undefined; to: Date | undefined }
+                )
+              }
               initialFocus
             />
             <div className="p-3 border-t border-forensic-100 flex justify-between">

@@ -35,8 +35,14 @@ export interface User {
   /** User's assigned role */
   role: RoleType;
 
-  /** Human-readable role title */
-  roleTitle: string;
+  /** User's status */
+  status: "active" | "inactive";
+
+  /** Date user was added */
+  added: string;
+
+  /** Number of cases assigned to user */
+  caseCount: number;
 
   /** User's Ethereum wallet address (if connected) */
   address?: EthereumAddress;

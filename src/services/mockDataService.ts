@@ -5,7 +5,7 @@
  */
 
 import { config } from "@/config";
-import { APP_CONSTANTS } from "@/config";
+import { ROLES } from "@/constants";
 import { User } from "@/types";
 
 // Development-only mock users
@@ -15,7 +15,7 @@ export const mockUsers: (User & { password: string })[] = [
     email: "court@example.com",
     password: "court123",
     name: "Judge Smith",
-    role: APP_CONSTANTS.ROLES.COURT,
+    role: ROLES.COURT,
     roleTitle: "Court Judge",
     address: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
   },
@@ -24,7 +24,7 @@ export const mockUsers: (User & { password: string })[] = [
     email: "officer@example.com",
     password: "officer123",
     name: "Officer Johnson",
-    role: APP_CONSTANTS.ROLES.OFFICER,
+    role: ROLES.OFFICER,
     roleTitle: "Police Officer",
     address: "0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2",
   },
@@ -33,7 +33,7 @@ export const mockUsers: (User & { password: string })[] = [
     email: "forensic@example.com",
     password: "forensic123",
     name: "Dr. Anderson",
-    role: APP_CONSTANTS.ROLES.FORENSIC,
+    role: ROLES.FORENSIC,
     roleTitle: "Forensic Investigator",
     address: "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4",
   },
@@ -42,7 +42,7 @@ export const mockUsers: (User & { password: string })[] = [
     email: "lawyer@example.com",
     password: "lawyer123",
     name: "Attorney Davis",
-    role: APP_CONSTANTS.ROLES.LAWYER,
+    role: ROLES.LAWYER,
     roleTitle: "Defense Attorney",
     address: "0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db",
   },
@@ -159,7 +159,8 @@ export class MockAuthService {
     if (!user) return null;
 
     // Remove password from returned user object
-    const { password: _, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 

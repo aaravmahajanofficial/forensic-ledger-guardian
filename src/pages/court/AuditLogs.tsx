@@ -2,9 +2,7 @@ import React, { useState, useMemo } from "react";
 import {
   Activity,
   Search,
-  Filter,
   Download,
-  Eye,
   AlertCircle,
   User,
   FileText,

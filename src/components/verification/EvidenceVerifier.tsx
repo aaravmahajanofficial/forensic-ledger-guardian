@@ -10,16 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Upload,
-  Shield,
-  FileCheck,
-  FileX,
-  AlertCircle,
-  CheckCircle,
-} from "lucide-react";
+import { Upload, Shield, AlertCircle, CheckCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import web3Service from "@/services/web3Service";
 
 interface VerificationResult {
   success: boolean;

@@ -6,7 +6,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
-import { config, APP_CONSTANTS } from "@/config";
+import { config } from "@/config";
 import { logError, logAudit, logPerformance } from "@/utils/logger";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -225,9 +225,7 @@ export const useEvidenceManager = (options: UseEvidenceManagerOptions = {}) => {
         }
 
         // Check filename length
-        if (
-          file.name.length > APP_CONSTANTS.FILE_CONSTRAINTS.MAX_FILENAME_LENGTH
-        ) {
+        if (file.name.length > config.fileConstraints.MAX_FILENAME_LENGTH) {
           invalid.push({
             file,
             reason: "Filename too long",

@@ -1,19 +1,16 @@
-import React, { useState, useMemo } from "react";
 import {
   Users,
   Search,
   Plus,
   Edit,
-  Trash2,
   Shield,
   Mail,
-  Calendar,
   CheckCircle,
   XCircle,
   AlertCircle,
-  User,
   Building,
 } from "lucide-react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -45,11 +42,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarFallback, AvatarInitials } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { logInfo } from "@/utils/logger";
 
 interface SystemUser {

@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,7 +7,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useState } from "react";
 import {
   BarChart2,
   Download,
@@ -42,7 +42,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Sector,
 } from "recharts";
 
 // Mock data for case statistics

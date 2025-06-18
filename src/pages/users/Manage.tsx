@@ -1,22 +1,15 @@
-import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import React, { useState, useMemo } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Search,
-  Filter,
   UserPlus,
   MoreVertical,
   ShieldCheck,
   ShieldOff,
   UserX,
-  User,
+  User as UserIcon, // Aliased to avoid conflict
   FileText,
   UserCog,
 } from "lucide-react";
@@ -28,11 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { APP_CONSTANTS } from "@/config";
-
-// Role type and enum-like object for convenience
-type Role = (typeof APP_CONSTANTS.ROLES)[keyof typeof APP_CONSTANTS.ROLES];
-const Role = APP_CONSTANTS.ROLES;
+import { ROLES } from "@/constants";
 import {
   Dialog,
   DialogContent,
@@ -50,14 +39,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { type User } from "@/types"; // Use `type` for type-only imports
 
-// Mock user data
-const userData = [
+// --- Mock Data ---
+const userData: User[] = [
   {
     id: "0x1A2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T",
     name: "Michael Wong",
     email: "michael.wong@courts.gov",
-    role: Role.Court,
+    role: ROLES.COURT,
     status: "active",
     added: "2025-01-15T10:00:00Z",
     caseCount: 38,
@@ -66,7 +56,7 @@ const userData = [
     id: "0xA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0",
     name: "John Smith",
     email: "john.smith@police.gov",
-    role: Role.Officer,
+    role: ROLES.OFFICER,
     status: "active",
     added: "2025-01-20T10:00:00Z",
     caseCount: 15,
@@ -75,7 +65,7 @@ const userData = [
     id: "0x2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1A",
     name: "Emily Chen",
     email: "emily.chen@forensics.gov",
-    role: Role.Forensic,
+    role: ROLES.FORENSIC,
     status: "active",
     added: "2025-01-25T10:00:00Z",
     caseCount: 22,
@@ -84,7 +74,7 @@ const userData = [
     id: "0xB2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0A1",
     name: "Sarah Lee",
     email: "sarah.lee@legal.gov",
-    role: Role.Lawyer,
+    role: ROLES.LAWYER,
     status: "active",
     added: "2025-01-30T10:00:00Z",
     caseCount: 12,
@@ -93,7 +83,7 @@ const userData = [
     id: "0x3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1A2B",
     name: "Robert Johnson",
     email: "robert.johnson@police.gov",
-    role: Role.Officer,
+    role: ROLES.OFFICER,
     status: "active",
     added: "2025-02-05T10:00:00Z",
     caseCount: 8,
@@ -102,7 +92,7 @@ const userData = [
     id: "0xC4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1A2B3",
     name: "David Williams",
     email: "david.williams@forensics.gov",
-    role: Role.Forensic,
+    role: ROLES.FORENSIC,
     status: "inactive",
     added: "2025-02-10T10:00:00Z",
     caseCount: 0,
@@ -111,18 +101,65 @@ const userData = [
     id: "0x4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1A2B3C",
     name: "Jennifer Miller",
     email: "jennifer.miller@legal.gov",
-    role: Role.Lawyer,
+    role: ROLES.LAWYER,
     status: "active",
     added: "2025-02-15T10:00:00Z",
     caseCount: 5,
   },
 ];
 
+// --- Helper Functions ---
+
+const getRoleTitle = (roleId: number): string => {
+  const roleKey = Object.keys(ROLES).find(
+    (key) => ROLES[key as keyof typeof ROLES] === roleId
+  );
+  switch (roleKey) {
+    case "COURT":
+      return "Court Judge";
+    case "OFFICER":
+      return "Police Officer";
+    case "FORENSIC":
+      return "Forensic Investigator";
+    case "LAWYER":
+      return "Defense Attorney";
+    default:
+      return "Unknown Role";
+  }
+};
+
+const getRoleBadge = (role: number) => {
+  switch (role) {
+    case ROLES.COURT:
+      return <Badge className="bg-forensic-court text-white">Court</Badge>;
+    case ROLES.OFFICER:
+      return <Badge className="bg-forensic-800 text-white">Officer</Badge>;
+    case ROLES.FORENSIC:
+      return <Badge className="bg-forensic-accent text-white">Forensic</Badge>;
+    case ROLES.LAWYER:
+      return (
+        <Badge className="bg-forensic-warning text-forensic-900">Lawyer</Badge>
+      );
+    default:
+      return <Badge className="bg-gray-500 text-white">Unknown</Badge>;
+  }
+};
+
+const getStatusBadge = (status: string) => {
+  if (status === "active") {
+    return <Badge variant="success">Active</Badge>;
+  } else {
+    return <Badge variant="secondary">Inactive</Badge>;
+  }
+};
+
+// --- Dialog Components ---
+
 interface EditUserDialogProps {
-  user: any;
+  user: User;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (updatedUser: any) => void;
+  onSave: (updatedUser: User) => void;
 }
 
 const EditUserDialog = ({
@@ -131,17 +168,24 @@ const EditUserDialog = ({
   onOpenChange,
   onSave,
 }: EditUserDialogProps) => {
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
-  const [selectedRole, setSelectedRole] = useState(user.role.toString());
+  const [formData, setFormData] = useState({
+    name: user.name,
+    email: user.email,
+    role: user.role.toString(),
+  });
+
+  React.useEffect(() => {
+    if (open) {
+      setFormData({
+        name: user.name,
+        email: user.email,
+        role: user.role.toString(),
+      });
+    }
+  }, [open, user]);
 
   const handleSave = () => {
-    onSave({
-      ...user,
-      name,
-      email,
-      role: parseInt(selectedRole),
-    });
+    onSave({ ...user, ...formData, role: parseInt(formData.role) });
     onOpenChange(false);
   };
 
@@ -161,8 +205,10 @@ const EditUserDialog = ({
             </label>
             <Input
               id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={formData.name}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, name: e.target.value }))
+              }
               placeholder="Enter user name"
             />
           </div>
@@ -172,8 +218,10 @@ const EditUserDialog = ({
             </label>
             <Input
               id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, email: e.target.value }))
+              }
               placeholder="Enter user email"
             />
           </div>
@@ -181,23 +229,21 @@ const EditUserDialog = ({
             <label htmlFor="role" className="text-sm font-medium">
               Role
             </label>
-            <Select value={selectedRole} onValueChange={setSelectedRole}>
+            <Select
+              value={formData.role}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, role: value }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={Role.Court.toString()}>
-                  Court Judge
-                </SelectItem>
-                <SelectItem value={Role.Officer.toString()}>
-                  Police Officer
-                </SelectItem>
-                <SelectItem value={Role.Forensic.toString()}>
-                  Forensic Investigator
-                </SelectItem>
-                <SelectItem value={Role.Lawyer.toString()}>
-                  Defense Attorney
-                </SelectItem>
+                {Object.values(ROLES).map((roleId) => (
+                  <SelectItem key={roleId} value={roleId.toString()}>
+                    {getRoleTitle(roleId)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -214,7 +260,7 @@ const EditUserDialog = ({
 };
 
 interface ChangeRoleDialogProps {
-  user: any;
+  user: User;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (userId: string, roleId: number) => void;
@@ -227,6 +273,12 @@ const ChangeRoleDialog = ({
   onSave,
 }: ChangeRoleDialogProps) => {
   const [selectedRole, setSelectedRole] = useState(user.role.toString());
+
+  React.useEffect(() => {
+    if (open) {
+      setSelectedRole(user.role.toString());
+    }
+  }, [open, user]);
 
   const handleSave = () => {
     onSave(user.id, parseInt(selectedRole));
@@ -252,18 +304,11 @@ const ChangeRoleDialog = ({
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={Role.Court.toString()}>
-                  Court Judge
-                </SelectItem>
-                <SelectItem value={Role.Officer.toString()}>
-                  Police Officer
-                </SelectItem>
-                <SelectItem value={Role.Forensic.toString()}>
-                  Forensic Investigator
-                </SelectItem>
-                <SelectItem value={Role.Lawyer.toString()}>
-                  Defense Attorney
-                </SelectItem>
+                {Object.values(ROLES).map((roleId) => (
+                  <SelectItem key={roleId} value={roleId.toString()}>
+                    {getRoleTitle(roleId)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -285,6 +330,8 @@ interface ConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
+  confirmText?: string;
+  variant?: "default" | "destructive";
 }
 
 const ConfirmDialog = ({
@@ -293,6 +340,8 @@ const ConfirmDialog = ({
   open,
   onOpenChange,
   onConfirm,
+  confirmText = "Confirm",
+  variant = "destructive",
 }: ConfirmDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -305,8 +354,8 @@ const ConfirmDialog = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={onConfirm}>
-            Confirm
+          <Button variant={variant} onClick={onConfirm}>
+            {confirmText}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -314,82 +363,60 @@ const ConfirmDialog = ({
   );
 };
 
-const UserManagement = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [users, setUsers] = useState(userData);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+// --- Main Component ---
 
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [changeRoleDialogOpen, setChangeRoleDialogOpen] = useState(false);
-  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
-  const [toggleStatusDialogOpen, setToggleStatusDialogOpen] = useState(false);
+const ManageUsersPage = () => {
+  const [filters, setFilters] = useState({
+    query: "",
+    role: "all",
+    status: "all",
+  });
+  const [users, setUsers] = useState(userData);
+
+  type DialogType = "edit" | "changeRole" | "remove" | "toggleStatus";
+  const [activeDialog, setActiveDialog] = useState<{
+    type: DialogType | null;
+    user: User | null;
+  }>({ type: null, user: null });
 
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Filter users based on search and filters
-  const filteredUsers = users
-    .filter((user) => {
-      // Search query filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
+  const handleFilterChange = (
+    type: "query" | "role" | "status",
+    value: string
+  ) => {
+    setFilters((prev) => ({ ...prev, [type]: value }));
+  };
+
+  const filteredUsers = useMemo(() => {
+    return users
+      .filter((user) => {
+        if (!filters.query) return true;
+        const query = filters.query.toLowerCase();
         return (
           user.name.toLowerCase().includes(query) ||
           user.email.toLowerCase().includes(query) ||
           user.id.toLowerCase().includes(query)
         );
-      }
-      return true;
-    })
-    .filter((user) => {
-      // Role filter
-      if (roleFilter === "all") return true;
-      return user.role === parseInt(roleFilter);
-    })
-    .filter((user) => {
-      // Status filter
-      if (statusFilter === "all") return true;
-      return user.status === statusFilter;
-    });
+      })
+      .filter(
+        (user) => filters.role === "all" || user.role === parseInt(filters.role)
+      )
+      .filter(
+        (user) => filters.status === "all" || user.status === filters.status
+      );
+  }, [users, filters]);
 
-  const getRoleBadge = (role: Role) => {
-    switch (role) {
-      case Role.Court:
-        return <Badge className="bg-forensic-court text-white">Court</Badge>;
-      case Role.Officer:
-        return <Badge className="bg-forensic-800 text-white">Officer</Badge>;
-      case Role.Forensic:
-        return (
-          <Badge className="bg-forensic-accent text-white">Forensic</Badge>
-        );
-      case Role.Lawyer:
-        return (
-          <Badge className="bg-forensic-warning text-forensic-900">
-            Lawyer
-          </Badge>
-        );
-      default:
-        return <Badge className="bg-gray-500 text-white">Unknown</Badge>;
-    }
+  const openDialog = (type: DialogType, user: User) => {
+    setActiveDialog({ type, user });
   };
 
-  const getStatusBadge = (status: string) => {
-    if (status === "active") {
-      return (
-        <Badge className="bg-forensic-success/20 text-forensic-success">
-          Active
-        </Badge>
-      );
-    } else {
-      return (
-        <Badge className="bg-forensic-400/20 text-forensic-500">Inactive</Badge>
-      );
-    }
+  const closeDialog = () => {
+    setActiveDialog({ type: null, user: null });
   };
 
-  const handleEditUser = (updatedUser: any) => {
+  const handleEditUser = (updatedUser: User) => {
     setUsers(
       users.map((user) => (user.id === updatedUser.id ? updatedUser : user))
     );
@@ -397,60 +424,51 @@ const UserManagement = () => {
       title: "User Updated",
       description: `${updatedUser.name}'s information has been updated.`,
     });
+    closeDialog();
   };
 
   const handleChangeRole = (userId: string, newRoleId: number) => {
-    const updatedUsers = users.map((user) => {
-      if (user.id === userId) {
-        return { ...user, role: newRoleId };
-      }
-      return user;
-    });
-
-    setUsers(updatedUsers);
+    setUsers(
+      users.map((user) =>
+        user.id === userId ? { ...user, role: newRoleId } : user
+      )
+    );
     toast({
       title: "Role Changed",
       description: `User's role has been updated.`,
     });
+    closeDialog();
   };
 
   const handleToggleStatus = () => {
-    if (!selectedUser) return;
-
-    const newStatus = selectedUser.status === "active" ? "inactive" : "active";
+    if (!activeDialog.user) return;
+    const { user } = activeDialog;
+    const newStatus = user.status === "active" ? "inactive" : "active";
     const actionText = newStatus === "active" ? "activated" : "deactivated";
 
-    const updatedUsers = users.map((user) => {
-      if (user.id === selectedUser.id) {
-        return { ...user, status: newStatus };
-      }
-      return user;
-    });
-
-    setUsers(updatedUsers);
-    setToggleStatusDialogOpen(false);
-
+    setUsers(
+      users.map((u) => (u.id === user.id ? { ...u, status: newStatus } : u))
+    );
     toast({
       title: `User ${actionText.charAt(0).toUpperCase() + actionText.slice(1)}`,
-      description: `${selectedUser.name}'s account has been ${actionText}.`,
+      description: `${user.name}'s account has been ${actionText}.`,
     });
+    closeDialog();
   };
 
   const handleRemoveUser = () => {
-    if (!selectedUser) return;
-
-    const updatedUsers = users.filter((user) => user.id !== selectedUser.id);
-    setUsers(updatedUsers);
-    setRemoveDialogOpen(false);
-
+    if (!activeDialog.user) return;
+    const { user } = activeDialog;
+    setUsers(users.filter((u) => u.id !== user.id));
     toast({
       title: "User Removed",
-      description: `${selectedUser.name}'s access has been revoked.`,
+      description: `${user.name}'s access has been revoked.`,
       variant: "destructive",
     });
+    closeDialog();
   };
 
-  const handleViewCases = (user: any) => {
+  const handleViewCases = (user: User) => {
     toast({
       title: "View Cases",
       description: `Viewing cases assigned to ${user.name}.`,
@@ -459,127 +477,115 @@ const UserManagement = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-forensic-800">
-          User Management
-        </h1>
+    <div className="container mx-auto py-10 animate-fade-in">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-forensic-800">
+            User Management
+          </h1>
+          <p className="text-gray-500">
+            Manage all users in the forensic evidence system.
+          </p>
+        </div>
         <Button
           className="bg-forensic-court hover:bg-forensic-court/90 flex items-center gap-2"
           onClick={() => navigate("/users/add")}
         >
           <UserPlus className="h-4 w-4" />
-          <span>Add User</span>
+          <span>Add New User</span>
         </Button>
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-forensic-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search users..."
-            className="pl-8 border-forensic-200"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by name, email, or ID..."
+            className="pl-10"
+            value={filters.query}
+            onChange={(e) => handleFilterChange("query", e.target.value)}
           />
         </div>
-
-        <div className="flex items-center space-x-2">
-          <Filter className="h-4 w-4 text-forensic-500" />
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="border-forensic-200">
-              <SelectValue placeholder="Filter by role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value={Role.Court.toString()}>Court</SelectItem>
-              <SelectItem value={Role.Officer.toString()}>Officer</SelectItem>
-              <SelectItem value={Role.Forensic.toString()}>Forensic</SelectItem>
-              <SelectItem value={Role.Lawyer.toString()}>Lawyer</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Filter className="h-4 w-4 text-forensic-500" />
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="border-forensic-200">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select
+          value={filters.role}
+          onValueChange={(value) => handleFilterChange("role", value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Filter by role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Roles</SelectItem>
+            {Object.values(ROLES).map((roleId) => (
+              <SelectItem key={roleId} value={roleId.toString()}>
+                {getRoleTitle(roleId)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filters.status}
+          onValueChange={(value) => handleFilterChange("status", value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* User List */}
       <Card>
-        <CardHeader>
-          <CardTitle>System Users</CardTitle>
-          <CardDescription>
-            Manage all users in the forensic evidence system
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="text-left border-b border-forensic-200">
-                  <th className="px-4 py-3 text-sm font-medium text-forensic-500">
-                    Name
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr className="text-left border-b">
+                  <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                    User
                   </th>
-                  <th className="px-4 py-3 text-sm font-medium text-forensic-500">
+                  <th className="px-6 py-3 text-sm font-semibold text-gray-600">
                     Role
                   </th>
-                  <th className="px-4 py-3 text-sm font-medium text-forensic-500">
-                    Email
-                  </th>
-                  <th className="px-4 py-3 text-sm font-medium text-forensic-500">
+                  <th className="px-6 py-3 text-sm font-semibold text-gray-600">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-sm font-medium text-forensic-500">
+                  <th className="px-6 py-3 text-sm font-semibold text-gray-600">
                     Cases
                   </th>
-                  <th className="px-4 py-3 text-sm font-medium text-forensic-500">
-                    Added
+                  <th className="px-6 py-3 text-sm font-semibold text-gray-600">
+                    Added On
                   </th>
-                  <th className="px-4 py-3 text-sm font-medium text-forensic-500 text-right">
+                  <th className="px-6 py-3 text-sm font-semibold text-gray-600 text-right">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y">
                 {filteredUsers.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="border-b border-forensic-100 hover:bg-forensic-50"
-                  >
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium text-forensic-800">
-                          {user.name}
-                        </p>
-                        <p className="text-xs text-forensic-500 font-mono truncate w-24 md:w-auto">
-                          {user.id}
-                        </p>
+                  <tr key={user.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-gray-900">
+                        {user.name}
                       </div>
+                      <div className="text-sm text-gray-500 font-mono truncate max-w-[150px]">
+                        {user.id}
+                      </div>
+                      <div className="text-sm text-gray-500">{user.email}</div>
                     </td>
-                    <td className="px-4 py-3">{getRoleBadge(user.role)}</td>
-                    <td className="px-4 py-3 text-forensic-600">
-                      {user.email}
-                    </td>
-                    <td className="px-4 py-3">{getStatusBadge(user.status)}</td>
-                    <td className="px-4 py-3 text-forensic-600">
+                    <td className="px-6 py-4">{getRoleBadge(user.role)}</td>
+                    <td className="px-6 py-4">{getStatusBadge(user.status)}</td>
+                    <td className="px-6 py-4 text-gray-700">
                       {user.caseCount}
                     </td>
-                    <td className="px-4 py-3 text-forensic-600">
+                    <td className="px-6 py-4 text-gray-700">
                       {new Date(user.added).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-6 py-4 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -590,89 +596,45 @@ const UserManagement = () => {
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setEditDialogOpen(true);
-                            }}
+                            onClick={() => openDialog("edit", user)}
                           >
-                            <Button
-                              variant="ghost"
-                              className="flex items-center w-full justify-start px-0"
-                            >
-                              <User className="h-4 w-4 mr-2" />
-                              Edit User
-                            </Button>
+                            <UserIcon className="mr-2 h-4 w-4" />
+                            Edit User
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            className="cursor-pointer"
                             onClick={() => handleViewCases(user)}
                           >
-                            <Button
-                              variant="ghost"
-                              className="flex items-center w-full justify-start px-0"
-                            >
-                              <FileText className="h-4 w-4 mr-2" />
-                              View Cases
-                            </Button>
+                            <FileText className="mr-2 h-4 w-4" />
+                            View Cases
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setChangeRoleDialogOpen(true);
-                            }}
+                            onClick={() => openDialog("changeRole", user)}
                           >
-                            <Button
-                              variant="ghost"
-                              className="flex items-center w-full justify-start px-0 text-forensic-court"
-                            >
-                              <UserCog className="h-4 w-4 mr-2" />
-                              Change Role
-                            </Button>
+                            <UserCog className="mr-2 h-4 w-4" />
+                            Change Role
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setToggleStatusDialogOpen(true);
-                            }}
+                            onClick={() => openDialog("toggleStatus", user)}
                           >
-                            <Button
-                              variant="ghost"
-                              className="flex items-center w-full justify-start px-0 text-forensic-warning"
-                            >
-                              {user.status === "active" ? (
-                                <>
-                                  <ShieldOff className="h-4 w-4 mr-2" />
-                                  Deactivate
-                                </>
-                              ) : (
-                                <>
-                                  <ShieldCheck className="h-4 w-4 mr-2" />
-                                  Activate
-                                </>
-                              )}
-                            </Button>
+                            {user.status === "active" ? (
+                              <ShieldOff className="mr-2 h-4 w-4" />
+                            ) : (
+                              <ShieldCheck className="mr-2 h-4 w-4" />
+                            )}
+                            {user.status === "active"
+                              ? "Deactivate"
+                              : "Activate"}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setRemoveDialogOpen(true);
-                            }}
+                            className="text-red-600"
+                            onClick={() => openDialog("remove", user)}
                           >
-                            <Button
-                              variant="ghost"
-                              className="flex items-center w-full justify-start px-0 text-forensic-danger"
-                            >
-                              <UserX className="h-4 w-4 mr-2" />
-                              Remove Access
-                            </Button>
+                            <UserX className="mr-2 h-4 w-4" />
+                            Remove Access
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -686,42 +648,44 @@ const UserManagement = () => {
       </Card>
 
       {/* Dialogs */}
-      {selectedUser && (
+      {activeDialog.type && activeDialog.user && (
         <>
           <EditUserDialog
-            user={selectedUser}
-            open={editDialogOpen}
-            onOpenChange={setEditDialogOpen}
+            user={activeDialog.user}
+            open={activeDialog.type === "edit"}
+            onOpenChange={closeDialog}
             onSave={handleEditUser}
           />
-
           <ChangeRoleDialog
-            user={selectedUser}
-            open={changeRoleDialogOpen}
-            onOpenChange={setChangeRoleDialogOpen}
+            user={activeDialog.user}
+            open={activeDialog.type === "changeRole"}
+            onOpenChange={closeDialog}
             onSave={handleChangeRole}
           />
-
           <ConfirmDialog
             title="Remove User Access"
-            description={`Are you sure you want to revoke ${selectedUser.name}'s access to the system? This action cannot be undone.`}
-            open={removeDialogOpen}
-            onOpenChange={setRemoveDialogOpen}
+            description={`Are you sure you want to revoke ${activeDialog.user.name}'s access? This action cannot be undone.`}
+            open={activeDialog.type === "remove"}
+            onOpenChange={closeDialog}
             onConfirm={handleRemoveUser}
+            confirmText="Confirm Removal"
           />
-
           <ConfirmDialog
-            title={
-              selectedUser.status === "active"
-                ? "Deactivate User"
-                : "Activate User"
-            }
+            title={`${
+              activeDialog.user.status === "active" ? "Deactivate" : "Activate"
+            } User`}
             description={`Are you sure you want to ${
-              selectedUser.status === "active" ? "deactivate" : "activate"
-            } ${selectedUser.name}'s account?`}
-            open={toggleStatusDialogOpen}
-            onOpenChange={setToggleStatusDialogOpen}
+              activeDialog.user.status === "active" ? "deactivate" : "activate"
+            } ${activeDialog.user.name}'s account?`}
+            open={activeDialog.type === "toggleStatus"}
+            onOpenChange={closeDialog}
             onConfirm={handleToggleStatus}
+            confirmText={
+              activeDialog.user.status === "active" ? "Deactivate" : "Activate"
+            }
+            variant={
+              activeDialog.user.status === "active" ? "destructive" : "default"
+            }
           />
         </>
       )}
@@ -729,4 +693,4 @@ const UserManagement = () => {
   );
 };
 
-export default UserManagement;
+export default ManageUsersPage;

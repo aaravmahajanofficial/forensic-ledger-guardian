@@ -39,11 +39,11 @@ import {
 } from "@/components/ui/command";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
-import { APP_CONSTANTS } from "@/config";
+import { ROLES } from "@/constants";
 
 // Role type for convenience
-type Role = (typeof APP_CONSTANTS.ROLES)[keyof typeof APP_CONSTANTS.ROLES];
-const Role = APP_CONSTANTS.ROLES;
+type Role = (typeof ROLES)[keyof typeof ROLES];
+const Role = ROLES;
 
 interface UserType {
   id: string;

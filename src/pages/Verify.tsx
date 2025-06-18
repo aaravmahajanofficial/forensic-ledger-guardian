@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import EvidenceVerifier from "@/components/verification/EvidenceVerifier";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

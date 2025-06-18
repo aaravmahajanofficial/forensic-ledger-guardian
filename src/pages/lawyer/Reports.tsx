@@ -4,20 +4,16 @@ import {
   FileText,
   Download,
   Calendar,
-  PieChart,
   ArrowRight,
   Share2,
   Printer,
   Filter,
-  Search,
-  FileCheck,
   Briefcase,
 } from "lucide-react";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -32,7 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { TabsList, TabsTrigger, Tabs, TabsContent } from "@/components/ui/tabs";
+import { TabsList, TabsTrigger, Tabs } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import {
   Select,

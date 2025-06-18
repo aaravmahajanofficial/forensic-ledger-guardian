@@ -6,7 +6,9 @@
 import React, { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { APP_CONSTANTS, Role } from "@/config";
+import { ROLES, type RoleType } from "@/constants";
+
+type Role = RoleType;
 import {
   Card,
   CardContent,
@@ -126,43 +128,25 @@ const UnauthorizedAccess: React.FC = () => {
 // Role-based protection shortcuts
 export const CourtOnlyRoute: React.FC<{ children: ReactNode }> = ({
   children,
-}) => (
-  <ProtectedRoute requiredRole={APP_CONSTANTS.ROLES.COURT}>
-    {children}
-  </ProtectedRoute>
-);
+}) => <ProtectedRoute requiredRole={ROLES.COURT}>{children}</ProtectedRoute>;
 
 export const OfficerOnlyRoute: React.FC<{ children: ReactNode }> = ({
   children,
-}) => (
-  <ProtectedRoute requiredRole={APP_CONSTANTS.ROLES.OFFICER}>
-    {children}
-  </ProtectedRoute>
-);
+}) => <ProtectedRoute requiredRole={ROLES.OFFICER}>{children}</ProtectedRoute>;
 
 export const ForensicOnlyRoute: React.FC<{ children: ReactNode }> = ({
   children,
-}) => (
-  <ProtectedRoute requiredRole={APP_CONSTANTS.ROLES.FORENSIC}>
-    {children}
-  </ProtectedRoute>
-);
+}) => <ProtectedRoute requiredRole={ROLES.FORENSIC}>{children}</ProtectedRoute>;
 
 export const LawyerOnlyRoute: React.FC<{ children: ReactNode }> = ({
   children,
-}) => (
-  <ProtectedRoute requiredRole={APP_CONSTANTS.ROLES.LAWYER}>
-    {children}
-  </ProtectedRoute>
-);
+}) => <ProtectedRoute requiredRole={ROLES.LAWYER}>{children}</ProtectedRoute>;
 
 // Multiple role protection
 export const LawEnforcementRoute: React.FC<{ children: ReactNode }> = ({
   children,
 }) => (
-  <ProtectedRoute
-    allowedRoles={[APP_CONSTANTS.ROLES.COURT, APP_CONSTANTS.ROLES.OFFICER]}
-  >
+  <ProtectedRoute allowedRoles={[ROLES.COURT, ROLES.OFFICER]}>
     {children}
   </ProtectedRoute>
 );
@@ -170,9 +154,7 @@ export const LawEnforcementRoute: React.FC<{ children: ReactNode }> = ({
 // This route has been removed as it's not used in the application
 
 export const LegalRoute: React.FC<{ children: ReactNode }> = ({ children }) => (
-  <ProtectedRoute
-    allowedRoles={[APP_CONSTANTS.ROLES.COURT, APP_CONSTANTS.ROLES.LAWYER]}
-  >
+  <ProtectedRoute allowedRoles={[ROLES.COURT, ROLES.LAWYER]}>
     {children}
   </ProtectedRoute>
 );
