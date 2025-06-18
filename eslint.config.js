@@ -65,7 +65,7 @@ export default [
       // General
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "prefer-const": "warn",
-      
+
       // React specific rules
       "react/react-in-jsx-scope": "off", // Not needed with new JSX transform
       "react/prop-types": "off", // Using TypeScript for prop validation

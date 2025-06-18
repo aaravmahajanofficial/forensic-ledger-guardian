@@ -73,12 +73,18 @@ const Settings = () => {
   };
 
   // Handle security settings changes
-  const handleSecurityChange = (key: keyof typeof securitySettings, value: boolean | string) => {
+  const handleSecurityChange = (
+    key: keyof typeof securitySettings,
+    value: boolean | string
+  ) => {
     setSecuritySettings((prev) => ({ ...prev, [key]: value }));
   };
 
   // Handle wallet settings changes
-  const handleWalletChange = (key: keyof typeof walletSettings, value: string | boolean) => {
+  const handleWalletChange = (
+    key: keyof typeof walletSettings,
+    value: string | boolean
+  ) => {
     setWalletSettings((prev) => ({ ...prev, [key]: value }));
   };
 

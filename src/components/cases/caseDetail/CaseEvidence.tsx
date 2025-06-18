@@ -51,7 +51,11 @@ const CaseEvidence: React.FC<CaseEvidenceProps> = ({
                     item.status === "verified" ? "bg-green-500" : "bg-amber-500"
                   }
                 >
-                  {item.status === "pending" ? "Pending" : item.status === "verified" ? "Verified" : "Rejected"}
+                  {item.status === "pending"
+                    ? "Pending"
+                    : item.status === "verified"
+                    ? "Verified"
+                    : "Rejected"}
                 </Badge>
                 <Button size="sm" className="bg-forensic-accent">
                   <span>View</span>

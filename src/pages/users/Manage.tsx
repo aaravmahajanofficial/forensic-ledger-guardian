@@ -111,7 +111,7 @@ const userData: User[] = [
     status: "active",
     added: "2025-02-15T10:00:00Z",
     caseCount: 5,
-    roleTitle: ""
+    roleTitle: "",
   },
 ];
 
@@ -438,11 +438,13 @@ const ManageUsersPage = () => {
     const roleType = newRoleId as RoleType;
     setUsers(
       users.map((user) =>
-        user.id === userId ? { 
-          ...user, 
-          role: roleType,
-          roleTitle: ROLE_NAMES[roleType]
-        } : user
+        user.id === userId
+          ? {
+              ...user,
+              role: roleType,
+              roleTitle: ROLE_NAMES[roleType],
+            }
+          : user
       )
     );
     toast({

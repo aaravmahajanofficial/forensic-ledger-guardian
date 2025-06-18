@@ -62,7 +62,9 @@ class Web3Service {
       // Check if MetaMask is available
       if (typeof window !== "undefined" && window.ethereum) {
         this.provider = new ethers.BrowserProvider(window.ethereum);
-        logDebug("Creating browser provider for MetaMask", { blockchain: true });
+        logDebug("Creating browser provider for MetaMask", {
+          blockchain: true,
+        });
 
         // Initialize contract if we have all required info
         if (config.blockchain.evidenceContractAddress) {
@@ -116,12 +118,9 @@ class Web3Service {
         this.provider
       );
 
-      logDebug(
-        "Evidence contract initialized",
-        {
-          address: config.blockchain.evidenceContractAddress,
-        }
-      );
+      logDebug("Evidence contract initialized", {
+        address: config.blockchain.evidenceContractAddress,
+      });
 
       // Initialize role manager contract if available
       if (config.blockchain.contractAddress) {
@@ -131,12 +130,9 @@ class Web3Service {
           this.provider
         );
 
-        logDebug(
-          "Role manager contract initialized",
-          {
-            address: config.blockchain.contractAddress,
-          }
-        );
+        logDebug("Role manager contract initialized", {
+          address: config.blockchain.contractAddress,
+        });
       } else {
         logWarn(
           "Role manager contract address not configured, using evidence contract for roles"
@@ -260,7 +256,12 @@ class Web3Service {
         });
       } catch (switchError: unknown) {
         // This error code indicates that the chain has not been added to MetaMask.
-        if (switchError && typeof switchError === 'object' && 'code' in switchError && switchError.code === 4902) {
+        if (
+          switchError &&
+          typeof switchError === "object" &&
+          "code" in switchError &&
+          switchError.code === 4902
+        ) {
           await this.addNetworkToMetaMask();
         } else {
           throw switchError;
@@ -330,9 +331,9 @@ class Web3Service {
 
       // If no signer but ethereum is available, try to get accounts
       if (window.ethereum) {
-        const accounts = await window.ethereum.request({
+        const accounts = (await window.ethereum.request({
           method: "eth_accounts",
-        }) as string[];
+        })) as string[];
         if (accounts && accounts.length > 0) {
           return accounts[0];
         }
@@ -866,7 +867,7 @@ class Web3Service {
       const events = await this.evidenceContract.queryFilter(filter, -10000); // Last 10000 blocks
 
       const evidencePromises = events.slice(0, limit).map(async (event) => {
-        if ('args' in event) {
+        if ("args" in event) {
           const evidenceId = event.args?.evidenceId.toString();
           return await this.getEvidence(evidenceId);
         }

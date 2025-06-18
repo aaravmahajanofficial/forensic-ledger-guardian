@@ -53,8 +53,8 @@ const localStorageMock: Storage = {
   length: 0,
   key: vi.fn().mockReturnValue(null),
 };
-Object.defineProperty(global, 'localStorage', {
-  value: localStorageMock
+Object.defineProperty(global, "localStorage", {
+  value: localStorageMock,
 });
 
 // Mock sessionStorage for testing
@@ -66,6 +66,6 @@ const sessionStorageMock: Storage = {
   length: 0,
   key: vi.fn().mockReturnValue(null),
 };
-Object.defineProperty(global, 'sessionStorage', {
-  value: sessionStorageMock
+Object.defineProperty(global, "sessionStorage", {
+  value: sessionStorageMock,
 });

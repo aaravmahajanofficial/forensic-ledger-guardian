@@ -27,8 +27,6 @@ class IPFSService {
       // Initialize Helia with minimal configuration for browser compatibility
       this.helia = await createHelia();
       this.fs = unixfs(this.helia);
-
-     
     } catch {
       // Initialization failed, will be retried on next operation
     } finally {
@@ -169,7 +167,6 @@ class IPFSService {
 
       return decryptedData;
     } catch (error) {
-     
       throw new Error(
         `Decryption failed: ${
           error instanceof Error ? error.message : "Unknown error"
