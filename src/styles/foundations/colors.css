@@ -1,0 +1,87 @@
+
+/* Modern Color Palette - Design System */
+@theme {
+  /* Dark Mode First */
+  --color-dark-50: #0a0a0b;
+  --color-dark-100: #111113;
+  --color-dark-200: #1a1a1d;
+  --color-dark-300: #2a2a2e;
+  --color-dark-400: #3a3a40;
+  --color-dark-500: #4a4a52;
+  --color-dark-600: #6a6a75;
+  --color-dark-700: #8a8a95;
+  --color-dark-800: #b4b4be;
+  --color-dark-900: #e4e4e7;
+
+  /* Primary Brand Colors */
+  --color-brand-50: #f0f9ff;
+  --color-brand-100: #e0f2fe;
+  --color-brand-200: #bae6fd;
+  --color-brand-300: #7dd3fc;
+  --color-brand-400: #38bdf8;
+  --color-brand-500: #0ea5e9;
+  --color-brand-600: #0284c7;
+  --color-brand-700: #0369a1;
+  --color-brand-800: #075985;
+  --color-brand-900: #0c4a6e;
+
+  /* Security/Trust Colors */
+  --color-security-50: #f0fdf4;
+  --color-security-100: #dcfce7;
+  --color-security-200: #bbf7d0;
+  --color-security-300: #86efac;
+  --color-security-400: #4ade80;
+  --color-security-500: #22c55e;
+  --color-security-600: #16a34a;
+  --color-security-700: #15803d;
+  --color-security-800: #166534;
+  --color-security-900: #14532d;
+
+  /* Warning/Alert Colors */
+  --color-warning-50: #fefce8;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+
+  /* Danger/Critical Colors */
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-200: #fecaca;
+  --color-danger-300: #fca5a5;
+  --color-danger-400: #f87171;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+  --color-danger-800: #991b1b;
+  --color-danger-900: #7f1d1d;
+
+  /* Evidence/Blockchain Colors */
+  --color-evidence-50: #f8fafc;
+  --color-evidence-100: #f1f5f9;
+  --color-evidence-200: #e2e8f0;
+  --color-evidence-300: #cbd5e1;
+  --color-evidence-400: #94a3b8;
+  --color-evidence-500: #64748b;
+  --color-evidence-600: #475569;
+  --color-evidence-700: #334155;
+  --color-evidence-800: #1e293b;
+  --color-evidence-900: #0f172a;
+
+  /* Court/Legal Colors */
+  --color-legal-50: #faf5ff;
+  --color-legal-100: #f3e8ff;
+  --color-legal-200: #e9d5ff;
+  --color-legal-300: #d8b4fe;
+  --color-legal-400: #c084fc;
+  --color-legal-500: #a855f7;
+  --color-legal-600: #9333ea;
+  --color-legal-700: #7c3aed;
+  --color-legal-800: #6b21a8;
+  --color-legal-900: #581c87;
+}

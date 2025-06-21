@@ -1,0 +1,35 @@
+
+/* Form Components */
+@layer components {
+  .input-modern {
+    display: flex;
+    height: 3rem;
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid hsl(var(--input));
+    background: hsl(var(--background));
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .input-modern::placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .input-modern:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--ring));
+  }
+
+  .input-modern:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .input-modern:focus {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    box-shadow: 0 0 0 3px hsl(var(--primary)/0.1);
+  }
+}

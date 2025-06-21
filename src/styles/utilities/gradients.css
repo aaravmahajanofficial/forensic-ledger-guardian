@@ -1,0 +1,22 @@
+
+/* Gradient Utilities */
+@layer components {
+  .gradient-brand {
+    background: linear-gradient(135deg, hsl(var(--brand-500)) 0%, hsl(var(--brand-600)) 100%);
+  }
+
+  .gradient-security {
+    background: linear-gradient(135deg, hsl(var(--security-500)) 0%, hsl(var(--security-600)) 100%);
+  }
+
+  .gradient-evidence {
+    background: linear-gradient(135deg, hsl(var(--evidence-600)) 0%, hsl(var(--evidence-700)) 100%);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

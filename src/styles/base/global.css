@@ -1,0 +1,44 @@
+
+/* Global Base Styles */
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  /* Focus Styles */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--ring));
+    border-radius: 0.25rem;
+  }
+
+  /* Selection */
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+    color: hsl(var(--primary-foreground));
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.2);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
+  }
+}
