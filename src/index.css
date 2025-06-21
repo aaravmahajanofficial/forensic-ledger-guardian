@@ -1,7 +1,145 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
-/* @tailwind base; */
-/* @tailwind components; */
-/* @tailwind utilities; */
+
+@import "tailwindcss";
+
+@source "src/**/*.{js,jsx,ts,tsx}";
+
+@theme {
+  --font-inter: "Inter", sans-serif;
+
+  --color-forensic-50: #f7fafc;
+  --color-forensic-100: #edf2f7;
+  --color-forensic-200: #e2e8f0;
+  --color-forensic-300: #cbd5e0;
+  --color-forensic-400: #a0aec0;
+  --color-forensic-500: #718096;
+  --color-forensic-600: #4a5568;
+  --color-forensic-700: #2d3748;
+  --color-forensic-800: #1a365d;
+  --color-forensic-900: #1a202c;
+  --color-forensic-accent: #319795;
+  --color-forensic-success: #2f855a;
+  --color-forensic-warning: #c05621;
+  --color-forensic-danger: #e53e3e;
+  --color-forensic-evidence: #3182ce;
+  --color-forensic-court: #805ad5;
+
+  --radius: 0.5rem;
+
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-in: slide-in 0.4s ease-out;
+  --animate-slide-in-left: slide-in-left 0.3s ease-out;
+  --animate-slide-in-right: slide-in-right 0.3s ease-out;
+  --animate-pulse-gentle: pulse-gentle 2s ease-in-out infinite;
+  --animate-scale-in: scale-in 0.2s ease-out;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s infinite linear;
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-gentle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
 
 @layer base {
   :root {
