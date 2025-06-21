@@ -8,6 +8,7 @@ import { config } from "@/config";
 import { User } from "@/types";
 import { secureStorage } from "@/utils/secureStorage";
 import { logError, logSecurityEvent, logAudit } from "@/utils/logger";
+import { mockUsers } from "@/services/mockDataService";
 
 export interface LoginCredentials {
   email: string;
@@ -35,21 +36,21 @@ class MockAuthService {
     email: string,
     password: string
   ): Promise<User | null> {
-    // For development purposes only
-    if (password === "password123") {
+    // Find the user in mock data
+    const mockUser = mockUsers.find(
+      (user) => user.email === email && user.password === password
+    );
+
+    if (mockUser) {
+      // Return user without password field
+      const { password: _password, ...userWithoutPassword } = mockUser;
       return {
-        id: "mock-user-1",
-        name: "Test User",
-        email: email,
-        role: 1, // Court role
-        roleTitle: "Court Administrator",
-        status: "active",
-        added: new Date().toISOString(),
-        caseCount: 0,
-        createdAt: new Date(),
+        ...userWithoutPassword,
+        createdAt: new Date(userWithoutPassword.added),
         lastLoginAt: new Date(),
       };
     }
+
     return null;
   }
 
