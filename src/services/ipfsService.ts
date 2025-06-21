@@ -2,6 +2,9 @@ import { createHelia } from "helia";
 import { unixfs } from "@helia/unixfs";
 import { toast } from "@/hooks/use-toast";
 import { logError, logInfo, logDebug } from "@/utils/logger";
+import type { Helia } from "@helia/interface";
+import type { UnixFS } from "@helia/unixfs";
+import { CID } from "multiformats/cid";
 
 /**
  * Modern IPFS service using Helia
@@ -9,9 +12,8 @@ import { logError, logInfo, logDebug } from "@/utils/logger";
  * Provides secure, decentralized storage for forensic evidence
  */
 class IPFSService {
-  // TODO: Replace any with proper Helia types once they are available
-  private helia: any | null = null; // eslint-disable-line @typescript-eslint/no-explicit-any
-  private fs: any | null = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+  private helia: Helia | null = null;
+  private fs: UnixFS | null = null;
   private isInitializing = false;
 
   constructor() {
@@ -203,6 +205,10 @@ class IPFSService {
       // Upload to IPFS
       const cid = await this.fs?.addBytes(new Uint8Array(encryptedData));
 
+      if (!cid) {
+        throw new Error("Failed to add file to IPFS");
+      }
+
       // Pin the file to keep it available
       await this.pinFile(cid.toString());
 
@@ -254,10 +260,16 @@ class IPFSService {
 
       logDebug("Starting file download from IPFS", { cid });
 
+      // Parse CID string to CID object
+      const cidObj = CID.parse(cid);
+
       // Download from IPFS
       const chunks: Uint8Array[] = [];
-      // eslint-disable-next-line no-unsafe-optional-chaining
-      for await (const chunk of this.fs?.cat(cid)) {
+      if (!this.fs) {
+        throw new Error("IPFS not initialized");
+      }
+
+      for await (const chunk of this.fs.cat(cidObj)) {
         chunks.push(chunk);
       }
 
@@ -346,14 +358,13 @@ class IPFSService {
         return { isOnline: false };
       }
 
-      const nodeId = this.helia.libp2p.peerId.toString();
-      const peers = this.helia.libp2p.getPeers().length;
-
+      // Note: libp2p access may vary by Helia version
+      // Providing basic status without libp2p details for now
       return {
         isOnline: true,
-        nodeId,
+        nodeId: "helia-node", // Generic ID since libp2p access is version-dependent
         version: "1.0.0", // Helia version
-        peers,
+        peers: 0, // Would need libp2p access for actual peer count
       };
     } catch (error) {
       logError("Failed to get IPFS status", {

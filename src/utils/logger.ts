@@ -17,7 +17,7 @@ export const logger = {
     console.info(`[INFO] ${message}`, context || {});
   },
   warn: (message: string, context?: Record<string, unknown>) => {
-    // eslint-disable-next-line no-console
+     
     console.warn(`[WARN] ${message}`, context || {});
   },
   error: (

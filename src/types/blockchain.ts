@@ -179,6 +179,39 @@ export interface EnhancedTransactionReceipt {
 }
 
 /**
+ * Blockchain transaction receipt
+ */
+export interface TransactionReceipt {
+  /** Transaction hash */
+  transactionHash: string;
+
+  /** Block number where transaction was mined */
+  blockNumber: number;
+
+  /** Block hash */
+  blockHash: string;
+
+  /** Gas used */
+  gasUsed: number;
+
+  /** Cumulative gas used */
+  cumulativeGasUsed: number;
+
+  /** Contract address (if deploying a contract) */
+  contractAddress?: string;
+
+  /** Transaction status (1 for success, 0 for failure) */
+  status: number;
+
+  /** Event logs */
+  logs: {
+    address: string;
+    topics: string[];
+    data: string;
+  }[];
+}
+
+/**
  * Result of a blockchain transaction
  */
 export interface TransactionResult {
@@ -189,7 +222,7 @@ export interface TransactionResult {
   hash: string;
 
   /** Full transaction receipt */
-  receipt: unknown; // TODO: Define proper receipt type
+  receipt: TransactionReceipt;
 
   /** Additional data returned from transaction */
   extraData?: Record<string, unknown>;

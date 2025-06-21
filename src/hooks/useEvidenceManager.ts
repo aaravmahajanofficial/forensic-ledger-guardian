@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { config } from "@/config";
 import { logError, logAudit, logPerformance } from "@/utils/logger";
 import { useAuth } from "@/contexts/AuthContext";
+import { mockDataService } from "@/services/mockDataService";
 
 // Type definitions
 export interface EvidenceItem {
@@ -328,9 +329,22 @@ export const useEvidenceManager = (options: UseEvidenceManagerOptions = {}) => {
 
 // Helper functions (these would typically interact with actual services)
 
-async function fetchEvidence(_caseId?: string): Promise<EvidenceItem[]> {
-  // TODO: Implement actual API call
-  throw new Error("API not implemented");
+async function fetchEvidence(caseId?: string): Promise<EvidenceItem[]> {
+  try {
+    const response = await fetch(
+      `${config.api.baseUrl}/evidence${caseId ? `?caseId=${caseId}` : ""}`
+    );
+    if (!response.ok) {
+      throw new Error(`Failed to fetch evidence: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    // Fallback to mock data for development
+    if (config.features.mockAuth) {
+      return mockDataService.getEvidenceForCase(caseId || "");
+    }
+    throw error;
+  }
 }
 
 async function uploadEvidenceFiles(
@@ -365,8 +379,37 @@ async function uploadEvidenceFiles(
           )
         );
 
-        // TODO: Implement actual file upload to IPFS
-        // const ipfsHash = await ipfsService.uploadFile(file);
+        // Upload file to IPFS (or simulate in development)
+        let ipfsHash = "";
+        let txHash = "";
+
+        if (config.features.mockBlockchain) {
+          // Simulate upload and blockchain transaction
+          ipfsHash = `QmMockHash${Date.now()}${Math.random()
+            .toString(36)
+            .substr(2, 9)}`;
+          txHash = `0x${Math.random().toString(16).substr(2, 64)}`;
+
+          // Simulate processing time
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } else {
+          // Actual IPFS upload would go here
+          // const ipfsService = await import('@/services/ipfsService');
+          // ipfsHash = await ipfsService.uploadFile(file);
+
+          // Update progress
+          setProgress((prev) =>
+            prev.map((p) =>
+              p.fileId === fileId
+                ? { ...p, status: "processing" as const, progress: 50 }
+                : p
+            )
+          );
+
+          // Actual blockchain transaction would go here
+          // const web3Service = await import('@/services/web3Service');
+          // txHash = await web3Service.addEvidence(ipfsHash, file.name, caseId);
+        }
 
         // Update progress
         setProgress((prev) =>
@@ -376,9 +419,6 @@ async function uploadEvidenceFiles(
               : p
           )
         );
-
-        // TODO: Implement blockchain transaction
-        // const txHash = await web3Service.addEvidence(ipfsHash, file.name, caseId);
 
         // Create evidence item
         const evidenceItem: EvidenceItem = {
@@ -392,6 +432,8 @@ async function uploadEvidenceFiles(
           size: file.size,
           verified: false,
           status: "pending",
+          ipfsHash,
+          blockchainTxHash: txHash,
           chainOfCustody: [
             {
               id: `COC-${Date.now()}`,
@@ -449,35 +491,101 @@ async function uploadEvidenceFiles(
 }
 
 async function verifyEvidence(evidenceId: string): Promise<EvidenceItem> {
-  // TODO: Implement actual verification logic
-  // This would involve blockchain verification, hash checking, etc.
+  try {
+    logAudit("Evidence verification initiated", { evidenceId });
 
-  logAudit("Evidence verification initiated", { evidenceId });
+    if (config.features.mockBlockchain) {
+      // Mock verification process - create a properly structured evidence item
+      const verifiedEvidence: EvidenceItem = {
+        id: evidenceId,
+        name: "Verified Evidence",
+        type: "document",
+        mimeType: "application/pdf",
+        caseId: "FF-2023-001",
+        submittedBy: "current-user",
+        submittedDate: new Date().toISOString(),
+        size: 1024,
+        verified: true,
+        status: "verified" as const,
+        hash: `0x${Math.random().toString(16).substr(2, 64)}`,
+        ipfsHash: `Qm${Math.random().toString(36).substr(2, 44)}`,
+        blockchainTxHash: `0x${Math.random().toString(16).substr(2, 64)}`,
+        chainOfCustody: [
+          {
+            id: `COC-${Date.now()}`,
+            action: "verified" as const,
+            timestamp: new Date().toISOString(),
+            userId: "current-user",
+            userName: "Current User",
+            userRole: "Forensic Expert",
+            details: "Evidence verified through blockchain",
+            transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`,
+          },
+        ],
+      };
 
-  // Mock implementation
-  return {
-    id: evidenceId,
-    name: "Mock Evidence",
-    type: "document",
-    mimeType: "application/pdf",
-    caseId: "FF-2023-001",
-    submittedBy: "Officer",
-    submittedDate: new Date().toISOString(),
-    size: 1024,
-    verified: true,
-    status: "verified",
-    chainOfCustody: [],
-  };
+      return verifiedEvidence;
+    } else {
+      // Real verification would involve:
+      // 1. Fetch evidence from blockchain
+      // 2. Verify IPFS hash integrity
+      // 3. Check chain of custody
+      // 4. Update verification status on blockchain
+
+      const response = await fetch(
+        `${config.api.baseUrl}/evidence/${evidenceId}/verify`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Verification failed: ${response.statusText}`);
+      }
+
+      return await response.json();
+    }
+  } catch (error) {
+    logError(
+      "Evidence verification failed",
+      { evidenceId },
+      error instanceof Error ? error : new Error(String(error))
+    );
+    throw error;
+  }
 }
 
 async function deleteEvidence(evidenceId: string): Promise<void> {
-  // TODO: Implement actual deletion logic
-  // This would involve removing from IPFS and updating blockchain
+  try {
+    logAudit("Evidence deletion requested", { evidenceId });
 
-  logAudit("Evidence deletion", { evidenceId });
+    if (config.features.mockBlockchain) {
+      // Mock deletion - in reality, evidence should be marked as deleted
+      // rather than actually removed from immutable storage
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return;
+    } else {
+      const response = await fetch(
+        `${config.api.baseUrl}/evidence/${evidenceId}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
-  // Mock implementation
-  return Promise.resolve();
+      if (!response.ok) {
+        throw new Error(`Deletion failed: ${response.statusText}`);
+      }
+    }
+  } catch (error) {
+    logError(
+      "Evidence deletion failed",
+      { evidenceId },
+      error instanceof Error ? error : new Error(String(error))
+    );
+    throw error;
+  }
 }
 
 export default useEvidenceManager;

@@ -42,8 +42,13 @@ const CourtDashboard = () => {
   // Handler for toggling system lock
   const handleToggleSystem = async () => {
     try {
-      // TODO: Implement toggleSystemLock in web3Service
-      const success = true; // Mock success for now
+      // In a real implementation, this would call the web3Service
+      // const success = await web3Service.toggleSystemLock();
+
+      // Mock implementation with delay to simulate blockchain transaction
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const success = true;
+
       if (success) {
         setSystemLocked((prev) => !prev);
         toast({

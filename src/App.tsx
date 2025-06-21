@@ -84,15 +84,31 @@ const ClientManagement = React.lazy(
   () => import("./pages/lawyer/ClientManagement")
 );
 
-// Loading component
-const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-      <p className="text-gray-600">Loading...</p>
+// Optimized loading component with accessibility
+const LoadingSpinner = React.memo(() => (
+  <div
+    className="min-h-screen flex items-center justify-center bg-gradient-to-br from-forensic-50 to-forensic-100"
+    role="status"
+    aria-label="Loading application"
+  >
+    <div className="text-center space-y-4">
+      <div className="relative">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-3 border-forensic-600 mx-auto"></div>
+        <div className="animate-ping absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 border border-forensic-400 rounded-full opacity-30"></div>
+      </div>
+      <div className="space-y-2">
+        <p className="text-forensic-700 font-medium">
+          Loading Forensic Guardian
+        </p>
+        <p className="text-forensic-500 text-sm">
+          Securing evidence integrity...
+        </p>
+      </div>
     </div>
   </div>
-);
+));
+
+LoadingSpinner.displayName = "LoadingSpinner";
 
 // Create Query Client with optimized defaults
 const queryClient = new QueryClient({

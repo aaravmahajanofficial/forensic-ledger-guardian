@@ -64,25 +64,57 @@ export const mockUsers: (User & { password: string })[] = [
 export const mockEvidence = [
   {
     id: "EV-2023-001",
-    hash: "0x1234567890abcdef",
-    filename: "security_footage.mp4",
-    fileSize: 25600000,
-    fileType: "video/mp4",
-    uploadedBy: "officer@example.com",
-    uploadedAt: "2023-04-15T10:30:00Z",
+    name: "security_footage.mp4",
+    type: "video",
+    mimeType: "video/mp4",
     caseId: "FF-2023-089",
+    submittedBy: "officer@example.com",
+    submittedDate: "2023-04-15T10:30:00Z",
+    size: 25600000,
     verified: true,
+    status: "verified" as const,
+    hash: "0x1234567890abcdef",
+    ipfsHash: "QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco",
+    blockchainTxHash:
+      "0xabcd1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+    chainOfCustody: [
+      {
+        id: "COC-001",
+        action: "created" as const,
+        timestamp: "2023-04-15T10:30:00Z",
+        userId: "officer@example.com",
+        userName: "Officer Johnson",
+        userRole: "Police Officer",
+        details: "Evidence uploaded to system",
+      },
+    ],
   },
   {
     id: "EV-2023-002",
-    hash: "0xabcdef1234567890",
-    filename: "fingerprint_analysis.pdf",
-    fileSize: 1024000,
-    fileType: "application/pdf",
-    uploadedBy: "forensic@example.com",
-    uploadedAt: "2023-04-16T14:20:00Z",
+    name: "fingerprint_analysis.pdf",
+    type: "document",
+    mimeType: "application/pdf",
     caseId: "FF-2023-089",
+    submittedBy: "forensic@example.com",
+    submittedDate: "2023-04-16T14:20:00Z",
+    size: 1024000,
     verified: true,
+    status: "verified" as const,
+    hash: "0xabcdef1234567890",
+    ipfsHash: "QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG",
+    blockchainTxHash:
+      "0xdef4567890abcdef1234567890abcdef1234567890abcdef1234567890abcd",
+    chainOfCustody: [
+      {
+        id: "COC-002",
+        action: "created" as const,
+        timestamp: "2023-04-16T14:20:00Z",
+        userId: "forensic@example.com",
+        userName: "Dr. Anderson",
+        userRole: "Forensic Investigator",
+        details: "Forensic analysis document uploaded",
+      },
+    ],
   },
 ];
 
@@ -171,7 +203,6 @@ export class MockAuthService {
     if (!user) return null;
 
     // Remove password from returned user object
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
@@ -209,3 +240,27 @@ if (config.app.debugMode) {
     "🚨 Mock data service is active. This should not be used in production!"
   );
 }
+
+export const mockDataService = {
+  getEvidenceForCase: (caseId: string) => {
+    return mockEvidence.filter(
+      (evidence) => !caseId || evidence.caseId === caseId
+    );
+  },
+
+  getAllEvidence: () => mockEvidence,
+
+  getCaseById: (caseId: string) => {
+    return mockCases.find((c) => c.id === caseId);
+  },
+
+  getAllCases: () => mockCases,
+
+  getActivityLogs: () => mockActivityLogs,
+
+  getUserById: (userId: string) => {
+    return mockUsers.find((u) => u.id === userId);
+  },
+
+  getAllUsers: () => mockUsers,
+};
