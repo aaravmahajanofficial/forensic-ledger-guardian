@@ -1,35 +1,249 @@
 
-/* Form Components */
+/* Modern Form Components */
 @layer components {
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: hsl(var(--foreground));
+    letter-spacing: -0.01em;
+  }
+
   .input-modern {
     display: flex;
     height: 3rem;
     width: 100%;
-    border-radius: 0.5rem;
-    border: 1px solid hsl(var(--input));
-    background: hsl(var(--background));
+    border-radius: 0.75rem;
+    border: 2px solid hsl(var(--border));
+    background: hsl(var(--card));
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    backdrop-filter: blur(8px);
   }
 
   .input-modern::placeholder {
     color: hsl(var(--muted-foreground));
+    font-weight: 400;
   }
 
-  .input-modern:focus-visible {
+  .input-modern:focus {
     outline: none;
-    box-shadow: 0 0 0 2px hsl(var(--ring));
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    background: hsl(var(--background));
+  }
+
+  .input-modern:hover:not(:focus) {
+    border-color: hsl(var(--primary) / 0.3);
   }
 
   .input-modern:disabled {
     cursor: not-allowed;
-    opacity: 0.5;
+    opacity: 0.6;
+    background: hsl(var(--muted));
   }
 
-  .input-modern:focus {
+  /* Search Input with Icon */
+  .search-input-wrapper {
+    position: relative;
+  }
+
+  .search-input {
+    padding-left: 2.75rem;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Textarea */
+  .textarea-modern {
+    display: flex;
+    min-height: 6rem;
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 2px solid hsl(var(--border));
+    background: hsl(var(--card));
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    resize: vertical;
+    font-family: inherit;
+  }
+
+  .textarea-modern::placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .textarea-modern:focus {
+    outline: none;
     border-color: hsl(var(--primary));
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    box-shadow: 0 0 0 3px hsl(var(--primary)/0.1);
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    background: hsl(var(--background));
+  }
+
+  /* Select Dropdown */
+  .select-modern {
+    display: flex;
+    height: 3rem;
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 2px solid hsl(var(--border));
+    background: hsl(var(--card));
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 1rem center;
+    background-repeat: no-repeat;
+    background-size: 1rem;
+  }
+
+  .select-modern:focus {
+    outline: none;
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+  }
+
+  /* Checkbox */
+  .checkbox-modern {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 0.375rem;
+    border: 2px solid hsl(var(--border));
+    background: hsl(var(--card));
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    cursor: pointer;
+  }
+
+  .checkbox-modern:checked {
+    background: hsl(var(--primary));
+    border-color: hsl(var(--primary));
+  }
+
+  .checkbox-modern:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: hsl(var(--primary-foreground));
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .checkbox-modern:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+  }
+
+  /* Radio Button */
+  .radio-modern {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    border: 2px solid hsl(var(--border));
+    background: hsl(var(--card));
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    cursor: pointer;
+  }
+
+  .radio-modern:checked {
+    border-color: hsl(var(--primary));
+  }
+
+  .radio-modern:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: hsl(var(--primary));
+  }
+
+  /* Form Validation States */
+  .form-error {
+    display: block;
+    font-size: 0.75rem;
+    color: hsl(var(--danger-600));
+    margin-top: 0.375rem;
+    font-weight: 500;
+  }
+
+  .form-success {
+    display: block;
+    font-size: 0.75rem;
+    color: hsl(var(--security-600));
+    margin-top: 0.375rem;
+    font-weight: 500;
+  }
+
+  .form-help {
+    display: block;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    margin-top: 0.375rem;
+  }
+
+  .input-error {
+    border-color: hsl(var(--danger-500));
+    background: hsl(var(--danger-50));
+  }
+
+  .input-error:focus {
+    border-color: hsl(var(--danger-500));
+    box-shadow: 0 0 0 3px hsl(var(--danger-500) / 0.1);
+  }
+
+  .input-success {
+    border-color: hsl(var(--security-500));
+    background: hsl(var(--security-50));
+  }
+
+  .input-success:focus {
+    border-color: hsl(var(--security-500));
+    box-shadow: 0 0 0 3px hsl(var(--security-500) / 0.1);
+  }
+
+  /* File Upload */
+  .file-upload {
+    border: 2px dashed hsl(var(--border));
+    border-radius: 0.75rem;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: hsl(var(--card));
+    cursor: pointer;
+  }
+
+  .file-upload:hover {
+    border-color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.05);
+  }
+
+  .file-upload.dragover {
+    border-color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.1);
+    transform: scale(1.02);
   }
 }
