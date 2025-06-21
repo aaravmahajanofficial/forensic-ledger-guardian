@@ -1,72 +1,85 @@
+
+/* Modern Logo Styles */
 .logo {
-  height: 6em;
-  padding: 1.5em;
+  height: 3rem;
+  padding: 0.75rem;
   will-change: filter;
-  transition: filter 300ms;
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
 }
 
 .logo:hover {
-  filter: drop-shadow(0 0 2em rgba(100, 108, 255, 0.67));
+  filter: drop-shadow(0 0 1rem rgba(56, 189, 248, 0.4));
+  transform: scale(1.05);
 }
 
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em rgba(97, 218, 251, 0.67));
+  filter: drop-shadow(0 0 1rem rgba(34, 197, 94, 0.4));
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+@keyframes logo-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
   }
-  to {
-    transform: rotate(360deg);
+  50% {
+    transform: translateY(-10px) rotate(2deg);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+  .logo.animate {
+    animation: logo-float 6s ease-in-out infinite;
   }
 }
 
-/* Custom scrollbar for better UX */
+/* Enhanced Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
+  background: hsl(var(--muted));
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 10px;
+  background: linear-gradient(180deg, hsl(var(--primary)/0.6), hsl(var(--primary)/0.4));
+  border-radius: 3px;
+  transition: all 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a0a0a0;
+  background: linear-gradient(180deg, hsl(var(--primary)/0.8), hsl(var(--primary)/0.6));
 }
 
-/* Focus styles for accessibility */
+::-webkit-scrollbar-corner {
+  background: hsl(var(--muted));
+}
+
+/* Enhanced Focus Styles */
 *:focus-visible {
-  outline: 2px solid rgba(49, 151, 149, 0.5);
+  outline: 2px solid hsl(var(--primary));
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
-/* Improved button tapping on mobile */
-button,
-a {
+/* Improved Button Tapping */
+button, a, [role="button"] {
   touch-action: manipulation;
-}
-
-/* Remove blue highlight on mobile tap */
-* {
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
-/* Reduce motion for users who prefer it */
-@media (prefers-reduced-motion) {
+/* Modern Transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
@@ -75,4 +88,159 @@ a {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --primary: 0 100% 50%;
+    --border: 0 0% 20%;
+  }
+}
+
+/* Print Styles */
+@media print {
+  * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Loading States */
+.loading-shimmer {
+  background: linear-gradient(90deg, 
+    hsl(var(--muted)) 25%, 
+    hsl(var(--muted-foreground)/0.1) 50%, 
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Interactive Elements */
+.interactive {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.interactive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px hsl(var(--primary)/0.15);
+}
+
+.interactive:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px hsl(var(--primary)/0.1);
+}
+
+/* Text Selection */
+::selection {
+  background: hsl(var(--primary)/0.2);
+  color: hsl(var(--primary-foreground));
+}
+
+::-moz-selection {
+  background: hsl(var(--primary)/0.2);
+  color: hsl(var(--primary-foreground));
+}
+
+/* Modern Form Elements */
+input[type="checkbox"], 
+input[type="radio"] {
+  accent-color: hsl(var(--primary));
+}
+
+/* Code Blocks */
+code {
+  font-family: var(--font-mono);
+  background: hsl(var(--muted));
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+}
+
+/* Tooltips */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border: 1px solid hsl(var(--border));
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 50;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Modern Card Hover Effects */
+.card-hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+}
+
+/* Status Indicators */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+.status-dot.online { background: hsl(var(--security-500)); }
+.status-dot.offline { background: hsl(var(--muted-foreground)); }
+.status-dot.warning { background: hsl(var(--warning-500)); }
+.status-dot.error { background: hsl(var(--danger-500)); }
+
+/* Modern Borders */
+.border-gradient {
+  background: linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
+              linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
+  border: 1px solid transparent;
+}
+
+/* Backdrop Blur Utilities */
+.backdrop-blur-sm { backdrop-filter: blur(4px); }
+.backdrop-blur { backdrop-filter: blur(8px); }
+.backdrop-blur-md { backdrop-filter: blur(12px); }
+.backdrop-blur-lg { backdrop-filter: blur(16px); }
+
+/* Modern Glass Effect */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
