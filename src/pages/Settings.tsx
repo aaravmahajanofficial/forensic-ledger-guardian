@@ -3,6 +3,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   User,
   Bell,
@@ -27,15 +29,13 @@ const Settings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // User profile state
   const [profileData, setProfileData] = useState({
     name: user?.name || "",
     title: user?.roleTitle || "",
     email: "user@example.com",
-    bio: "",
+    bio: "Experienced forensic analyst with a background in digital evidence processing and blockchain technology.",
   });
 
-  // Notification preferences state
   const [notificationPrefs, setNotificationPrefs] = useState({
     caseUpdates: true,
     newEvidence: true,
@@ -43,36 +43,32 @@ const Settings = () => {
     systemAnnouncements: true,
   });
 
-  // Security settings state
   const [securitySettings, setSecuritySettings] = useState({
     twoFactorAuth: false,
     loginNotifications: true,
     recoveryEmail: "",
   });
 
-  // Wallet settings state
   const [walletSettings, setWalletSettings] = useState({
     autoSign: false,
     txNotifications: true,
   });
 
-  // Loading states for buttons
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [isNotifSaving, setIsNotifSaving] = useState(false);
   const [isSecuritySaving, setIsSecuritySaving] = useState(false);
 
-  // Handle profile data changes
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { id, value } = e.target;
     setProfileData((prev) => ({ ...prev, [id]: value }));
   };
 
-  // Handle notification toggle changes
   const handleNotificationToggle = (key: keyof typeof notificationPrefs) => {
     setNotificationPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Handle security settings changes
   const handleSecurityChange = (
     key: keyof typeof securitySettings,
     value: boolean | string
@@ -80,7 +76,6 @@ const Settings = () => {
     setSecuritySettings((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Handle wallet settings changes
   const handleWalletChange = (
     key: keyof typeof walletSettings,
     value: string | boolean
@@ -88,11 +83,8 @@ const Settings = () => {
     setWalletSettings((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Save profile changes
   const saveProfileChanges = () => {
     setIsProfileSaving(true);
-
-    // Simulate API call
     setTimeout(() => {
       setIsProfileSaving(false);
       toast({
@@ -102,11 +94,8 @@ const Settings = () => {
     }, 1000);
   };
 
-  // Save notification preferences
   const saveNotificationPrefs = () => {
     setIsNotifSaving(true);
-
-    // Simulate API call
     setTimeout(() => {
       setIsNotifSaving(false);
       toast({
@@ -116,11 +105,8 @@ const Settings = () => {
     }, 1000);
   };
 
-  // Save security settings
   const saveSecuritySettings = () => {
     setIsSecuritySaving(true);
-
-    // Simulate API call
     setTimeout(() => {
       setIsSecuritySaving(false);
       toast({
@@ -130,51 +116,78 @@ const Settings = () => {
     }, 1000);
   };
 
+  const getNotificationDescription = (key: keyof typeof notificationPrefs) => {
+    switch (key) {
+      case "caseUpdates":
+        return "Get notified about status changes in your assigned cases.";
+      case "newEvidence":
+        return "Receive alerts when new evidence is submitted to your cases.";
+      case "roleAssignments":
+        return "Be informed about new role assignments or permission changes.";
+      case "systemAnnouncements":
+        return "Receive important announcements and updates from administrators.";
+      default:
+        return "";
+    }
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8 animate-fade-in bg-background text-foreground">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-forensic-800">Settings</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-primary">
+          Settings
+        </h1>
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid grid-cols-4 mb-6">
-          <TabsTrigger value="profile" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            <span className="hidden md:inline">Profile</span>
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-6 bg-muted p-1 rounded-lg">
+          <TabsTrigger
+            value="profile"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+          >
+            <User className="h-5 w-5" />
+            <span>Profile</span>
           </TabsTrigger>
           <TabsTrigger
             value="notifications"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
           >
-            <Bell className="h-4 w-4" />
-            <span className="hidden md:inline">Notifications</span>
+            <Bell className="h-5 w-5" />
+            <span>Notifications</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            <span className="hidden md:inline">Security</span>
+          <TabsTrigger
+            value="security"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+          >
+            <Shield className="h-5 w-5" />
+            <span>Security</span>
           </TabsTrigger>
-          <TabsTrigger value="account" className="flex items-center gap-2">
-            <Key className="h-4 w-4" />
-            <span className="hidden md:inline">Wallet</span>
+          <TabsTrigger
+            value="account"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+          >
+            <Key className="h-5 w-5" />
+            <span>Wallet & Blockchain</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile" className="space-y-4">
+        <TabsContent value="profile" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
+              <CardTitle className="text-xl">Profile Information</CardTitle>
               <CardDescription>
-                Update your personal information
+                Update your personal and professional information.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="name">Full Name</Label>
                   <Input
                     id="name"
                     value={profileData.name}
                     onChange={handleProfileChange}
+                    placeholder="e.g., John Doe"
                   />
                 </div>
                 <div className="space-y-2">
@@ -183,6 +196,7 @@ const Settings = () => {
                     id="title"
                     value={profileData.title}
                     onChange={handleProfileChange}
+                    placeholder="e.g., Forensic Analyst"
                   />
                 </div>
               </div>
@@ -194,266 +208,249 @@ const Settings = () => {
                   type="email"
                   value={profileData.email}
                   onChange={handleProfileChange}
+                  placeholder="your.email@agency.gov"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Input
+                <Label htmlFor="bio">Professional Bio</Label>
+                <Textarea
                   id="bio"
                   value={profileData.bio}
                   onChange={handleProfileChange}
-                  className="h-24"
+                  placeholder="A brief summary of your professional background..."
+                  className="min-h-[120px]"
                 />
               </div>
-
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4 bg-muted/50">
               <Button
-                className="bg-forensic-accent hover:bg-forensic-accent/90 flex items-center gap-2"
                 onClick={saveProfileChanges}
                 disabled={isProfileSaving}
+                className="ml-auto"
               >
                 {isProfileSaving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  <Save className="h-4 w-4" />
+                  <Save className="mr-2 h-4 w-4" />
                 )}
-                {isProfileSaving ? "Saving..." : "Save Changes"}
+                Save Changes
               </Button>
-            </CardContent>
+            </CardFooter>
           </Card>
         </TabsContent>
 
-        <TabsContent value="notifications" className="space-y-4">
+        <TabsContent value="notifications" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Notification Preferences</CardTitle>
+              <CardTitle className="text-xl">
+                Notification Preferences
+              </CardTitle>
               <CardDescription>
-                Configure how you receive notifications
+                Manage how you receive notifications from the system.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Case Updates</p>
-                  <p className="text-sm text-forensic-500">
-                    Get notified when a case is updated
-                  </p>
+            <CardContent className="space-y-4 divide-y">
+              {Object.entries(notificationPrefs).map(([key, value]) => (
+                <div
+                  key={key}
+                  className="flex items-center justify-between pt-4 first:pt-0"
+                >
+                  <div>
+                    <Label
+                      htmlFor={key}
+                      className="font-medium text-foreground"
+                    >
+                      {key
+                        .replace(/([A-Z])/g, " $1")
+                        .replace(/^./, (str) => str.toUpperCase())}
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      {getNotificationDescription(
+                        key as keyof typeof notificationPrefs
+                      )}
+                    </p>
+                  </div>
+                  <Switch
+                    id={key}
+                    checked={value}
+                    onCheckedChange={() =>
+                      handleNotificationToggle(
+                        key as keyof typeof notificationPrefs
+                      )
+                    }
+                  />
                 </div>
-                <Switch
-                  checked={notificationPrefs.caseUpdates}
-                  onCheckedChange={() =>
-                    handleNotificationToggle("caseUpdates")
-                  }
-                  id="case-updates"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">New Evidence</p>
-                  <p className="text-sm text-forensic-500">
-                    Get notified when new evidence is added to your cases
-                  </p>
-                </div>
-                <Switch
-                  checked={notificationPrefs.newEvidence}
-                  onCheckedChange={() =>
-                    handleNotificationToggle("newEvidence")
-                  }
-                  id="evidence-alerts"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Role Assignments</p>
-                  <p className="text-sm text-forensic-500">
-                    Get notified when you are assigned to a new case
-                  </p>
-                </div>
-                <Switch
-                  checked={notificationPrefs.roleAssignments}
-                  onCheckedChange={() =>
-                    handleNotificationToggle("roleAssignments")
-                  }
-                  id="role-alerts"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">System Announcements</p>
-                  <p className="text-sm text-forensic-500">
-                    Important system-wide announcements
-                  </p>
-                </div>
-                <Switch
-                  checked={notificationPrefs.systemAnnouncements}
-                  onCheckedChange={() =>
-                    handleNotificationToggle("systemAnnouncements")
-                  }
-                  id="system-alerts"
-                />
-              </div>
-
+              ))}
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4 bg-muted/50">
               <Button
-                className="bg-forensic-accent hover:bg-forensic-accent/90 flex items-center gap-2"
                 onClick={saveNotificationPrefs}
                 disabled={isNotifSaving}
+                className="ml-auto"
               >
                 {isNotifSaving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  <Save className="h-4 w-4" />
+                  <Save className="mr-2 h-4 w-4" />
                 )}
-                {isNotifSaving ? "Saving..." : "Save Preferences"}
+                Save Preferences
               </Button>
-            </CardContent>
+            </CardFooter>
           </Card>
         </TabsContent>
 
-        <TabsContent value="security" className="space-y-4">
+        <TabsContent value="security" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Security Settings</CardTitle>
+              <CardTitle className="text-xl">Security Settings</CardTitle>
               <CardDescription>
-                Manage your security preferences
+                Enhance your account&apos;s security.rity.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-background">
                 <div>
-                  <p className="font-medium">Two-Factor Authentication</p>
-                  <p className="text-sm text-forensic-500">
-                    Add an extra layer of security to your account
+                  <Label htmlFor="twoFactorAuth" className="font-medium">
+                    Two-Factor Authentication (2FA)
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Require a second verification step to log in.
                   </p>
                 </div>
                 <Switch
+                  id="twoFactorAuth"
                   checked={securitySettings.twoFactorAuth}
                   onCheckedChange={(checked) =>
                     handleSecurityChange("twoFactorAuth", checked)
                   }
-                  id="2fa"
                 />
               </div>
-
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-background">
                 <div>
-                  <p className="font-medium">Login Notifications</p>
-                  <p className="text-sm text-forensic-500">
-                    Receive alerts when your account is accessed
+                  <Label htmlFor="loginNotifications" className="font-medium">
+                    Login Notifications
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Get an email notification for every new login to your
+                    account.
                   </p>
                 </div>
                 <Switch
+                  id="loginNotifications"
                   checked={securitySettings.loginNotifications}
                   onCheckedChange={(checked) =>
                     handleSecurityChange("loginNotifications", checked)
                   }
-                  id="login-alerts"
                 />
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="recovery-email">Recovery Email</Label>
+                <Label htmlFor="recoveryEmail">Recovery Email</Label>
                 <Input
-                  id="recovery-email"
+                  id="recoveryEmail"
                   type="email"
-                  placeholder="backup@example.com"
                   value={securitySettings.recoveryEmail}
                   onChange={(e) =>
                     handleSecurityChange("recoveryEmail", e.target.value)
                   }
+                  placeholder="recovery.email@example.com"
                 />
               </div>
-
-              <div className="bg-forensic-warning/10 border border-forensic-warning/20 p-4 rounded-md flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-forensic-warning shrink-0 mt-0.5" />
-                <p className="text-sm text-forensic-600">
-                  Changing security settings requires verification through your
-                  blockchain wallet. Make sure you have access to your connected
-                  wallet.
-                </p>
-              </div>
-
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4 bg-muted/50">
               <Button
-                className="bg-forensic-accent hover:bg-forensic-accent/90 flex items-center gap-2"
                 onClick={saveSecuritySettings}
                 disabled={isSecuritySaving}
+                className="ml-auto"
               >
                 {isSecuritySaving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  <Save className="h-4 w-4" />
+                  <Save className="mr-2 h-4 w-4" />
                 )}
-                {isSecuritySaving ? "Saving..." : "Save Security Settings"}
+                Save Security Settings
               </Button>
+            </CardFooter>
+          </Card>
+
+          <Card className="border-destructive/50 bg-destructive/10">
+            <CardHeader className="flex-row items-center gap-4 space-y-0">
+              <AlertTriangle className="h-6 w-6 text-destructive" />
+              <div>
+                <CardTitle className="text-lg text-destructive">
+                  Account Deactivation
+                </CardTitle>
+                <CardDescription className="text-destructive/80">
+                  Permanently deactivate your account and delete all associated
+                  data.
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-destructive/90 mb-4">
+                This action is irreversible. Please be certain before
+                proceeding. All your cases, evidence records, and activity logs
+                will be permanently erased.
+              </p>
+              <Button variant="destructive">Deactivate Account</Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="account" className="space-y-4">
+        <TabsContent value="account" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Wallet Information</CardTitle>
+              <CardTitle className="text-xl">Wallet & Blockchain</CardTitle>
               <CardDescription>
-                Manage your blockchain wallet connection
+                Manage your connected wallet and transaction settings.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 border border-forensic-200 rounded-md bg-forensic-50">
-                <p className="font-medium text-forensic-800 mb-1">
-                  Connected Wallet
-                </p>
-                <p className="text-sm text-forensic-600 font-mono">
-                  {user?.address ||
-                    "0x0000000000000000000000000000000000000000"}
-                </p>
+            <CardContent className="space-y-6">
+              <div className="flex items-center p-4 rounded-lg border bg-background">
+                <div className="flex-grow">
+                  <Label className="font-medium">
+                    Connected Wallet Address
+                  </Label>
+                  <p className="text-sm text-muted-foreground font-mono break-all">
+                    {user?.address || "0x0000...0000"}
+                  </p>
+                </div>
+                <Button variant="outline">Disconnect</Button>
               </div>
-
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-background">
                 <div>
-                  <p className="font-medium">Auto-sign Transactions</p>
-                  <p className="text-sm text-forensic-500">
-                    Allow automatic signing for routine operations
+                  <Label htmlFor="autoSign" className="font-medium">
+                    Auto-Sign Transactions
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Allow the application to sign transactions without a prompt.
                   </p>
                 </div>
                 <Switch
+                  id="autoSign"
                   checked={walletSettings.autoSign}
                   onCheckedChange={(checked) =>
                     handleWalletChange("autoSign", checked)
                   }
-                  id="auto-sign"
                 />
               </div>
-
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-background">
                 <div>
-                  <p className="font-medium">Transaction Notifications</p>
-                  <p className="text-sm text-forensic-500">
-                    Get notified for all blockchain transactions
+                  <Label htmlFor="txNotifications" className="font-medium">
+                    Transaction Notifications
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Receive notifications for completed or failed transactions.
                   </p>
                 </div>
                 <Switch
+                  id="txNotifications"
                   checked={walletSettings.txNotifications}
                   onCheckedChange={(checked) =>
                     handleWalletChange("txNotifications", checked)
                   }
-                  id="tx-alerts"
                 />
               </div>
-
-              <div className="bg-forensic-warning/10 border border-forensic-warning/20 p-4 rounded-md flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-forensic-warning shrink-0 mt-0.5" />
-                <p className="text-sm text-forensic-600">
-                  Changing your connected wallet requires verification through
-                  both your current and new wallets. This is to ensure the
-                  security of your account and data.
-                </p>
-              </div>
-
-              <Button variant="outline" className="w-full">
-                Switch Wallet
-              </Button>
             </CardContent>
           </Card>
         </TabsContent>

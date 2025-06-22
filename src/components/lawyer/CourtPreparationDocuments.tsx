@@ -14,51 +14,78 @@ import {
   FileText,
   Download,
   Edit,
-  Copy,
   UploadCloud,
   Presentation,
+  FileUp,
+  Users,
+  Clock,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export interface DocumentItem {
   id: string;
   name: string;
-  type: string;
+  type: "Brief" | "Motion" | "Exhibit" | "Pleading" | "Other";
   status: "draft" | "review" | "final";
   lastModified: string;
   size: string;
-  author: string;
+  author: { name: string; avatarUrl?: string };
 }
 
 interface CourtPreparationDocumentsProps {
   documents: DocumentItem[];
 }
 
+const StatCard = ({
+  icon,
+  label,
+  value,
+  colorClass,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  colorClass: string;
+}) => (
+  <Card className="hover:shadow-lg transition-shadow duration-200">
+    <CardContent className={`p-4 flex items-center gap-4 ${colorClass}`}>
+      <div className="p-3 bg-white/20 rounded-lg">{icon}</div>
+      <div>
+        <div className="text-sm font-medium text-white/90">{label}</div>
+        <div className="text-2xl font-bold text-white">{value}</div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 const CourtPreparationDocuments: React.FC<CourtPreparationDocumentsProps> = ({
   documents,
 }) => {
-  const getStatusColor = (status: string) => {
+  const getStatusBadgeVariant = (
+    status: "draft" | "review" | "final"
+  ): "secondary" | "warning" | "success" => {
     switch (status) {
-      case "final":
-        return "bg-green-100 text-green-800";
-      case "review":
-        return "bg-yellow-100 text-yellow-800";
       case "draft":
-        return "bg-blue-100 text-blue-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+        return "secondary";
+      case "review":
+        return "warning";
+      case "final":
+        return "success";
     }
   };
 
-  const getDocumentIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case "brief":
-        return <FileText className="h-4 w-4 text-blue-600" />;
-      case "motion":
-        return <FileText className="h-4 w-4 text-green-600" />;
-      case "exhibit":
-        return <Presentation className="h-4 w-4 text-purple-600" />;
+  const getDocumentIcon = (type: DocumentItem["type"]) => {
+    switch (type) {
+      case "Brief":
+        return <FileText className="h-5 w-5 text-blue-500" />;
+      case "Motion":
+        return <FileText className="h-5 w-5 text-green-500" />;
+      case "Exhibit":
+        return <Presentation className="h-5 w-5 text-purple-500" />;
+      case "Pleading":
+        return <FileText className="h-5 w-5 text-yellow-500" />;
       default:
-        return <FileText className="h-4 w-4 text-gray-600" />;
+        return <FileText className="h-5 w-5 text-gray-500" />;
     }
   };
 
@@ -69,45 +96,39 @@ const CourtPreparationDocuments: React.FC<CourtPreparationDocumentsProps> = ({
   return (
     <div className="space-y-6">
       {/* Document Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <FileText className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-            <h3 className="font-medium">Draft</h3>
-            <p className="text-2xl font-bold text-blue-600">{draftCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Edit className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
-            <h3 className="font-medium">In Review</h3>
-            <p className="text-2xl font-bold text-yellow-600">{reviewCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Copy className="h-8 w-8 text-green-600 mx-auto mb-2" />
-            <h3 className="font-medium">Final</h3>
-            <p className="text-2xl font-bold text-green-600">{finalCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <UploadCloud className="h-8 w-8 text-forensic-accent mx-auto mb-2" />
-            <h3 className="font-medium">Total</h3>
-            <p className="text-2xl font-bold text-forensic-accent">
-              {documents.length}
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          icon={<FileText className="h-6 w-6 text-white" />}
+          label="Drafts"
+          value={draftCount}
+          colorClass="bg-blue-500"
+        />
+        <StatCard
+          icon={<Clock className="h-6 w-6 text-white" />}
+          label="In Review"
+          value={reviewCount}
+          colorClass="bg-yellow-500"
+        />
+        <StatCard
+          icon={<FileUp className="h-6 w-6 text-white" />}
+          label="Finalized"
+          value={finalCount}
+          colorClass="bg-green-500"
+        />
+        <StatCard
+          icon={<Users className="h-6 w-6 text-white" />}
+          label="Total Documents"
+          value={documents.length}
+          colorClass="bg-gray-700"
+        />
       </div>
 
       {/* Documents Table */}
-      <Card>
+      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-forensic-accent" />
+            <CardTitle className="flex items-center gap-3 text-2xl font-bold text-gray-800 dark:text-white">
+              <FileText className="h-7 w-7 text-primary" />
               Court Documents
             </CardTitle>
             <Button>
@@ -117,60 +138,71 @@ const CourtPreparationDocuments: React.FC<CourtPreparationDocumentsProps> = ({
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Document Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Author</TableHead>
-                <TableHead>Last Modified</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {documents.map((doc) => (
-                <TableRow key={doc.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {getDocumentIcon(doc.type)}
-                      <span className="font-medium">{doc.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{doc.type}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(doc.status)}>
-                      {doc.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-600">
-                    {doc.author}
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-600">
-                    {doc.lastModified}
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-600">
-                    {doc.size}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline">
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Download className="h-4 w-4 mr-1" />
-                        Download
-                      </Button>
-                    </div>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[40%]">Document Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Author</TableHead>
+                  <TableHead>Last Modified</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {documents.map((doc) => (
+                  <TableRow key={doc.id} className="hover:bg-muted/50">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        {getDocumentIcon(doc.type)}
+                        <span className="font-medium text-gray-800 dark:text-gray-200">
+                          {doc.name}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{doc.type}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(doc.status)}>
+                        {doc.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-8 w-8 border">
+                          <AvatarImage
+                            src={doc.author.avatarUrl}
+                            alt={doc.author.name}
+                          />
+                          <AvatarFallback>
+                            {doc.author.name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-muted-foreground">
+                          {doc.author.name}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {doc.lastModified}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button size="sm" variant="outline">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

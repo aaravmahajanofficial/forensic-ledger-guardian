@@ -1,151 +1,132 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FileUp, Eye, Lock, Unlock, FileCheck } from "lucide-react";
+import { FileUp, Eye, Lock, Unlock, FileCheck, ShieldQuestion } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Mock activity data
 const activities = [
-  {
-    id: 1,
-    type: "upload",
-    user: "John Smith",
-    userInitials: "JS",
-    userRole: "Forensic",
-    caseId: "FF-2023-104",
-    evidenceId: "EV-104-001",
-    timestamp: "2025-04-09T10:23:45Z",
-    description: "Uploaded hard drive disk image",
-  },
-  {
-    id: 2,
-    type: "view",
-    user: "Emily Johnson",
-    userInitials: "EJ",
-    userRole: "Officer",
-    caseId: "FF-2023-104",
-    evidenceId: "EV-104-001",
-    timestamp: "2025-04-09T11:45:12Z",
-    description: "Viewed hard drive disk image",
-  },
-  {
-    id: 3,
-    type: "lock",
-    user: "Michael Chen",
-    userInitials: "MC",
-    userRole: "Court",
-    caseId: "FF-2023-092",
-    evidenceId: null,
-    timestamp: "2025-04-09T13:12:33Z",
-    description: "Sealed case for court proceedings",
-  },
-  {
-    id: 4,
-    type: "verify",
-    user: "Sarah Lee",
-    userInitials: "SL",
-    userRole: "Forensic",
-    caseId: "FF-2023-089",
-    evidenceId: "EV-089-005",
-    timestamp: "2025-04-08T16:37:21Z",
-    description: "Verified email archive integrity",
-  },
-  {
-    id: 5,
-    type: "unlock",
-    user: "Michael Chen",
-    userInitials: "MC",
-    userRole: "Court",
-    caseId: "FF-2023-078",
-    evidenceId: null,
-    timestamp: "2025-04-08T09:05:48Z",
-    description: "Unsealed case after hearing",
-  },
+	{
+		id: 1,
+		type: "upload",
+		user: "John Smith",
+		userInitials: "JS",
+		description: "Uploaded hard drive disk image for case #FF-2023-104.",
+		timestamp: "2025-04-09T10:23:45Z",
+	},
+	{
+		id: 2,
+		type: "view",
+		user: "Emily Johnson",
+		userInitials: "EJ",
+		description: "Viewed evidence EV-104-001 in case #FF-2023-104.",
+		timestamp: "2025-04-09T11:45:12Z",
+	},
+	{
+		id: 3,
+		type: "lock",
+		user: "Michael Chen",
+		userInitials: "MC",
+		description: "Sealed case #FF-2023-092 for court proceedings.",
+		timestamp: "2025-04-09T13:12:33Z",
+	},
+	{
+		id: 4,
+		type: "verify",
+		user: "Sarah Lee",
+		userInitials: "SL",
+		description: "Verified integrity of email archive EV-089-005.",
+		timestamp: "2025-04-08T16:37:21Z",
+	},
+	{
+		id: 5,
+		type: "unlock",
+		user: "Michael Chen",
+		userInitials: "MC",
+		description: "Unsealed case #FF-2023-078 after hearing.",
+		timestamp: "2025-04-08T09:05:48Z",
+	},
 ];
 
-const ActivityIcon = ({ type }: { type: string }) => {
-  switch (type) {
-    case "upload":
-      return <FileUp className="h-4 w-4 text-forensic-evidence" />;
-    case "view":
-      return <Eye className="h-4 w-4 text-forensic-accent" />;
-    case "lock":
-      return <Lock className="h-4 w-4 text-forensic-danger" />;
-    case "unlock":
-      return <Unlock className="h-4 w-4 text-forensic-success" />;
-    case "verify":
-      return <FileCheck className="h-4 w-4 text-forensic-court" />;
-    default:
-      return null;
-  }
-};
-
-const getActivityColor = (type: string) => {
-  switch (type) {
-    case "upload":
-      return "bg-forensic-evidence/10 border-forensic-evidence/20";
-    case "view":
-      return "bg-forensic-accent/10 border-forensic-accent/20";
-    case "lock":
-      return "bg-forensic-danger/10 border-forensic-danger/20";
-    case "unlock":
-      return "bg-forensic-success/10 border-forensic-success/20";
-    case "verify":
-      return "bg-forensic-court/10 border-forensic-court/20";
-    default:
-      return "bg-forensic-200 border-forensic-300";
-  }
+const activityConfig = {
+	upload: {
+		icon: FileUp,
+		color: "text-primary",
+		bg: "bg-primary/10",
+	},
+	view: {
+		icon: Eye,
+		color: "text-accent",
+		bg: "bg-accent/10",
+	},
+	lock: {
+		icon: Lock,
+		color: "text-destructive",
+		bg: "bg-destructive/10",
+	},
+	unlock: {
+		icon: Unlock,
+		color: "text-green-600",
+		bg: "bg-green-500/10",
+	},
+	verify: {
+		icon: FileCheck,
+		color: "text-secondary",
+		bg: "bg-secondary/10",
+	},
+	default: {
+		icon: ShieldQuestion,
+		color: "text-muted-foreground",
+		bg: "bg-muted",
+	},
 };
 
 const RecentActivityList = () => {
-  return (
-    <div className="space-y-4">
-      {activities.map((activity) => (
-        <div
-          key={activity.id}
-          className="flex items-start space-x-4 p-3 rounded-lg border border-forensic-100 hover:bg-forensic-50 transition-colors"
-        >
-          <div
-            className={cn(
-              "p-2 rounded-full border",
-              getActivityColor(activity.type)
-            )}
-          >
-            <ActivityIcon type={activity.type} />
-          </div>
+	const formatTimeAgo = (timestamp: string) => {
+		const now = new Date();
+		const activityDate = new Date(timestamp);
+		const diffInSeconds = Math.floor((now.getTime() - activityDate.getTime()) / 1000);
 
-          <div className="flex-1 space-y-1">
-            <div className="flex justify-between">
-              <span className="font-medium text-forensic-800">
-                {activity.description}
-              </span>
-              <span className="text-xs text-forensic-500">
-                {new Date(activity.timestamp).toLocaleTimeString()}
-              </span>
-            </div>
+		if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
+		const diffInMinutes = Math.floor(diffInSeconds / 60);
+		if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+		const diffInHours = Math.floor(diffInMinutes / 60);
+		if (diffInHours < 24) return `${diffInHours}h ago`;
+		const diffInDays = Math.floor(diffInHours / 24);
+		return `${diffInDays}d ago`;
+	};
 
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-1 text-sm text-forensic-600">
-                <span>Case: {activity.caseId}</span>
-                {activity.evidenceId && (
-                  <>
-                    <span>•</span>
-                    <span>Evidence: {activity.evidenceId}</span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
+	return (
+		<div className="space-y-6">
+			{activities.map((activity, index) => {
+				const config = activityConfig[activity.type as keyof typeof activityConfig] || activityConfig.default;
 
-          <Avatar className="h-8 w-8">
-            <AvatarImage src="" />
-            <AvatarFallback className="bg-forensic-accent/20 text-forensic-accent text-xs">
-              {activity.userInitials}
-            </AvatarFallback>
-          </Avatar>
-        </div>
-      ))}
-    </div>
-  );
+				return (
+					<div key={activity.id} className="flex items-start space-x-4 group">
+						<div className="relative">
+							<Avatar className="h-10 w-10 border-2 border-transparent group-hover:border-primary/50 transition-all">
+								<AvatarImage src={`https://i.pravatar.cc/40?u=${activity.user}`} alt={activity.user} />
+								<AvatarFallback className={cn("font-bold", config.bg, config.color)}>
+									{activity.userInitials}
+								</AvatarFallback>
+							</Avatar>
+							{index < activities.length - 1 && (
+								<div className="absolute top-12 left-5 h-full w-0.5 bg-border group-hover:bg-primary/50 transition-all" />
+							)}
+						</div>
+						<div className="flex-1 pt-1">
+							<p className="text-sm text-foreground">
+								<span className="font-semibold">{activity.user}</span>
+								<span className="text-muted-foreground"> {activity.description}</span>
+							</p>
+							<p className="text-xs text-muted-foreground mt-1">
+								{formatTimeAgo(activity.timestamp)}
+							</p>
+						</div>
+					</div>
+				);
+			})}
+		</div>
+	);
 };
 
 export default RecentActivityList;

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLES, ROLE_NAMES } from "@/constants";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 // Role type and enum-like object for convenience
 type Role = (typeof ROLES)[keyof typeof ROLES];
@@ -58,39 +59,39 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
   const getRoleBadgeColor = (role: Role) => {
     switch (role) {
       case ROLES.COURT:
-        return "bg-forensic-court text-white";
+        return "bg-primary text-primary-foreground";
       case ROLES.OFFICER:
-        return "bg-forensic-800 text-white";
+        return "bg-secondary text-secondary-foreground";
       case ROLES.FORENSIC:
-        return "bg-forensic-accent text-white";
+        return "bg-accent text-accent-foreground";
       case ROLES.LAWYER:
-        return "bg-forensic-warning text-forensic-900";
+        return "bg-warning text-warning-foreground";
       default:
-        return "bg-gray-500 text-white";
+        return "bg-muted text-muted-foreground";
     }
   };
 
   return (
-    <header className="bg-white border-b border-forensic-200 h-14 md:h-16">
-      <div className="h-full px-2 sm:px-4 flex items-center justify-between">
-        <div className="flex items-center">
+    <header className="bg-card border-b border-border h-16 sticky top-0 z-50 backdrop-blur-sm bg-card/95">
+      <div className="h-full px-4 sm:px-6 flex items-center justify-between">
+        <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
-            className="mr-1 sm:mr-2"
+            className="shrink-0"
           >
             <Menu className="h-5 w-5" />
           </Button>
 
-          {/* Show logo on mobile */}
+          {/* Enhanced Logo */}
           {isMobile && (
-            <div className="flex items-center">
-              <div className="flex items-center justify-center w-6 h-6 bg-gradient-to-r from-forensic-accent to-forensic-evidence rounded-md overflow-hidden">
-                <Shield className="h-4 w-4 text-white" />
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg shadow-md">
+                <Shield className="h-5 w-5 text-white" />
               </div>
-              <span className="ml-1 font-semibold text-sm md:text-base">
-                ForensicChain
+              <span className="font-semibold text-lg text-foreground">
+                Forensic Ledger Guardian
               </span>
             </div>
           )}
@@ -102,7 +103,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-1 text-forensic-600 hover:text-forensic-accent"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
               onClick={() => scrollToSection("features")}
             >
               <Sparkles className="h-4 w-4" />
@@ -111,7 +112,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-1 text-forensic-600 hover:text-forensic-accent"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
               onClick={() => scrollToSection("how-it-works")}
             >
               <HelpCircle className="h-4 w-4" />
@@ -120,7 +121,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-1 text-forensic-600 hover:text-forensic-accent"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
               onClick={() => scrollToSection("security")}
             >
               <Lock className="h-4 w-4" />
@@ -130,17 +131,23 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
         )}
 
         {user ? (
-          <div className="flex items-center gap-1 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
-              <Bell className="h-4 w-4 text-forensic-500" />
+            <Button variant="ghost" size="icon" className="hidden sm:flex relative">
+              <Bell className="h-5 w-5 text-muted-foreground" />
+              <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full flex items-center justify-center">
+                <span className="text-xs text-white">•</span>
+              </span>
             </Button>
 
             {/* Role Badge - hide on very small screens */}
             <Badge
               className={`${
                 user.role ? getRoleBadgeColor(user.role) : "bg-gray-500"
-              } px-2 py-1 hidden xs:inline-flex`}
+              } px-3 py-1 hidden xs:inline-flex rounded-full font-medium`}
             >
               {user.role ? ROLE_NAMES[user.role] : "Unknown"}
             </Badge>
@@ -151,7 +158,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
                   variant="ghost"
                   className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2"
                 >
-                  <User className="h-4 w-4 text-forensic-accent" />
+                  <User className="h-4 w-4 text-accent" />
                   <span className="hidden sm:inline-block text-sm truncate max-w-[100px] md:max-w-none">
                     {user.name}
                   </span>
@@ -159,8 +166,8 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="flex items-center gap-2">
-                  <div className="flex items-center justify-center w-5 h-5 bg-gradient-to-r from-forensic-accent to-forensic-evidence rounded-md overflow-hidden">
-                    <Shield className="h-3 w-3 text-white" />
+                  <div className="flex items-center justify-center w-5 h-5 bg-primary rounded-md overflow-hidden">
+                    <Shield className="h-3 w-3 text-primary-foreground" />
                   </div>
                   <span>User Profile</span>
                 </DropdownMenuLabel>
@@ -179,7 +186,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className="text-forensic-danger cursor-pointer"
+                  className="text-destructive cursor-pointer"
                   onClick={handleLogout}
                 >
                   <LogOut className="h-4 w-4 mr-2" />

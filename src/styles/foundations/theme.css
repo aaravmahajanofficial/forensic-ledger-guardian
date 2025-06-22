@@ -2,92 +2,98 @@
 /* Modern Theme Variables - Forensic Ledger Guardian */
 @layer base {
   :root {
-    /* Light Theme - Professional & Clean */
-    --background: 248 250 252;
-    --foreground: 15 23 42;
+    /* Light Theme - Professional & Clean (Per Design Document) */
+    --background: 249 250 251; /* Ghost White #F9FAFB */
+    --foreground: 32 33 36; /* Jet Black #202124 */
 
     --card: 255 255 255;
-    --card-foreground: 30 41 59;
+    --card-foreground: 32 33 36;
 
     --popover: 255 255 255;
-    --popover-foreground: 15 23 42;
+    --popover-foreground: 32 33 36;
 
-    --primary: 99 102 241;
+    --primary: 28 31 42; /* Deep Navy #1C1F2A */
     --primary-foreground: 248 250 252;
 
-    --secondary: 241 245 249;
-    --secondary-foreground: 51 65 85;
+    --secondary: 25 118 210; /* Cerulean Blue #1976D2 */
+    --secondary-foreground: 255 255 255;
 
     --muted: 248 250 252;
-    --muted-foreground: 100 116 139;
+    --muted-foreground: 95 99 104; /* Slate Grey #5F6368 */
 
-    --accent: 16 185 129;
-    --accent-foreground: 248 250 252;
+    --accent: 46 204 113; /* Emerald Green #2ECC71 */
+    --accent-foreground: 255 255 255;
 
-    --destructive: 239 68 68;
-    --destructive-foreground: 248 250 252;
+    --destructive: 229 57 53; /* Crimson Red #E53935 */
+    --destructive-foreground: 255 255 255;
 
-    --border: 226 232 240;
+    --warning: 255 179 0; /* Amber #FFB300 */
+    --warning-foreground: 255 255 255;
+
+    --border: 229 231 235;
     --input: 241 245 249;
-    --ring: 99 102 241;
+    --ring: 25 118 210; /* Cerulean Blue for focus rings */
 
     --radius: 0.75rem;
 
     /* Sidebar Variables */
     --sidebar-background: 255 255 255;
-    --sidebar-foreground: 51 65 85;
-    --sidebar-primary: 99 102 241;
+    --sidebar-foreground: 32 33 36; /* Jet Black */
+    --sidebar-primary: 28 31 42; /* Deep Navy */
     --sidebar-primary-foreground: 248 250 252;
     --sidebar-accent: 248 250 252;
-    --sidebar-accent-foreground: 51 65 85;
-    --sidebar-border: 226 232 240;
-    --sidebar-ring: 99 102 241;
+    --sidebar-accent-foreground: 32 33 36;
+    --sidebar-border: 229 231 235;
+    --sidebar-ring: 25 118 210; /* Cerulean Blue */
 
-    /* Custom Brand Variables */
-    --brand-gradient: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
-    --security-gradient: linear-gradient(135deg, hsl(var(--security-500)) 0%, hsl(var(--security-600)) 100%);
-    --danger-gradient: linear-gradient(135deg, hsl(var(--danger-500)) 0%, hsl(var(--danger-600)) 100%);
+    /* Custom Brand Variables (Per Design Document) */
+    --brand-gradient: linear-gradient(135deg, hsl(28 31 42) 0%, hsl(46 204 113) 100%);
+    --security-gradient: linear-gradient(135deg, hsl(46 204 113) 0%, hsl(39 174 96) 100%);
+    --danger-gradient: linear-gradient(135deg, hsl(229 57 53) 0%, hsl(220 38 38) 100%);
   }
 
   .dark {
-    /* Dark Theme - Professional Dark Mode */
-    --background: 15 23 42;
-    --foreground: 241 245 249;
+    /* Dark Theme - Professional Dark Mode (Per Design Document) */
+    --background: 18 18 18; /* Charcoal Grey #121212 */
+    --foreground: 255 255 255;
 
-    --card: 30 41 59;
-    --card-foreground: 226 232 240;
+    --card: 30 30 30; /* #1E1E1E */
+    --card-foreground: 255 255 255;
 
-    --popover: 30 41 59;
-    --popover-foreground: 226 232 240;
+    --popover: 30 30 30;
+    --popover-foreground: 255 255 255;
 
-    --primary: 129 140 248;
-    --primary-foreground: 15 23 42;
+    --primary: 28 31 42; /* Deep Navy */
+    --primary-foreground: 248 250 252;
 
-    --secondary: 51 65 85;
-    --secondary-foreground: 226 232 240;
+    --secondary: 25 118 210; /* Cerulean Blue */
+    --secondary-foreground: 255 255 255;
 
-    --muted: 51 65 85;
-    --muted-foreground: 148 163 184;
+    --muted: 30 30 30;
+    --muted-foreground: 176 190 197; /* #B0BEC5 */
 
-    --accent: 52 211 153;
-    --accent-foreground: 15 23 42;
+    --accent: 52 211 153; /* Slightly lighter emerald for dark mode */
+    --accent-foreground: 18 18 18;
 
-    --destructive: 248 113 113;
-    --destructive-foreground: 15 23 42;
+    --destructive: 248 113 113; /* Lighter red for dark mode */
+    --destructive-foreground: 18 18 18;
 
-    --border: 71 85 105;
-    --input: 51 65 85;
-    --ring: 129 140 248;
+    --warning: 255 179 0; /* Amber for dark mode */
+    --warning-foreground: 18 18 18;
+
+    --border: 64 64 64;
+    --input: 30 30 30;
+    --ring: 25 118 210; /* Cerulean Blue */
 
     /* Dark Sidebar Variables */
-    --sidebar-background: 30 41 59;
-    --sidebar-foreground: 203 213 225;
-    --sidebar-primary: 129 140 248;
-    --sidebar-primary-foreground: 15 23 42;
-    --sidebar-accent: 51 65 85;
-    --sidebar-accent-foreground: 226 232 240;
-    --sidebar-border: 71 85 105;
-    --sidebar-ring: 129 140 248;
+    --sidebar-background: 30 30 30;
+    --sidebar-foreground: 255 255 255;
+    --sidebar-primary: 25 118 210;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 30 30 30;
+    --sidebar-accent-foreground: 255 255 255;
+    --sidebar-border: 64 64 64;
+    --sidebar-ring: 25 118 210;
   }
 
   /* Typography Scale */
@@ -146,11 +152,12 @@
     text-wrap: pretty;
   }
 
-  /* Focus Styles - Enhanced for accessibility */
+  /* Focus Styles - Standard without high contrast */
   :focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
     border-radius: 0.375rem;
+    forced-color-adjust: none;
   }
 
   /* Selection */

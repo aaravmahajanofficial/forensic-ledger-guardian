@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -8,9 +14,21 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, Plus, Calendar } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
+import { CheckCircle2, Plus, Calendar, Flag } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export interface ChecklistItem {
   id: string;
@@ -32,6 +50,9 @@ const CourtPreparationChecklist: React.FC<CourtPreparationChecklistProps> = ({
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [newTask, setNewTask] = useState("");
   const [taskDueDate, setTaskDueDate] = useState("");
+  const [taskPriority, setTaskPriority] = useState<"high" | "medium" | "low">(
+    "medium"
+  );
 
   const toggleTask = (id: string) => {
     const updatedChecklist = checklist.map((item) =>
@@ -47,25 +68,26 @@ const CourtPreparationChecklist: React.FC<CourtPreparationChecklistProps> = ({
         task: newTask,
         completed: false,
         dueDate: taskDueDate || undefined,
-        priority: "medium",
+        priority: taskPriority,
       };
       onUpdateChecklist([...checklist, newChecklistItem]);
       setNewTask("");
       setTaskDueDate("");
+      setTaskPriority("medium");
       setTaskDialogOpen(false);
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityBadgeVariant = (
+    priority: "high" | "medium" | "low"
+  ): "destructive" | "warning" | "success" => {
     switch (priority) {
       case "high":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "destructive";
       case "medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "warning";
       case "low":
-        return "bg-green-100 text-green-800 border-green-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "success";
     }
   };
 
@@ -75,107 +97,144 @@ const CourtPreparationChecklist: React.FC<CourtPreparationChecklistProps> = ({
     totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-forensic-accident" />
-                Court Preparation Checklist
-              </CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
-                {completedTasks} of {totalTasks} tasks completed (
-                {Math.round(completionPercentage)}%)
-              </p>
-            </div>
-            <Button onClick={() => setTaskDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Task
-            </Button>
+    <Card className="w-full shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-3 text-2xl font-bold text-gray-800 dark:text-white">
+            <CheckCircle2 className="h-8 w-8 text-primary" />
+            Court Preparation Checklist
+          </CardTitle>
+          <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Task
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Add a new task</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="task" className="text-right">
+                    Task
+                  </Label>
+                  <Input
+                    id="task"
+                    value={newTask}
+                    onChange={(e) => setNewTask(e.target.value)}
+                    className="col-span-3"
+                    placeholder="e.g., File motion to compel"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="due-date" className="text-right">
+                    Due Date
+                  </Label>
+                  <Input
+                    id="due-date"
+                    type="date"
+                    value={taskDueDate}
+                    onChange={(e) => setTaskDueDate(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="priority" className="text-right">
+                    Priority
+                  </Label>
+                  <Select
+                    onValueChange={(
+                      value: "high" | "medium" | "low"
+                    ) => setTaskPriority(value)}
+                    defaultValue={taskPriority}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setTaskDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={addTask}>Add Task</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center text-sm text-muted-foreground">
+            <span>Progress</span>
+            <span>{Math.round(completionPercentage)}%</span>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
+          <Progress value={completionPercentage} className="h-2" />
+          <p className="text-sm text-muted-foreground text-center mt-1">
+            {completedTasks} of {totalTasks} tasks completed
+          </p>
+        </div>
+        <div className="space-y-3 pt-4">
           {checklist.map((item) => (
             <div
               key={item.id}
-              className={`flex items-center justify-between p-3 rounded-lg border ${
-                item.completed ? "bg-gray-50 opacity-60" : "bg-white"
-              }`}
+              className={cn(
+                "flex items-center justify-between p-3 rounded-lg border transition-all",
+                item.completed
+                  ? "bg-muted/50 border-dashed"
+                  : "bg-background hover:bg-muted/50"
+              )}
             >
-              <div className="flex items-center gap-3 flex-1">
+              <div className="flex items-center gap-4">
                 <Checkbox
+                  id={`task-${item.id}`}
                   checked={item.completed}
                   onCheckedChange={() => toggleTask(item.id)}
                 />
-                <div className="flex-1">
-                  <p
-                    className={`font-medium ${
-                      item.completed ? "line-through text-gray-500" : ""
-                    }`}
-                  >
-                    {item.task}
-                  </p>
-                  {item.dueDate && (
-                    <div className="flex items-center gap-1 mt-1">
-                      <Calendar className="h-3 w-3 text-gray-400" />
-                      <span className="text-xs text-gray-500">
-                        {item.dueDate}
-                      </span>
-                    </div>
+                <label
+                  htmlFor={`task-${item.id}`}
+                  className={cn(
+                    "font-medium",
+                    item.completed ? "line-through text-muted-foreground" : ""
                   )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`px-2 py-1 text-xs rounded-full border ${getPriorityColor(
-                    item.priority
-                  )}`}
                 >
-                  {item.priority}
-                </span>
-                {item.completed && (
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  {item.task}
+                </label>
+              </div>
+              <div className="flex items-center gap-4">
+                {item.dueDate && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    <span>{item.dueDate}</span>
+                  </div>
                 )}
+                <Badge
+                  variant={getPriorityBadgeVariant(item.priority)}
+                  className="flex items-center gap-1"
+                >
+                  <Flag className="h-3 w-3" />
+                  {item.priority}
+                </Badge>
               </div>
             </div>
           ))}
-        </CardContent>
-      </Card>
-
-      {/* Add Task Dialog */}
-      <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Task</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Task Description</label>
-              <Input
-                value={newTask}
-                onChange={(e) => setNewTask(e.target.value)}
-                placeholder="Enter task description"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Due Date (Optional)</label>
-              <Input
-                type="date"
-                value={taskDueDate}
-                onChange={(e) => setTaskDueDate(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTaskDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={addTask}>Add Task</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </div>
+      </CardContent>
+      <CardFooter className="text-xs text-muted-foreground text-center">
+        Stay organized and ensure all preparations are complete before the court date.
+      </CardFooter>
+    </Card>
   );
 };
 

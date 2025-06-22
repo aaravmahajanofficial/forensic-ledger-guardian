@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Gavel } from "lucide-react";
+import { Calendar, Gavel, ClipboardList, ShieldCheck, FileText } from "lucide-react";
 
 // Import the new component parts
 import CourtPreparationOverview from "@/components/lawyer/CourtPreparationOverview";
@@ -17,13 +17,19 @@ import CourtPreparationDocuments, {
 
 // Mock data - would normally come from props or API
 const caseData = {
-  id: "FF-2023-089",
+  caseNumber: "FF-2023-089",
   title: "Tech Corp Data Breach Investigation",
-  status: "Preparation",
+  status: "In Progress" as "In Progress" | "Ready" | "Pending",
   hearingDate: "2024-02-15",
   judge: "Hon. Sarah Mitchell",
   courtroom: "Court Room 3A",
   prepProgress: 75,
+  stats: {
+    readyItems: 2,
+    pendingItems: 2,
+    witnesses: 1,
+    documents: 3,
+  },
 };
 
 const initialChecklistItems: ChecklistItem[] = [
@@ -62,7 +68,7 @@ const initialEvidenceItems: EvidenceItem[] = [
     name: "Server Access Logs",
     type: "Digital",
     status: "verified",
-    hash: "0xa1b2c3...",
+    hash: "0xa1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
     timestamp: "2024-01-05 14:30",
     size: "2.3 MB",
     relevance: "high",
@@ -72,7 +78,7 @@ const initialEvidenceItems: EvidenceItem[] = [
     name: "Email Communications",
     type: "Digital",
     status: "verified",
-    hash: "0xd4e5f6...",
+    hash: "0xd4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
     timestamp: "2024-01-06 09:15",
     size: "1.8 MB",
     relevance: "high",
@@ -82,7 +88,7 @@ const initialEvidenceItems: EvidenceItem[] = [
     name: "Network Traffic Analysis",
     type: "Digital",
     status: "pending",
-    hash: "0xg7h8i9...",
+    hash: "0xg7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2a3b4c5d6e7f8",
     timestamp: "2024-01-07 11:45",
     size: "5.2 MB",
     relevance: "medium",
@@ -97,7 +103,7 @@ const initialDocuments: DocumentItem[] = [
     status: "review",
     lastModified: "2024-01-08",
     size: "450 KB",
-    author: "Sarah Johnson",
+    author: { name: "Sarah Johnson", avatarUrl: "https://i.pravatar.cc/150?u=a042581f4e29026704d" },
   },
   {
     id: "doc2",
@@ -106,7 +112,7 @@ const initialDocuments: DocumentItem[] = [
     status: "draft",
     lastModified: "2024-01-09",
     size: "320 KB",
-    author: "Sarah Johnson",
+    author: { name: "Sarah Johnson", avatarUrl: "https://i.pravatar.cc/150?u=a042581f4e29026704d" },
   },
   {
     id: "doc3",
@@ -115,7 +121,7 @@ const initialDocuments: DocumentItem[] = [
     status: "final",
     lastModified: "2024-01-07",
     size: "1.2 MB",
-    author: "Dr. Michael Chen",
+    author: { name: "Dr. Michael Chen", avatarUrl: "https://i.pravatar.cc/150?u=a042581f4e29026704e" },
   },
 ];
 
@@ -129,57 +135,62 @@ const CourtPreparation: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-forensic-800 mb-1">
+    <div>
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8 bg-background text-foreground">
+        <div className="mb-4 sm:mb-0">
+          <h1 className="text-3xl font-bold tracking-tight text-primary">
             Court Preparation
           </h1>
-          <p className="text-sm text-forensic-600">
-            Prepare case materials and evidence for court proceedings
+          <p className="text-muted-foreground mt-1">
+            Prepare case materials and evidence for court proceedings for case {caseData.caseNumber}
           </p>
         </div>
-        <Badge className="text-lg px-3 py-2 bg-forensic-court text-white">
+        <Badge variant="outline" className="text-sm font-medium border-primary/50 text-primary">
           <Calendar className="h-4 w-4 mr-2" />
           <span>{daysUntilCourt} Days Until Court</span>
         </Badge>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 rounded-lg p-1 bg-muted">
           <TabsTrigger value="overview" className="flex items-center gap-2">
-            <Gavel className="h-4 w-4" />
-            Overview
+            <Gavel className="h-5 w-5" />
+            <span className="hidden sm:inline">Overview</span>
           </TabsTrigger>
           <TabsTrigger value="checklist" className="flex items-center gap-2">
-            Checklist
+            <ClipboardList className="h-5 w-5" />
+            <span className="hidden sm:inline">Checklist</span>
           </TabsTrigger>
           <TabsTrigger value="evidence" className="flex items-center gap-2">
-            Evidence
+            <ShieldCheck className="h-5 w-5" />
+            <span className="hidden sm:inline">Evidence</span>
           </TabsTrigger>
           <TabsTrigger value="documents" className="flex items-center gap-2">
-            Documents
+            <FileText className="h-5 w-5" />
+            <span className="hidden sm:inline">Documents</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview">
-          <CourtPreparationOverview caseData={caseData} />
-        </TabsContent>
+        <div className="mt-6">
+          <TabsContent value="overview" className="animate-fade-in">
+            <CourtPreparationOverview caseData={caseData} />
+          </TabsContent>
 
-        <TabsContent value="checklist">
-          <CourtPreparationChecklist
-            checklist={checklist}
-            onUpdateChecklist={setChecklist}
-          />
-        </TabsContent>
+          <TabsContent value="checklist" className="animate-fade-in">
+            <CourtPreparationChecklist
+              checklist={checklist}
+              onUpdateChecklist={setChecklist}
+            />
+          </TabsContent>
 
-        <TabsContent value="evidence">
-          <CourtPreparationEvidence evidence={initialEvidenceItems} />
-        </TabsContent>
+          <TabsContent value="evidence" className="animate-fade-in">
+            <CourtPreparationEvidence evidence={initialEvidenceItems} />
+          </TabsContent>
 
-        <TabsContent value="documents">
-          <CourtPreparationDocuments documents={initialDocuments} />
-        </TabsContent>
+          <TabsContent value="documents" className="animate-fade-in">
+            <CourtPreparationDocuments documents={initialDocuments} />
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   );

@@ -17,28 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ROLES } from "@/constants";
+import { ROLES, ROLE_NAMES } from "@/constants";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { UserPlus, Mail, User, Shield, Building, Key } from "lucide-react";
+import { UserPlus, Mail, User, Shield, Building, Key, ArrowLeft } from "lucide-react";
 
-// Helper function moved outside for better performance and separation of concerns
 const getRoleTitle = (roleId: string): string => {
-  const roleKey = Object.keys(ROLES).find(
-    (key) => ROLES[key as keyof typeof ROLES].toString() === roleId
-  );
-  switch (roleKey) {
-    case "Court":
-      return "Court Judge";
-    case "Officer":
-      return "Police Officer";
-    case "Forensic":
-      return "Forensic Investigator";
-    case "Lawyer":
-      return "Defense Attorney";
-    default:
-      return "Unknown Role";
-  }
+    const roleValue = parseInt(roleId, 10) as keyof typeof ROLE_NAMES;
+    return ROLE_NAMES[roleValue] || "Unknown Role";
 };
 
 const AddUser = () => {
@@ -73,6 +59,14 @@ const AddUser = () => {
       });
       return false;
     }
+    if (password.length < 8) {
+        toast({
+            title: "Invalid Password",
+            description: "Password must be at least 8 characters long.",
+            variant: "destructive",
+        });
+        return false;
+    }
     if (password !== confirmPassword) {
       toast({
         title: "Password Mismatch",
@@ -84,7 +78,7 @@ const AddUser = () => {
     return true;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) {
       return;
@@ -92,162 +86,172 @@ const AddUser = () => {
 
     setIsSubmitting(true);
 
-    // Mock user creation
-    setTimeout(() => {
-      toast({
-        title: "User Created",
-        description: `${formData.name} has been added as a ${getRoleTitle(
-          formData.role
-        )}.`,
-      });
-      setIsSubmitting(false);
-      navigate("/users/manage");
-    }, 1500);
+    // Mock user creation with a delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    setIsSubmitting(false);
+
+    toast({
+      title: "User Invitation Sent",
+      description: `${formData.name} has been invited as a ${getRoleTitle(
+        formData.role
+      )}. They will receive an email to set up their account.`,
+      variant: "success",
+    });
+    
+    navigate("/users/manage");
   };
 
   return (
-    <div className="container mx-auto max-w-3xl py-10">
-      <Card className="border-2 border-forensic-200/50 shadow-lg">
-        <CardHeader>
-          <div className="flex items-center space-x-4">
-            <div className="rounded-full bg-forensic-500 p-3 text-white">
-              <UserPlus size={24} />
-            </div>
-            <div>
-              <CardTitle className="text-2xl font-bold text-forensic-800">
-                Create a New User
-              </CardTitle>
-              <CardDescription className="text-gray-600">
-                Fill out the form to add a new user to the system.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-6 pt-6">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="name">
-                  <User className="mr-2 inline-block h-4 w-4" />
-                  Full Name
-                </Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="Enter full name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">
-                  <Mail className="mr-2 inline-block h-4 w-4" />
-                  Email Address
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter email address"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="role">
-                  <Shield className="mr-2 inline-block h-4 w-4" />
-                  Assign Role
-                </Label>
-                <Select
-                  name="role"
-                  onValueChange={handleRoleChange}
-                  value={formData.role}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(ROLES).map(([key, value]) => (
-                      <SelectItem key={key} value={value.toString()}>
-                        {getRoleTitle(value.toString())}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="organization">
-                  <Building className="mr-2 inline-block h-4 w-4" />
-                  Organization (Optional)
-                </Label>
-                <Input
-                  id="organization"
-                  name="organization"
-                  placeholder="Enter organization"
-                  value={formData.organization}
-                  onChange={handleChange}
-                  className="w-full"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="password">
-                  <Key className="mr-2 inline-block h-4 w-4" />
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Create a password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="w-full"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">
-                  <Key className="mr-2 inline-block h-4 w-4" />
-                  Confirm Password
-                </Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                  className="w-full"
-                />
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-end space-x-4 border-t px-6 py-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(-1)}
-              disabled={isSubmitting}
-            >
-              Cancel
+    <div className="container mx-auto max-w-3xl py-12 px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+            <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to User Management
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating User..." : "Create User"}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+        </div>
+        <Card className="bg-card/80 backdrop-blur-sm border-border/20">
+            <CardHeader>
+                <div className="flex items-center space-x-4">
+                    <div className="bg-primary/10 p-3 rounded-full border border-primary/20">
+                        <UserPlus className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                        <CardTitle className="text-2xl font-bold text-foreground">Invite New User</CardTitle>
+                        <CardDescription className="text-muted-foreground">
+                            Fill out the form below to invite a new user to the platform.
+                        </CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <form onSubmit={handleSubmit}>
+                <CardContent className="space-y-6 pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">
+                                <User className="inline-block mr-2 h-4 w-4 text-muted-foreground" />
+                                Full Name
+                            </Label>
+                            <Input
+                                id="name"
+                                name="name"
+                                placeholder="e.g., Jane Doe"
+                                value={formData.name}
+                                onChange={handleChange}
+                                required
+                                className="bg-background/50"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">
+                                <Mail className="inline-block mr-2 h-4 w-4 text-muted-foreground" />
+                                Email Address
+                            </Label>
+                            <Input
+                                id="email"
+                                name="email"
+                                type="email"
+                                placeholder="e.g., jane.doe@example.com"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                className="bg-background/50"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="role">
+                                <Shield className="inline-block mr-2 h-4 w-4 text-muted-foreground" />
+                                Assign Role
+                            </Label>
+                            <Select onValueChange={handleRoleChange} value={formData.role} name="role">
+                                <SelectTrigger id="role" className="bg-background/50">
+                                    <SelectValue placeholder="Select a role..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(ROLES)
+                                        .filter(([key]) => key !== 'NONE')
+                                        .map(([, value]) => (
+                                        <SelectItem key={value} value={String(value)}>
+                                            {ROLE_NAMES[value]}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="organization">
+                                <Building className="inline-block mr-2 h-4 w-4 text-muted-foreground" />
+                                Organization / Department
+                            </Label>
+                            <Input
+                                id="organization"
+                                name="organization"
+                                placeholder="e.g., Central Police Dept."
+                                value={formData.organization}
+                                onChange={handleChange}
+                                className="bg-background/50"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="password">
+                                <Key className="inline-block mr-2 h-4 w-4 text-muted-foreground" />
+                                Create Temporary Password
+                            </Label>
+                            <Input
+                                id="password"
+                                name="password"
+                                type="password"
+                                placeholder="••••••••"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                                className="bg-background/50"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="confirmPassword">
+                                <Key className="inline-block mr-2 h-4 w-4 text-muted-foreground" />
+                                Confirm Temporary Password
+                            </Label>
+                            <Input
+                                id="confirmPassword"
+                                name="confirmPassword"
+                                type="password"
+                                placeholder="••••••••"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                required
+                                className="bg-background/50"
+                            />
+                        </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground pt-2">
+                        The user will be required to change this temporary password upon their first login.
+                    </p>
+                </CardContent>
+                <CardFooter className="flex justify-end border-t border-border/20 pt-6">
+                    <Button type="submit" disabled={isSubmitting} size="lg">
+                        {isSubmitting ? (
+                            <>
+                                <span className="animate-spin mr-2">◌</span>
+                                Sending Invitation...
+                            </>
+                        ) : (
+                            <>
+                                <UserPlus className="mr-2 h-5 w-5" />
+                                Invite User
+                            </>
+                        )}
+                    </Button>
+                </CardFooter>
+            </form>
+        </Card>
     </div>
   );
 };

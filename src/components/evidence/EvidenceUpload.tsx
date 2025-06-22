@@ -21,15 +21,16 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useEvidenceManager } from "@/hooks/useEvidenceManager";
 import {
-  Upload,
-  FileCheck,
+  UploadCloud,
   FolderKanban,
-  X,
   Loader2,
   FileDigit,
   Save,
+  Paperclip,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
 
 // Mock case data - would be fetched from API
 const cases = [
@@ -38,13 +39,18 @@ const cases = [
   { id: "FF-2023-089", title: "Email Fraud Investigation - Acme Corp" },
 ];
 
+interface FileWithProgress extends File {
+  progress?: number;
+}
+
 const EvidenceUpload = () => {
   const [selectedCase, setSelectedCase] = useState<string>("");
   const [evidenceType, setEvidenceType] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [deviceSource, setDeviceSource] = useState<string>("");
   const [location, setLocation] = useState<string>("");
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<FileWithProgress[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -53,7 +59,9 @@ const EvidenceUpload = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const fileArray = Array.from(e.target.files);
+      const fileArray = Array.from(e.target.files).map((f) =>
+        Object.assign(f, { progress: 0 })
+      );
       setFiles((prevFiles) => [...prevFiles, ...fileArray]);
     }
   };
@@ -62,9 +70,24 @@ const EvidenceUpload = () => {
     setFiles(files.filter((_, i) => i !== index));
   };
 
-  const browseFiles = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
+  const onDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const onDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    if (e.dataTransfer.files) {
+      const fileArray = Array.from(e.dataTransfer.files).map((f) =>
+        Object.assign(f, { progress: 0 })
+      );
+      setFiles((prevFiles) => [...prevFiles, ...fileArray]);
     }
   };
 
@@ -73,8 +96,8 @@ const EvidenceUpload = () => {
 
     if (!selectedCase) {
       toast({
-        title: "Case required",
-        description: "Please select a case for this evidence",
+        title: "Case Not Selected",
+        description: "Please associate this evidence with a case.",
         variant: "destructive",
       });
       return;
@@ -82,110 +105,146 @@ const EvidenceUpload = () => {
 
     if (files.length === 0) {
       toast({
-        title: "No files selected",
-        description: "Please select at least one evidence file to upload",
+        title: "No Files to Upload",
+        description: "Please select at least one evidence file.",
         variant: "destructive",
       });
       return;
     }
 
-    // Validate files before upload
     const { valid, invalid } = validateFiles(files);
 
     if (invalid.length > 0) {
       toast({
-        title: "Invalid files detected",
+        title: "Invalid Files Detected",
         description: `${invalid.length} file(s) failed validation. Please check file types and sizes.`,
         variant: "destructive",
       });
+      setFiles(valid); // Keep only valid files
       return;
     }
 
-    try {
-      // Upload files using the evidence manager
-      await uploadFiles(valid, selectedCase);
+    // Simulate upload progress for UI demonstration
+    const uploadWithProgress = async () => {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setFiles((prev) =>
+          prev.map((f) => (f.name === file.name ? { ...f, progress: 0 } : f))
+        );
+        await new Promise((resolve) => setTimeout(resolve, 100)); // short delay
 
-      // Reset form on successful upload
+        const progressInterval = setInterval(() => {
+          setFiles((prev) =>
+            prev.map((f) => {
+              if (f.name === file.name) {
+                const newProgress = (f.progress || 0) + 10;
+                if (newProgress >= 100) {
+                  clearInterval(progressInterval);
+                  return { ...f, progress: 100 };
+                }
+                return { ...f, progress: newProgress };
+              }
+              return f;
+            })
+          );
+        }, 100);
+      }
+      await uploadFiles(valid, selectedCase);
+    };
+
+    try {
+      await uploadWithProgress();
+
+      toast({
+        title: "Upload Successful",
+        description: `${files.length} evidence file(s) have been securely submitted.`,
+        variant: "success",
+      });
+
+      // Reset form
       setFiles([]);
       setDescription("");
       setEvidenceType("");
       setDeviceSource("");
       setLocation("");
+      setSelectedCase("");
       clearUploadProgress();
     } catch (error) {
-      // Error handling is managed by the hook
       console.error("Upload failed:", error);
     }
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-forensic-800">
-          Evidence Upload
+    <div className="container mx-auto p-4 md:p-6">
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          Secure Evidence Upload
         </h1>
-      </div>
+        <p className="text-muted-foreground">
+          Submit digital evidence files to the immutable blockchain ledger.
+        </p>
+      </header>
 
-      <Card className="border-forensic-200">
-        <CardHeader>
-          <CardTitle className="text-xl flex items-center">
-            <Upload className="mr-2 h-5 w-5 text-forensic-accent" />
-            Submit Digital Evidence
-          </CardTitle>
-          <CardDescription>
-            Upload evidence files securely to the forensic blockchain ledger
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Case Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="caseId">Select Case</Label>
-              <Select value={selectedCase} onValueChange={setSelectedCase}>
-                <SelectTrigger id="caseId" className="border-forensic-200">
-                  <SelectValue placeholder="Select a case" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cases.map((caseItem) => (
-                    <SelectItem key={caseItem.id} value={caseItem.id}>
-                      <div className="flex items-center">
-                        <FolderKanban className="mr-2 h-4 w-4 text-forensic-accent" />
-                        <span>
-                          {caseItem.id}: {caseItem.title}
-                        </span>
-                      </div>
+      <form onSubmit={handleSubmit}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FolderKanban className="w-6 h-6 text-primary" />
+              Case & Evidence Details
+            </CardTitle>
+            <CardDescription>
+              Provide all necessary metadata for the evidence being submitted. This
+              information is critical for the chain of custody.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Case Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="caseId">Associate with Case</Label>
+                <Select value={selectedCase} onValueChange={setSelectedCase}>
+                  <SelectTrigger id="caseId">
+                    <SelectValue placeholder="Select a case file..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cases.map((caseItem) => (
+                      <SelectItem key={caseItem.id} value={caseItem.id}>
+                        <div className="flex items-center gap-2">
+                          <FolderKanban className="h-4 w-4 text-muted-foreground" />
+                          <span>
+                            {caseItem.id}: {caseItem.title}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Evidence Type */}
+              <div className="space-y-2">
+                <Label htmlFor="evidenceType">Type of Evidence</Label>
+                <Select value={evidenceType} onValueChange={setEvidenceType}>
+                  <SelectTrigger id="evidenceType">
+                    <SelectValue placeholder="Select evidence category..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="disk_image">Disk Image</SelectItem>
+                    <SelectItem value="memory_dump">Memory Dump</SelectItem>
+                    <SelectItem value="log_files">Log Files</SelectItem>
+                    <SelectItem value="emails">Email Archives</SelectItem>
+                    <SelectItem value="photos">Photographs</SelectItem>
+                    <SelectItem value="documents">Documents</SelectItem>
+                    <SelectItem value="mobile_data">
+                      Mobile Device Data
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Evidence Type */}
-            <div className="space-y-2">
-              <Label htmlFor="evidenceType">Evidence Type</Label>
-              <Select value={evidenceType} onValueChange={setEvidenceType}>
-                <SelectTrigger
-                  id="evidenceType"
-                  className="border-forensic-200"
-                >
-                  <SelectValue placeholder="Select evidence type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="disk_image">Disk Image</SelectItem>
-                  <SelectItem value="memory_dump">Memory Dump</SelectItem>
-                  <SelectItem value="log_files">Log Files</SelectItem>
-                  <SelectItem value="emails">Email Archives</SelectItem>
-                  <SelectItem value="photos">Photographs</SelectItem>
-                  <SelectItem value="documents">Documents</SelectItem>
-                  <SelectItem value="mobile_data">
-                    Mobile Device Data
-                  </SelectItem>
-                  <SelectItem value="network_captures">
-                    Network Captures
-                  </SelectItem>
-                  <SelectItem value="other">Other Digital Evidence</SelectItem>
-                </SelectContent>
-              </Select>
+                    <SelectItem value="network_captures">
+                      Network Captures
+                    </SelectItem>
+                    <SelectItem value="other">Other Digital Evidence</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Description */}
@@ -193,42 +252,39 @@ const EvidenceUpload = () => {
               <Label htmlFor="description">Evidence Description</Label>
               <Textarea
                 id="description"
-                placeholder="Describe the evidence and its relevance to the case"
+                placeholder="Describe the evidence, its condition, and its relevance to the case. Be as detailed as possible."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="min-h-[100px] border-forensic-200"
+                className="min-h-[120px]"
               />
             </div>
 
-            {/* Source and Location */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Source Device/System */}
               <div className="space-y-2">
                 <Label htmlFor="deviceSource">Source Device/System</Label>
                 <Input
                   id="deviceSource"
-                  placeholder="E.g., Suspect's laptop, Server ID: SRV-001"
+                  placeholder="e.g., Suspect's laptop (MacBook Pro 16-inch)"
                   value={deviceSource}
                   onChange={(e) => setDeviceSource(e.target.value)}
-                  className="border-forensic-200"
                 />
               </div>
+              {/* Collection Location */}
               <div className="space-y-2">
                 <Label htmlFor="location">Collection Location</Label>
                 <Input
                   id="location"
-                  placeholder="E.g., Suspect's home office, 123 Main St."
+                  placeholder="e.g., 123 Main St, Anytown, USA, Home Office"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="border-forensic-200"
                 />
               </div>
             </div>
 
             {/* File Upload */}
-            <div className="space-y-2">
+            <div className="space-y-4">
               <Label htmlFor="fileUpload">Evidence Files</Label>
-
-              {/* Hidden file input */}
               <input
                 type="file"
                 id="fileUpload"
@@ -237,109 +293,113 @@ const EvidenceUpload = () => {
                 multiple
                 className="hidden"
               />
-
-              {/* Drop zone */}
               <div
-                onClick={browseFiles}
+                onDragEnter={onDragEnter}
+                onDragLeave={onDragLeave}
+                onDragOver={onDragEnter} // Reuse onDragEnter logic
+                onDrop={onDrop}
+                onClick={() => fileInputRef.current?.click()}
                 className={cn(
-                  "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors",
-                  "border-forensic-300 hover:border-forensic-accent",
-                  files.length > 0 ? "bg-forensic-50" : "bg-white"
+                  "relative flex flex-col items-center justify-center w-full p-10 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-300",
+                  isDragOver
+                    ? "border-primary bg-primary/10"
+                    : "border-border hover:border-primary/50 hover:bg-muted"
                 )}
               >
-                <div className="flex flex-col items-center space-y-2">
-                  <FileDigit className="h-10 w-10 text-forensic-400" />
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-forensic-800">
-                      Drag & drop files or click to browse
-                    </p>
-                    <p className="text-xs text-forensic-500">
-                      Supports any file type. Maximum 1GB per file.
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="mt-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      browseFiles();
-                    }}
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Select Files
-                  </Button>
-                </div>
+                <UploadCloud className="w-12 h-12 text-muted-foreground mb-4" />
+                <p className="text-lg font-semibold text-foreground">
+                  Drag & drop files here
+                </p>
+                <p className="text-muted-foreground">or</p>
+                <Button type="button" variant="outline" className="mt-2">
+                  <Paperclip className="mr-2 h-4 w-4" />
+                  Browse Files
+                </Button>
+                <p className="text-xs text-muted-foreground mt-4">
+                  Max file size: 1GB. All uploads are hashed and recorded.
+                </p>
               </div>
+            </div>
 
-              {/* File list */}
-              {files.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <div className="font-medium text-sm text-forensic-700">
-                    {files.length} file(s) selected
-                  </div>
-                  <div className="max-h-40 overflow-y-auto border rounded-md bg-forensic-50">
-                    {files.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 border-b border-forensic-200 last:border-b-0"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <FileCheck className="h-4 w-4 text-forensic-accent" />
-                          <div className="text-sm">
-                            <div className="font-medium text-forensic-800">
+            {/* File list */}
+            {files.length > 0 && (
+              <div className="space-y-4 pt-4">
+                <h3 className="font-medium text-foreground">
+                  Selected Files ({files.length})
+                </h3>
+                <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                  {files.map((file, index) => (
+                    <div
+                      key={index}
+                      className="relative bg-muted/50 p-4 rounded-lg border border-border"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                          <FileDigit className="h-6 w-6 text-primary flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
                               {file.name}
-                            </div>
-                            <div className="text-xs text-forensic-500">
+                            </p>
+                            <p className="text-xs text-muted-foreground">
                               {(file.size / (1024 * 1024)).toFixed(2)} MB
-                            </div>
+                            </p>
                           </div>
                         </div>
                         <Button
                           type="button"
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={() => removeFile(index)}
-                          className="h-8 w-8 p-0 text-forensic-500 hover:text-forensic-danger"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
                         >
-                          <X className="h-4 w-4" />
-                          <span className="sr-only">Remove</span>
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    ))}
-                  </div>
+                      {isUploading && file.progress !== undefined && (
+                        <div className="mt-2">
+                          <Progress value={file.progress} className="h-2" />
+                          <p className="text-xs text-right text-muted-foreground mt-1">
+                            {file.progress === 100
+                              ? "Processing..."
+                              : `${file.progress}%`}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
+              </div>
+            )}
+          </CardContent>
+          <CardFooter className="flex justify-end gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isUploading}
+              onClick={() => setFiles([])}
+            >
+              Clear Selection
+            </Button>
+            <Button
+              type="submit"
+              disabled={isUploading || files.length === 0}
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Submit {files.length}{" "}
+                  {files.length === 1 ? "File" : "Files"}
+                </>
               )}
-            </div>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button type="button" variant="outline" disabled={isUploading}>
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={isUploading || files.length === 0}
-            className={cn(
-              "bg-forensic-accent hover:bg-forensic-accent/90",
-              isUploading && "opacity-80"
-            )}
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                <span>Uploading...</span>
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                <span>Submit Evidence</span>
-              </>
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
+            </Button>
+          </CardFooter>
+        </Card>
+      </form>
     </div>
   );
 };

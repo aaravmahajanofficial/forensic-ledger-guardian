@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import {
   ErrorBoundary,
   AuthErrorBoundary,
@@ -84,23 +85,19 @@ const ClientManagement = React.lazy(
   () => import("./pages/lawyer/ClientManagement")
 );
 
-// Optimized loading component with accessibility
+// Optimized loading component
 const LoadingSpinner = React.memo(() => (
-  <div
-    className="min-h-screen flex items-center justify-center bg-gradient-to-br from-forensic-50 to-forensic-100"
-    role="status"
-    aria-label="Loading application"
-  >
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-muted to-background">
     <div className="text-center space-y-4">
       <div className="relative">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-3 border-forensic-600 mx-auto"></div>
-        <div className="animate-ping absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 border border-forensic-400 rounded-full opacity-30"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-3 border-primary mx-auto"></div>
+        <div className="animate-ping absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 border border-primary/50 rounded-full opacity-30"></div>
       </div>
       <div className="space-y-2">
-        <p className="text-forensic-700 font-medium">
+        <p className="text-foreground font-medium">
           Loading Forensic Guardian
         </p>
-        <p className="text-forensic-500 text-sm">
+        <p className="text-muted-foreground text-sm">
           Securing evidence integrity...
         </p>
       </div>
@@ -142,12 +139,20 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <TooltipProvider>
-            <AuthErrorBoundary>
-              <AuthProvider>
-                <Web3Provider>
-                  <Toaster />
-                  <Sonner />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+            storageKey="theme"
+            forcedTheme={localStorage.getItem('theme') as 'light' | 'dark' | undefined}
+          >
+            <TooltipProvider>
+              <AuthErrorBoundary>
+                <AuthProvider>
+                  <Web3Provider>
+                    <Toaster />
+                    <Sonner />
                   <Suspense fallback={<LoadingSpinner />}>
                     <Routes>
                       {/* Public routes */}
@@ -481,6 +486,7 @@ const App: React.FC = () => {
               </AuthProvider>
             </AuthErrorBoundary>
           </TooltipProvider>
+          </ThemeProvider>
         </BrowserRouter>
       </QueryClientProvider>
     </ErrorBoundary>

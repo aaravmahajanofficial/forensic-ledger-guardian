@@ -1,6 +1,13 @@
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, FileDigit, Clock } from "lucide-react";
+import {
+  LayoutGrid,
+  FileText,
+  Clock4,
+  Users,
+  Gavel,
+  FolderKanban,
+} from "lucide-react";
 import CaseOverview from "./CaseOverview";
 import CaseEvidence from "./CaseEvidence";
 import CaseActivity from "./CaseActivity";
@@ -12,23 +19,39 @@ interface CaseTabsProps {
 
 const CaseTabs: React.FC<CaseTabsProps> = ({ caseData }) => {
   return (
-    <Tabs defaultValue="overview">
-      <TabsList className="w-full grid grid-cols-3 mb-6">
-        <TabsTrigger value="overview" className="flex items-center gap-2">
-          <FileText className="h-4 w-4" />
+    <Tabs defaultValue="overview" className="w-full">
+      <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-6 bg-muted p-1 rounded-lg">
+        <TabsTrigger
+          value="overview"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+        >
+          <LayoutGrid className="h-5 w-5" />
           <span>Overview</span>
         </TabsTrigger>
-        <TabsTrigger value="evidence" className="flex items-center gap-2">
-          <FileDigit className="h-4 w-4" />
-          <span>Evidence ({caseData.evidenceCount})</span>
+        <TabsTrigger
+          value="evidence"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+        >
+          <FolderKanban className="h-5 w-5" />
+          <span>Evidence ({caseData.evidenceItems.length})</span>
         </TabsTrigger>
-        <TabsTrigger value="activity" className="flex items-center gap-2">
-          <Clock className="h-4 w-4" />
-          <span>Activity</span>
+        <TabsTrigger
+          value="activity"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+        >
+          <Clock4 className="h-5 w-5" />
+          <span>Timeline</span>
+        </TabsTrigger>
+        <TabsTrigger
+          value="participants"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+        >
+          <Users className="h-5 w-5" />
+          <span>Participants</span>
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="overview" className="space-y-6">
+      <TabsContent value="overview">
         <CaseOverview caseData={caseData} />
       </TabsContent>
 
@@ -41,6 +64,17 @@ const CaseTabs: React.FC<CaseTabsProps> = ({ caseData }) => {
 
       <TabsContent value="activity">
         <CaseActivity timeline={caseData.timeline} />
+      </TabsContent>
+
+      <TabsContent value="participants">
+        {/* Placeholder for future participants component */}
+        <div className="text-center py-12 text-muted-foreground">
+          <Users className="h-12 w-12 mx-auto mb-4" />
+          <h3 className="text-lg font-medium">Participants Panel</h3>
+          <p className="text-sm">
+            Management of involved parties is coming soon.
+          </p>
+        </div>
       </TabsContent>
     </Tabs>
   );

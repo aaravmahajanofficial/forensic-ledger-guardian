@@ -14,9 +14,9 @@ import { Shield, ArrowLeft, Send, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
-const emailSchema = z
-  .string()
-  .email({ message: "Please enter a valid email address" });
+const emailSchema = z.string().email({
+  message: "Please enter a valid email address.",
+});
 
 const ForgotPasswordForm = ({ onBack }: { onBack: () => void }) => {
   const [email, setEmail] = useState("");
@@ -30,28 +30,23 @@ const ForgotPasswordForm = ({ onBack }: { onBack: () => void }) => {
     setError(null);
 
     try {
-      // Validate email
       emailSchema.parse(email);
-
       setIsLoading(true);
-
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      // Success state
       setIsSubmitted(true);
       toast({
-        title: "Recovery email sent",
-        description: "Check your inbox for password reset instructions",
+        title: "Recovery Email Sent",
+        description: "Check your inbox for password reset instructions.",
       });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        setError(error.errors[0].message);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setError(err.errors[0].message);
       } else {
         setError("An unexpected error occurred. Please try again.");
         toast({
-          title: "Password reset failed",
-          description: "An error occurred while sending the recovery email",
+          title: "Password Reset Failed",
+          description: "An error occurred while sending the recovery email.",
           variant: "destructive",
         });
       }
@@ -61,115 +56,82 @@ const ForgotPasswordForm = ({ onBack }: { onBack: () => void }) => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[80vh]">
-      <Card className="w-full max-w-md shadow-lg border-forensic-200 animate-fade-in">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-2">
-            <Shield className="h-12 w-12 text-forensic-accent" />
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <Card className="w-full max-w-md mx-4 sm:mx-0 animate-fade-in-up shadow-2xl border-border/80">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4">
+            <Shield
+              className="h-16 w-16 text-primary animate-pulse"
+              style={{ animationDuration: "3s" }}
+            />
           </div>
-          <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-3xl font-bold text-foreground">
+            Reset Password
+          </CardTitle>
+          <CardDescription className="text-muted-foreground pt-1">
             {isSubmitted
-              ? "Check your email for reset instructions"
-              : "Enter your email to receive a password reset link"}
+              ? "A recovery link is on its way!"
+              : "Enter your email to receive a password reset link."}
           </CardDescription>
         </CardHeader>
 
-        <CardContent>
-          {!isSubmitted ? (
-            <form onSubmit={handleSubmit}>
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="border-forensic-200"
-                    aria-invalid={error ? "true" : "false"}
-                  />
-                  {error && <p className="text-red-500 text-sm">{error}</p>}
-                </div>
-
-                <Button
-                  type="submit"
-                  className="bg-forensic-accent hover:bg-forensic-accent/90 w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <span className="flex items-center">
-                      <svg
-                        className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Processing...
-                    </span>
-                  ) : (
-                    <span className="flex items-center">
-                      <Send className="mr-2 h-4 w-4" />
-                      Send Reset Link
-                    </span>
-                  )}
-                </Button>
-              </div>
-            </form>
+        <CardContent className="p-6">
+          {isSubmitted ? (
+            <div className="text-center p-8 bg-muted/50 rounded-lg">
+              <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <p className="text-foreground font-semibold">
+                Please check your inbox for an email from us.
+              </p>
+              <p className="text-muted-foreground text-sm mt-2">
+                It contains instructions to reset your password.
+              </p>
+            </div>
           ) : (
-            <div className="text-center space-y-4 py-4">
-              <div className="flex justify-center">
-                <CheckCircle className="h-16 w-16 text-green-500" />
-              </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <h3 className="font-medium text-lg">Recovery Email Sent</h3>
-                <p className="text-muted-foreground text-sm">
-                  We&apos;ve sent a password reset link to{" "}
-                  <span className="font-medium text-forensic-800">{email}</span>
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  If you don&apos;t see the email in your inbox, please check
-                  your spam folder.
-                </p>
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="e.g., officer@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-12"
+                  aria-invalid={!!error}
+                />
+                {error && (
+                  <p className="text-sm font-medium text-destructive">
+                    {error}
+                  </p>
+                )}
               </div>
               <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => {
-                  setIsSubmitted(false);
-                  setEmail("");
-                }}
+                type="submit"
+                className="w-full h-12 font-bold"
+                disabled={isLoading}
               >
-                Try a different email
+                {isLoading ? (
+                  "Sending Link..."
+                ) : (
+                  <>
+                    <Send className="mr-2 h-5 w-5" /> Send Recovery Link
+                  </>
+                )}
               </Button>
-            </div>
+            </form>
           )}
         </CardContent>
 
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex justify-center p-6 bg-muted/50">
           <Button
-            variant="ghost"
+            variant="link"
+            className="text-sm text-muted-foreground hover:text-primary"
             onClick={onBack}
-            className="flex items-center text-forensic-accent hover:text-forensic-accent/90"
+            disabled={isLoading}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Login
+            Back to Sign In
           </Button>
         </CardFooter>
       </Card>

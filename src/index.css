@@ -1,4 +1,3 @@
-
 @import "tailwindcss";
 
 /* Import Modular CSS Files */
@@ -29,8 +28,7 @@
     text-align: left;
     font-size: 0.75rem;
     font-weight: 600;
-    color: h
-(var(--muted-foreground));
+    color: hsl(var(--muted-foreground));
     text-transform: uppercase;
     letter-spacing: 0.05em;
     border-bottom: 1px solid hsl(var(--border));
@@ -119,3 +117,5 @@
     border-radius: 1rem;
   }
 }
+
+@import "tailwindcss";

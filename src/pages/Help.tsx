@@ -11,124 +11,124 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { BookOpen, HelpCircle, MessageSquare, Mail } from "lucide-react";
+import { BookOpen, HelpCircle, MessageSquare, Mail, LifeBuoy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const faqs = [
+  {
+    question: "What is Forensic Ledger Guardian?",
+    answer:
+      "Forensic Ledger Guardian is a blockchain-based digital evidence management system that ensures the integrity and chain of custody of forensic evidence through cryptographic verification and decentralized storage.",
+  },
+  {
+    question: "How do I submit new evidence?",
+    answer:
+      "Navigate to the 'Upload' page from the main navigation. You can upload digital evidence files, which will be hashed and stored securely. The system will guide you through providing necessary metadata and case information.",
+  },
+  {
+    question: "How can I verify the integrity of an evidence file?",
+    answer:
+      "Use the 'Verify' page to check evidence integrity. You can upload a file to compare its hash with the one recorded on the blockchain, or you can browse existing evidence and view its verification history.",
+  },
+  {
+    question: "Who can access the evidence I upload?",
+    answer:
+      "Access control is managed on a per-case basis. Only users who have been granted specific permissions for a case (e.g., investigating officers, lawyers, forensic analysts) can view or interact with its associated evidence.",
+  },
+  {
+    question: "What happens if I forget my password?",
+    answer:
+      "You can use the 'Forgot Password' link on the login page to initiate a password reset process. A secure link will be sent to your registered email address.",
+  },
+];
 
 const Help = () => {
   return (
-    <div className="container mx-auto py-6 animate-fade-in">
-      <h1 className="text-2xl font-bold text-forensic-800 mb-6 flex items-center">
-        <HelpCircle className="mr-2 h-6 w-6 text-forensic-accent" />
-        Help & Support
-      </h1>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8 animate-fade-in bg-background text-foreground">
+      <header className="flex items-center gap-4">
+        <HelpCircle className="h-8 w-8 text-primary" />
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-primary">
+            Help & Support Center
+          </h1>
+          <p className="text-muted-foreground">
+            Find answers, guides, and contact information.
+          </p>
+        </div>
+      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <BookOpen className="h-5 w-5 mr-2 text-forensic-evidence" />
-              Documentation
-            </CardTitle>
-            <CardDescription>Learn how to use the system</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-forensic-600 mb-4">
-              Access comprehensive guides and tutorials on using ForensicLedger
-              for evidence management.
-            </p>
-            <Button className="w-full bg-forensic-evidence hover:bg-forensic-evidence/90 flex items-center justify-center">
-              <span>View Documentation</span>
-            </Button>
-          </CardContent>
-        </Card>
+      <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <LifeBuoy className="h-5 w-5 text-primary" />
+                Frequently Asked Questions
+              </CardTitle>
+              <CardDescription>
+                Quick answers to common questions about the platform.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full">
+                {faqs.map((faq, index) => (
+                  <AccordionItem key={index} value={`item-${index + 1}`}>
+                    <AccordionTrigger className="text-left">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-base">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <MessageSquare className="h-5 w-5 mr-2 text-forensic-court" />
-              Support
-            </CardTitle>
-            <CardDescription>Get assistance from our team</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-forensic-600 mb-4">
-              Contact our support team for any technical issues or questions
-              about the platform.
-            </p>
-            <Button className="w-full bg-forensic-court hover:bg-forensic-court/90 flex items-center justify-center">
-              <span>Contact Support</span>
-              <Mail className="ml-2 h-4 w-4" />
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+        <aside className="space-y-8">
+          <Card className="bg-muted/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                Documentation
+              </CardTitle>
+              <CardDescription>
+                Learn how to use the system effectively.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Access comprehensive guides and tutorials on using Forensic
+                Ledger Guardian for evidence management.
+              </p>
+              <Button className="w-full">View Documentation</Button>
+            </CardContent>
+          </Card>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Frequently Asked Questions</CardTitle>
-          <CardDescription>Quick answers to common questions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="item-1">
-              <AccordionTrigger>What is ForensicLedger?</AccordionTrigger>
-              <AccordionContent>
-                ForensicLedger is a blockchain-based digital evidence management
-                system that ensures the integrity and chain of custody of
-                forensic evidence through cryptographic verification and
-                decentralized storage.
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="item-2">
-              <AccordionTrigger>How do I submit evidence?</AccordionTrigger>
-              <AccordionContent>
-                Navigate to the Upload page from the main navigation. You can
-                upload digital evidence files, which will be hashed and stored
-                securely. The system will guide you through providing necessary
-                metadata and case information.
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="item-3">
-              <AccordionTrigger>
-                How can I verify evidence integrity?
-              </AccordionTrigger>
-              <AccordionContent>
-                Use the Verify page to check evidence integrity. You can upload
-                a file to compare its hash with the one recorded on the
-                blockchain, or you can browse existing evidence and view its
-                complete chain of custody history.
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="item-4">
-              <AccordionTrigger>
-                What roles are available in the system?
-              </AccordionTrigger>
-              <AccordionContent>
-                The system supports four main roles: Court (administrator),
-                Officer (law enforcement), Forensic (technical specialist), and
-                Lawyer (legal representative). Each role has specific
-                permissions and workflows tailored to their responsibilities.
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="item-5">
-              <AccordionTrigger>
-                How does the blockchain ensure evidence integrity?
-              </AccordionTrigger>
-              <AccordionContent>
-                When evidence is uploaded, a cryptographic hash is generated and
-                stored on the blockchain. This hash acts as a digital
-                fingerprint that can later be used to verify the file
-                hasn&apos;t been altered. Additionally, all access to evidence
-                is recorded in an immutable chain of custody log.
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </CardContent>
-      </Card>
+          <Card className="bg-muted/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-primary" />
+                Contact Support
+              </CardTitle>
+              <CardDescription>
+                Get assistance from our expert team.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Contact our support team for any technical issues or questions
+                about the platform.
+              </p>
+              <Button variant="outline" className="w-full">
+                <Mail className="mr-2 h-4 w-4" />
+                Email Support
+              </Button>
+            </CardContent>
+          </Card>
+        </aside>
+      </main>
     </div>
   );
 };

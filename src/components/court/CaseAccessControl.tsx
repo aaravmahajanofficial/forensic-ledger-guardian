@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Card,
   CardHeader,
@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Calendar, Lock, Info, X, Save, Search } from "lucide-react";
+import { Calendar, Lock, Info, X, Save, Search, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Popover,
@@ -41,7 +41,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ROLES } from "@/constants";
 
-// Role type for convenience
+// Types
 type Role = (typeof ROLES)[keyof typeof ROLES];
 
 interface UserType {
@@ -62,40 +62,37 @@ interface AccessMatrixItem {
   hasAccess: boolean;
 }
 
+// Mock Data
+const mockUsers: UserType[] = [
+    { id: "1", name: "Judge Anderson", email: "j.anderson@court.gov", role: ROLES.COURT },
+    { id: "2", name: "Officer Miller", email: "m.miller@police.gov", role: ROLES.OFFICER },
+    { id: "3", name: "Dr. Evelyn Reed", email: "e.reed@forensics.gov", role: ROLES.FORENSIC },
+    { id: "4", name: "Laura Bailey, Esq.", email: "l.bailey@justice.gov", role: ROLES.LAWYER },
+];
+
+const mockCases: CaseType[] = [
+    { id: "C-2024-011", title: "State v. Harrison" },
+    { id: "C-2024-012", title: "Cybercrime Initiative" },
+    { id: "C-2024-015", title: "Evidence Tampering Inquiry" },
+    { id: "C-2024-017", title: "Financial Fraud Analysis" },
+];
+
+const initialAccessMatrix: AccessMatrixItem[] = [
+    { userId: "1", caseId: "C-2024-011", hasAccess: true },
+    { userId: "2", caseId: "C-2024-011", hasAccess: true },
+    { userId: "2", caseId: "C-2024-012", hasAccess: true },
+    { userId: "3", caseId: "C-2024-012", hasAccess: true },
+    { userId: "4", caseId: "C-2024-011", hasAccess: true },
+    { userId: "4", caseId: "C-2024-015", hasAccess: true },
+];
+
 const CaseAccessControl = () => {
   const { toast } = useToast();
 
-  // Mock data
-  const users: UserType[] = [
-    { id: "1", name: "John Smith", email: "john@court.gov", role: ROLES.COURT },
-    {
-      id: "2",
-      name: "Emma Clark",
-      email: "emma@police.gov",
-      role: ROLES.OFFICER,
-    },
-    {
-      id: "3",
-      name: "Michael Chen",
-      email: "michael@lab.gov",
-      role: ROLES.FORENSIC,
-    },
-    {
-      id: "4",
-      name: "Sarah Johnson",
-      email: "sarah@legal.gov",
-      role: ROLES.LAWYER,
-    },
-  ];
+  const [users] = useState<UserType[]>(mockUsers);
+  const [cases] = useState<CaseType[]>(mockCases);
+  const [accessMatrix, setAccessMatrix] = useState<AccessMatrixItem[]>(initialAccessMatrix);
 
-  const cases: CaseType[] = [
-    { id: "C-2023-001", title: "Prosecutor v. Smith" },
-    { id: "C-2023-002", title: "Robbery Investigation" },
-    { id: "C-2023-005", title: "Digital Evidence Case" },
-    { id: "C-2023-007", title: "Financial Fraud Case" },
-  ];
-
-  // State
   const [selectedCases, setSelectedCases] = useState<CaseType[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<UserType[]>([]);
   const [grantAccess, setGrantAccess] = useState<boolean>(true);
@@ -104,63 +101,34 @@ const CaseAccessControl = () => {
   const [openUserCommand, setOpenUserCommand] = useState<boolean>(false);
   const [caseSearchQuery, setCaseSearchQuery] = useState<string>("");
   const [userSearchQuery, setUserSearchQuery] = useState<string>("");
-  const [accessMatrix, setAccessMatrix] = useState<AccessMatrixItem[]>([
-    { userId: "1", caseId: "C-2023-001", hasAccess: true },
-    { userId: "2", caseId: "C-2023-001", hasAccess: true },
-    { userId: "2", caseId: "C-2023-002", hasAccess: true },
-    { userId: "3", caseId: "C-2023-002", hasAccess: true },
-    { userId: "4", caseId: "C-2023-001", hasAccess: true },
-    { userId: "4", caseId: "C-2023-005", hasAccess: true },
-  ]);
 
-  // Filtered data based on search queries
-  const filteredCases = cases.filter(
-    (caseItem) =>
-      caseItem.id.toLowerCase().includes(caseSearchQuery.toLowerCase()) ||
-      caseItem.title.toLowerCase().includes(caseSearchQuery.toLowerCase())
-  );
+  const filteredCases = useMemo(() => 
+    cases.filter(
+      (caseItem) =>
+        caseItem.id.toLowerCase().includes(caseSearchQuery.toLowerCase()) ||
+        caseItem.title.toLowerCase().includes(caseSearchQuery.toLowerCase())
+    ), [cases, caseSearchQuery]);
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(userSearchQuery.toLowerCase())
-  );
+  const filteredUsers = useMemo(() =>
+    users.filter(
+      (user) =>
+        user.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(userSearchQuery.toLowerCase())
+    ), [users, userSearchQuery]);
 
-  // Helper functions
-  const getRoleBadgeColor = (role: Role) => {
+  const getRoleBadgeVariant = (role: Role): "default" | "secondary" | "destructive" | "outline" | "success" | "warning" => {
     switch (role) {
-      case ROLES.COURT:
-        return "bg-forensic-court text-white";
-      case ROLES.OFFICER:
-        return "bg-forensic-800 text-white";
-      case ROLES.FORENSIC:
-        return "bg-forensic-accent text-white";
-      case ROLES.LAWYER:
-        return "bg-forensic-warning text-forensic-900";
-      default:
-        return "bg-gray-500 text-white";
-    }
-  };
-
-  const getRoleString = (role: Role): string => {
-    switch (role) {
-      case ROLES.COURT:
-        return "Court";
-      case ROLES.OFFICER:
-        return "Officer";
-      case ROLES.FORENSIC:
-        return "Forensic";
-      case ROLES.LAWYER:
-        return "Lawyer";
-      default:
-        return "Unknown";
+      case ROLES.COURT: return "default";
+      case ROLES.OFFICER: return "secondary";
+      case ROLES.FORENSIC: return "success";
+      case ROLES.LAWYER: return "warning";
+      default: return "outline";
     }
   };
 
   const hasAccess = (userId: string, caseId: string): boolean => {
     return !!accessMatrix.find(
-      (item) =>
-        item.userId === userId && item.caseId === caseId && item.hasAccess
+      (item) => item.userId === userId && item.caseId === caseId && item.hasAccess
     );
   };
 
@@ -186,15 +154,13 @@ const CaseAccessControl = () => {
     if (selectedUsers.length === 0 || selectedCases.length === 0) {
       toast({
         title: "Selection Required",
-        description: "Please select both users and cases to update access",
-        variant: "destructive",
+        description: "Please select at least one user and one case.",
+        variant: "warning",
       });
       return;
     }
 
-    // Create new access matrix items based on selections
     const updatedMatrix = [...accessMatrix];
-
     selectedUsers.forEach((user) => {
       selectedCases.forEach((caseItem) => {
         const existingItemIndex = updatedMatrix.findIndex(
@@ -204,11 +170,7 @@ const CaseAccessControl = () => {
         if (existingItemIndex >= 0) {
           updatedMatrix[existingItemIndex].hasAccess = grantAccess;
         } else {
-          updatedMatrix.push({
-            userId: user.id,
-            caseId: caseItem.id,
-            hasAccess: grantAccess,
-          });
+          updatedMatrix.push({ userId: user.id, caseId: caseItem.id, hasAccess: grantAccess });
         }
       });
     });
@@ -216,490 +178,235 @@ const CaseAccessControl = () => {
     setAccessMatrix(updatedMatrix);
 
     toast({
-      title: grantAccess ? "Access Granted" : "Access Revoked",
-      description: `Successfully updated access for ${
-        selectedUsers.length
-      } user(s) and ${selectedCases.length} case(s)${
+      title: `Access ${grantAccess ? "Granted" : "Revoked"}`,
+      description: `Updated access for ${selectedUsers.length} user(s) to ${selectedCases.length} case(s)${
         expiryDate ? ` until ${format(expiryDate, "PPP")}` : ""
-      }`,
-      variant: "default",
+      }.`,
+      variant: "success",
     });
+
+    // Clear selections after update
+    setSelectedCases([]);
+    setSelectedUsers([]);
+    setExpiryDate(undefined);
   };
 
-  const removeSelectedCase = (caseToRemove: CaseType) => {
-    setSelectedCases(selectedCases.filter((c) => c.id !== caseToRemove.id));
-  };
-
-  const removeSelectedUser = (userToRemove: UserType) => {
-    setSelectedUsers(selectedUsers.filter((u) => u.id !== userToRemove.id));
-  };
-
-  const handleCaseSearch = (value: string) => {
-    setCaseSearchQuery(value);
-  };
-
-  const handleUserSearch = (value: string) => {
-    setUserSearchQuery(value);
+  const removeSelectedItem = <T extends { id: string }>(
+    items: T[], 
+    setItems: React.Dispatch<React.SetStateAction<T[]>>, 
+    itemToRemove: T
+  ) => {
+    setItems(items.filter((i) => i.id !== itemToRemove.id));
   };
 
   return (
-    <Card className="shadow-sm border-forensic-200 animate-fade-in">
+    <Card className="w-full animate-fade-in shadow-lg border-border/40">
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Lock className="h-5 w-5 text-forensic-accent" />
-          Case Access Control
-        </CardTitle>
-        <CardDescription>
-          Manage which users have access to specific cases
-        </CardDescription>
+        <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
+                <Lock className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+                <CardTitle className="text-xl font-bold text-foreground">Case Access Control</CardTitle>
+                <CardDescription className="text-muted-foreground">Manage user permissions for specific cases.</CardDescription>
+            </div>
+        </div>
       </CardHeader>
 
-      <CardContent>
-        <div className="space-y-6">
-          {/* Case and User Selection */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* Case Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="caseSelect" className="text-sm font-medium">
-                Case ID{" "}
-                <span className="text-xs text-muted-foreground">
-                  (Multi-select)
-                </span>
-              </Label>
-
-              <div className="relative">
-                <Popover
-                  open={openCaseCommand}
-                  onOpenChange={setOpenCaseCommand}
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={openCaseCommand}
-                      className="w-full justify-between border-forensic-200 bg-white"
-                    >
-                      <div className="flex items-center">
-                        <Search className="mr-2 h-4 w-4 text-muted-foreground" />
-                        {selectedCases.length > 0
-                          ? `${selectedCases.length} case${
-                              selectedCases.length > 1 ? "s" : ""
-                            } selected`
-                          : "Search cases..."}
-                      </div>
-                      <div
-                        className={cn(
-                          "transition-transform",
-                          openCaseCommand ? "rotate-180" : ""
-                        )}
-                      >
-                        <svg
-                          width="12"
-                          height="6"
-                          viewBox="0 0 12 6"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M1 0.5L6 5.5L11 0.5"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className="w-full p-0 shadow-lg border border-forensic-200/70 rounded-md"
-                    align="start"
-                  >
-                    <Command className="rounded-md">
-                      <CommandInput
-                        placeholder="Search cases..."
-                        value={caseSearchQuery}
-                        onValueChange={handleCaseSearch}
-                        className="border-b-0 focus:ring-0 focus:border-0 ring-0"
-                      />
-                      <CommandList>
-                        <CommandEmpty>No cases found.</CommandEmpty>
-                        <CommandGroup className="max-h-[200px] overflow-auto p-1">
-                          {filteredCases.map((caseItem) => (
-                            <CommandItem
-                              key={caseItem.id}
-                              className="flex items-center px-2 py-1.5 cursor-pointer hover:bg-forensic-50 rounded-sm"
-                              onSelect={() => {
-                                const isSelected = selectedCases.some(
-                                  (c) => c.id === caseItem.id
-                                );
-                                if (!isSelected) {
-                                  setSelectedCases([
-                                    ...selectedCases,
-                                    caseItem,
-                                  ]);
-                                }
-                              }}
-                            >
-                              <Checkbox
-                                checked={selectedCases.some(
-                                  (c) => c.id === caseItem.id
-                                )}
-                                className="mr-2 data-[state=checked]:bg-forensic-accent data-[state=checked]:border-forensic-accent"
-                              />
-                              <div className="flex flex-col">
-                                <span className="font-medium text-sm">
-                                  {caseItem.id}
-                                </span>
-                                <span className="text-muted-foreground text-xs">
-                                  {caseItem.title}
-                                </span>
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                      <div className="border-t p-2 flex justify-between">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setCaseSearchQuery("");
-                            setOpenCaseCommand(false);
-                          }}
-                        >
-                          Close
-                        </Button>
-                        {selectedCases.length > 0 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-forensic-accent hover:text-forensic-accent/90"
-                            onClick={() => setSelectedCases([])}
-                          >
-                            Clear All
-                          </Button>
-                        )}
-                      </div>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+      <CardContent className="space-y-8 pt-4">
+        {/* Case and User Selection */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Case Selection */}
+          <div className="space-y-3">
+            <Label htmlFor="caseSelect" className="text-base font-semibold text-foreground">Select Cases</Label>
+            <Popover open={openCaseCommand} onOpenChange={setOpenCaseCommand}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" aria-expanded={openCaseCommand} className="w-full justify-between text-base h-11">
+                  <div className="flex items-center gap-2">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                    <span>{selectedCases.length > 0 ? `${selectedCases.length} case(s) selected` : "Search and select cases..."}</span>
+                  </div>
+                  <ChevronDown className={cn("h-4 w-4 shrink-0 opacity-50 transition-transform", openCaseCommand && "rotate-180")} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search by ID or title..." value={caseSearchQuery} onValueChange={setCaseSearchQuery} />
+                  <CommandList>
+                    <CommandEmpty>No cases found.</CommandEmpty>
+                    <CommandGroup>
+                      <ScrollArea className="h-[200px]">
+                        {filteredCases.map((caseItem) => (
+                          <CommandItem key={caseItem.id} onSelect={() => {
+                            const isSelected = selectedCases.some((c) => c.id === caseItem.id);
+                            if (isSelected) {
+                              removeSelectedItem(selectedCases, setSelectedCases, caseItem);
+                            } else {
+                              setSelectedCases([...selectedCases, caseItem]);
+                            }
+                          }}>
+                            <Checkbox checked={selectedCases.some((c) => c.id === caseItem.id)} className="mr-2" />
+                            <div className="flex flex-col">
+                              <span className="font-medium">{caseItem.id}</span>
+                              <span className="text-xs text-muted-foreground">{caseItem.title}</span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </ScrollArea>
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            {selectedCases.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedCases.map((caseItem) => (
+                  <Badge key={caseItem.id} variant="secondary" className="pl-2 pr-1 py-1 text-sm">
+                    {caseItem.id}
+                    <button onClick={() => removeSelectedItem(selectedCases, setSelectedCases, caseItem)} className="ml-1.5 rounded-full hover:bg-muted-foreground/20 p-0.5">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
               </div>
-
-              {/* Selected Cases Tags */}
-              {selectedCases.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {selectedCases.map((caseItem) => (
-                    <Badge
-                      key={caseItem.id}
-                      variant="secondary"
-                      className="pl-2 py-1 pr-1 flex items-center gap-1 bg-forensic-50 text-forensic-800 hover:bg-forensic-100 transition-all animate-fadeIn"
-                    >
-                      {caseItem.id}
-                      <button
-                        onClick={() => removeSelectedCase(caseItem)}
-                        className="ml-1 rounded-full hover:bg-forensic-200 h-5 w-5 inline-flex items-center justify-center"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* User Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="userSelect" className="text-sm font-medium">
-                User{" "}
-                <span className="text-xs text-muted-foreground">
-                  (Multi-select)
-                </span>
-              </Label>
-
-              <div className="relative">
-                <Popover
-                  open={openUserCommand}
-                  onOpenChange={setOpenUserCommand}
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={openUserCommand}
-                      className="w-full justify-between border-forensic-200 bg-white"
-                    >
-                      <div className="flex items-center">
-                        <Search className="mr-2 h-4 w-4 text-muted-foreground" />
-                        {selectedUsers.length > 0
-                          ? `${selectedUsers.length} user${
-                              selectedUsers.length > 1 ? "s" : ""
-                            } selected`
-                          : "Search users..."}
-                      </div>
-                      <div
-                        className={cn(
-                          "transition-transform",
-                          openUserCommand ? "rotate-180" : ""
-                        )}
-                      >
-                        <svg
-                          width="12"
-                          height="6"
-                          viewBox="0 0 12 6"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M1 0.5L6 5.5L11 0.5"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className="w-full p-0 shadow-lg border border-forensic-200/70 rounded-md"
-                    align="start"
-                  >
-                    <Command className="rounded-md">
-                      <CommandInput
-                        placeholder="Search users..."
-                        value={userSearchQuery}
-                        onValueChange={handleUserSearch}
-                        className="border-b-0 focus:ring-0 focus:border-0 ring-0"
-                      />
-                      <CommandList>
-                        <CommandEmpty>No users found.</CommandEmpty>
-                        <CommandGroup className="max-h-[200px] overflow-auto p-1">
-                          {filteredUsers.map((user) => (
-                            <CommandItem
-                              key={user.id}
-                              className="flex items-center px-2 py-1.5 cursor-pointer hover:bg-forensic-50 rounded-sm"
-                              onSelect={() => {
-                                const isSelected = selectedUsers.some(
-                                  (u) => u.id === user.id
-                                );
-                                if (!isSelected) {
-                                  setSelectedUsers([...selectedUsers, user]);
-                                }
-                              }}
-                            >
-                              <Checkbox
-                                checked={selectedUsers.some(
-                                  (u) => u.id === user.id
-                                )}
-                                className="mr-2 data-[state=checked]:bg-forensic-accent data-[state=checked]:border-forensic-accent"
-                              />
-                              <div className="flex flex-col flex-1">
-                                <span className="font-medium text-sm">
-                                  {user.name}
-                                </span>
-                                <span className="text-muted-foreground text-xs">
-                                  {user.email}
-                                </span>
-                              </div>
-                              <Badge
-                                className={cn(
-                                  "ml-2",
-                                  getRoleBadgeColor(user.role)
-                                )}
-                              >
-                                {getRoleString(user.role)}
-                              </Badge>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                      <div className="border-t p-2 flex justify-between">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setUserSearchQuery("");
-                            setOpenUserCommand(false);
-                          }}
-                        >
-                          Close
-                        </Button>
-                        {selectedUsers.length > 0 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-forensic-accent hover:text-forensic-accent/90"
-                            onClick={() => setSelectedUsers([])}
-                          >
-                            Clear All
-                          </Button>
-                        )}
-                      </div>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Selected Users Tags */}
-              {selectedUsers.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {selectedUsers.map((user) => (
-                    <Badge
-                      key={user.id}
-                      variant="secondary"
-                      className="pl-2 py-1 pr-1 flex items-center gap-1 bg-forensic-50 text-forensic-800 hover:bg-forensic-100 transition-all animate-fadeIn"
-                    >
-                      {user.name}
-                      <button
-                        onClick={() => removeSelectedUser(user)}
-                        className="ml-1 rounded-full hover:bg-forensic-200 h-5 w-5 inline-flex items-center justify-center"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
+            )}
           </div>
 
-          {/* Grant Access Toggle and Date Picker */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="grant-access"
-                checked={grantAccess}
-                onCheckedChange={setGrantAccess}
-                className="data-[state=checked]:bg-forensic-accent"
-              />
-              <Label htmlFor="grant-access" className="font-medium">
-                {grantAccess ? "Grant" : "Revoke"} access to selected cases
-              </Label>
-            </div>
-
-            <div className="space-y-2">
-              <Label
-                htmlFor="expiry-date"
-                className="text-sm font-medium flex items-center gap-1"
-              >
-                Optional Expiration Date
-              </Label>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="date"
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal border-forensic-200",
-                      !expiryDate && "text-muted-foreground"
-                    )}
-                  >
-                    <Calendar className="mr-2 h-4 w-4" />
-                    {expiryDate ? (
-                      format(expiryDate, "PPP")
-                    ) : (
-                      <span>Select expiry date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <CalendarComponent
-                    mode="single"
-                    selected={expiryDate}
-                    onSelect={setExpiryDate}
-                    initialFocus
-                    disabled={(date) => date < new Date()}
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+          {/* User Selection */}
+          <div className="space-y-3">
+            <Label htmlFor="userSelect" className="text-base font-semibold text-foreground">Select Users</Label>
+            <Popover open={openUserCommand} onOpenChange={setOpenUserCommand}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" aria-expanded={openUserCommand} className="w-full justify-between text-base h-11">
+                    <div className="flex items-center gap-2">
+                        <Search className="h-4 w-4 text-muted-foreground" />
+                        <span>{selectedUsers.length > 0 ? `${selectedUsers.length} user(s) selected` : "Search and select users..."}</span>
+                    </div>
+                  <ChevronDown className={cn("h-4 w-4 shrink-0 opacity-50 transition-transform", openUserCommand && "rotate-180")} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search by name or email..." value={userSearchQuery} onValueChange={setUserSearchQuery} />
+                  <CommandList>
+                    <CommandEmpty>No users found.</CommandEmpty>
+                    <CommandGroup>
+                      <ScrollArea className="h-[200px]">
+                        {filteredUsers.map((user) => (
+                          <CommandItem key={user.id} onSelect={() => {
+                            const isSelected = selectedUsers.some((u) => u.id === user.id);
+                            if (isSelected) {
+                              removeSelectedItem(selectedUsers, setSelectedUsers, user);
+                            } else {
+                              setSelectedUsers([...selectedUsers, user]);
+                            }
+                          }}>
+                            <Checkbox checked={selectedUsers.some((u) => u.id === user.id)} className="mr-2" />
+                            <div className="flex-grow">
+                              <p className="font-medium">{user.name}</p>
+                              <p className="text-xs text-muted-foreground">{user.email}</p>
+                            </div>
+                            <Badge variant={getRoleBadgeVariant(user.role)}>{user.role}</Badge>
+                          </CommandItem>
+                        ))}
+                      </ScrollArea>
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            {selectedUsers.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedUsers.map((user) => (
+                  <Badge key={user.id} variant="secondary" className="pl-2 pr-1 py-1 text-sm">
+                    {user.name}
+                    <button onClick={() => removeSelectedItem(selectedUsers, setSelectedUsers, user)} className="ml-1.5 rounded-full hover:bg-muted-foreground/20 p-0.5">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
+        </div>
 
-          {/* Grant Access Button */}
-          <div className="flex flex-col space-y-2">
-            <Button
-              onClick={handleUpdateAccess}
-              className="w-full sm:w-auto bg-forensic-accent hover:bg-forensic-accent/90 flex items-center gap-2"
-            >
-              <Save className="h-4 w-4" />
+        {/* Grant Access Toggle and Date Picker */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center rounded-lg border p-4 bg-background/50">
+          <div className="flex items-center space-x-3">
+            <Switch id="grant-access" checked={grantAccess} onCheckedChange={setGrantAccess} />
+            <Label htmlFor="grant-access" className="text-base font-medium">
               {grantAccess ? "Grant Access" : "Revoke Access"}
-            </Button>
-
-            <p className="text-xs text-muted-foreground flex items-center">
-              <Info className="h-3 w-3 mr-1" />
-              {grantAccess
-                ? "This will grant selected users access to selected cases"
-                : "This will revoke access for selected users to selected cases"}
-              {expiryDate && `, until ${format(expiryDate, "PPP")}`}
-            </p>
+            </Label>
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="expiry-date" className="text-sm font-medium flex items-center gap-1 text-muted-foreground">Optional Expiration Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button id="date" variant={"outline"} className={cn("w-full justify-start text-left font-normal h-11", !expiryDate && "text-muted-foreground")}>
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {expiryDate ? format(expiryDate, "PPP") : <span>No expiry date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent mode="single" selected={expiryDate} onSelect={setExpiryDate} initialFocus disabled={(date) => date < new Date()} />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
 
-          {/* Access Matrix Table */}
-          <div className="mt-6">
-            <h3 className="text-sm font-medium mb-2">Access Matrix</h3>
-            <ScrollArea className="h-[250px] rounded-md border">
-              <div className="p-2">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[180px]">User</TableHead>
+        {/* Access Matrix Table */}
+        <div>
+          <h3 className="text-lg font-semibold mb-3 text-foreground">Access Matrix Overview</h3>
+          <div className="rounded-lg border border-border/40 overflow-hidden">
+            <ScrollArea className="h-[300px]">
+              <Table className="bg-card">
+                <TableHeader className="bg-muted/40">
+                  <TableRow>
+                    <TableHead className="w-[220px] font-semibold">User</TableHead>
+                    {cases.map((caseItem) => (
+                      <TableHead key={caseItem.id} className="text-center font-semibold">
+                        <div className="flex flex-col items-center">
+                          <span>{caseItem.id}</span>
+                          <span className="text-xs text-muted-foreground font-normal truncate max-w-[120px]">{caseItem.title}</span>
+                        </div>
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id} className="hover:bg-muted/20">
+                      <TableCell className="font-medium">
+                        <div className="flex flex-col">
+                          <span>{user.name}</span>
+                          <span className="text-xs text-muted-foreground">{user.email}</span>
+                        </div>
+                      </TableCell>
                       {cases.map((caseItem) => (
-                        <TableHead key={caseItem.id} className="text-center">
-                          <div className="flex flex-col">
-                            <span>{caseItem.id}</span>
-                            <span className="text-xs text-muted-foreground font-normal">
-                              {caseItem.title}
-                            </span>
-                          </div>
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex flex-col">
-                            <span>{user.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {user.email}
-                            </span>
+                        <TableCell key={`${user.id}-${caseItem.id}`} className="text-center">
+                          <div className="flex justify-center">
+                            <Switch checked={hasAccess(user.id, caseItem.id)} onCheckedChange={() => toggleAccess(user.id, caseItem.id)} />
                           </div>
                         </TableCell>
-                        {cases.map((caseItem) => (
-                          <TableCell
-                            key={`${user.id}-${caseItem.id}`}
-                            className="text-center"
-                          >
-                            <div className="flex justify-center">
-                              <Switch
-                                checked={hasAccess(user.id, caseItem.id)}
-                                onCheckedChange={() =>
-                                  toggleAccess(user.id, caseItem.id)
-                                }
-                                className="data-[state=checked]:bg-forensic-accent"
-                              />
-                            </div>
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </ScrollArea>
           </div>
         </div>
       </CardContent>
 
-      <CardFooter className="border-t pt-4 flex justify-between">
-        <p className="text-xs sm:text-sm text-muted-foreground">
-          {accessMatrix.filter((item) => item.hasAccess).length} active access
-          permissions
-        </p>
+      <CardFooter className="border-t pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Info className="h-4 w-4" />
+            <p>{accessMatrix.filter((item) => item.hasAccess).length} active permissions.</p>
+        </div>
+        <Button onClick={handleUpdateAccess} size="lg" className="w-full sm:w-auto">
+          <Save className="h-4 w-4 mr-2" />
+          Update Access Permissions
+        </Button>
       </CardFooter>
     </Card>
   );

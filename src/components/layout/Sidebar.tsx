@@ -163,7 +163,7 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
         {/* Mobile overlay */}
         {isOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
           />
         )}
@@ -171,40 +171,37 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
         {/* Mobile sidebar */}
         <div
           className={cn(
-            "fixed top-0 left-0 z-50 h-full bg-white shadow-xl transition-all duration-300 transform",
+            "fixed top-0 left-0 z-50 h-full bg-card shadow-2xl transition-all duration-300 transform border-r border-border",
             isOpen ? "translate-x-0" : "-translate-x-full",
             "w-64"
           )}
         >
           <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between p-4 border-b">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-6 h-6 bg-gradient-to-r from-forensic-accent to-forensic-evidence rounded-md overflow-hidden">
-                  <Shield className="h-4 w-4 text-white" />
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg shadow-md">
+                  <Shield className="h-5 w-5 text-white" />
                 </div>
-                <span className="ml-2 font-bold text-lg">ForensicChain</span>
+                <span className="font-semibold text-lg text-foreground">Forensic Ledger Guardian</span>
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => setIsOpen(false)}
-                className="p-1 h-8 w-8"
               >
-                <ChevronLeft size={20} />
+                <ChevronLeft className="h-4 w-4" />
               </Button>
             </div>
-            <div className="flex-1 overflow-y-auto p-2">
+            <div className="flex-1 overflow-y-auto p-3">
               {user && (
-                <div className="mb-4 p-2 bg-forensic-50 rounded-lg">
-                  <p className="text-sm font-medium">{user.name}</p>
-                  <Badge className="mt-1">
-                    {user.roleTitle || "Unknown Role"}
-                  </Badge>
+                <div className="mb-4 p-3 bg-muted/50 rounded-xl">
+                  <p className="text-sm font-medium text-foreground">{user.name}</p>
+                  <Badge className="mt-2 bg-accent text-accent-foreground">{user.roleTitle || "Unknown Role"}</Badge>
                 </div>
               )}
 
               <div className="mb-6">
-                <p className="px-3 text-xs font-medium text-gray-500 uppercase mb-2">
+                <p className="px-3 text-xs font-medium text-muted-foreground uppercase mb-3 tracking-wider">
                   Core
                 </p>
                 <nav className="space-y-1">
@@ -214,10 +211,10 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
                       to={link.to}
                       className={({ isActive }) =>
                         cn(
-                          "flex items-center px-3 py-2 text-sm rounded-md w-full",
+                          "flex items-center px-3 py-2.5 text-sm rounded-lg w-full transition-all duration-200",
                           isActive
-                            ? "bg-forensic-accent/10 text-forensic-accent font-medium"
-                            : "text-gray-700 hover:bg-gray-100"
+                            ? "bg-primary/10 text-primary font-medium shadow-sm"
+                            : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
                         )
                       }
                       onClick={() => isMobile && setIsOpen(false)}
@@ -231,7 +228,7 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
 
               {user && roleBasedLinks().length > 0 && (
                 <div className="mb-6">
-                  <p className="px-3 text-xs font-medium text-gray-500 uppercase mb-2">
+                  <p className="px-3 text-xs font-medium text-muted-foreground uppercase mb-3 tracking-wider">
                     Role Specific
                   </p>
                   <nav className="space-y-1">
@@ -241,10 +238,10 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
                         to={link.to}
                         className={({ isActive }) =>
                           cn(
-                            "flex items-center px-3 py-2 text-sm rounded-md w-full",
+                            "flex items-center px-3 py-2.5 text-sm rounded-lg w-full transition-all duration-200",
                             isActive
-                              ? "bg-forensic-accent/10 text-forensic-accent font-medium"
-                              : "text-gray-700 hover:bg-gray-100"
+                              ? "bg-secondary/10 text-secondary font-medium shadow-sm"
+                              : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
                           )
                         }
                         onClick={() => isMobile && setIsOpen(false)}
@@ -258,7 +255,7 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
               )}
 
               <div>
-                <p className="px-3 text-xs font-medium text-gray-500 uppercase mb-2">
+                <p className="px-3 text-xs font-medium text-muted-foreground uppercase mb-3 tracking-wider">
                   Utilities
                 </p>
                 <nav className="space-y-1">
@@ -268,10 +265,10 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
                       to={link.to}
                       className={({ isActive }) =>
                         cn(
-                          "flex items-center px-3 py-2 text-sm rounded-md w-full",
+                          "flex items-center px-3 py-2.5 text-sm rounded-lg w-full transition-all duration-200",
                           isActive
-                            ? "bg-forensic-accent/10 text-forensic-accent font-medium"
-                            : "text-gray-700 hover:bg-gray-100"
+                            ? "bg-accent/10 text-accent font-medium shadow-sm"
+                            : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
                         )
                       }
                       onClick={() => isMobile && setIsOpen(false)}
@@ -293,41 +290,41 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
   return (
     <div
       className={cn(
-        "h-screen bg-white border-r border-forensic-200 transition-all duration-300",
+        "h-screen bg-card border-r border-border transition-all duration-300 flex flex-col",
         collapsed ? "w-16" : "w-64"
       )}
     >
       <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-4 border-b border-border">
           {!collapsed && (
-            <div className="flex items-center">
-              <div className="flex items-center justify-center w-6 h-6 bg-gradient-to-r from-forensic-accent to-forensic-evidence rounded-md overflow-hidden">
-                <Shield className="h-4 w-4 text-white" />
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg shadow-md">
+                <Shield className="h-5 w-5 text-white" />
               </div>
-              <span className="ml-2 font-bold text-lg">ForensicChain</span>
+              <span className="font-semibold text-lg text-foreground">Forensic Ledger Guardian</span>
             </div>
           )}
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={toggleCollapsed}
-            className="p-1 h-8 w-8 ml-auto"
+            className="shrink-0"
           >
-            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2">
+        <div className="flex-1 overflow-y-auto p-3">
           {user && !collapsed && (
-            <div className="mb-4 p-2 bg-forensic-50 rounded-lg">
-              <p className="text-sm font-medium truncate">{user.name}</p>
-              <Badge className="mt-1">{user.roleTitle || "Unknown Role"}</Badge>
+            <div className="mb-4 p-3 bg-muted/50 rounded-xl">
+              <p className="text-sm font-medium truncate text-foreground">{user.name}</p>
+              <Badge className="mt-2 bg-accent text-accent-foreground">{user.roleTitle || "Unknown Role"}</Badge>
             </div>
           )}
 
           <div className="mb-6">
             {!collapsed && (
-              <p className="px-3 text-xs font-medium text-gray-500 uppercase mb-2">
+              <p className="px-3 text-xs font-medium text-muted-foreground uppercase mb-3 tracking-wider">
                 Core
               </p>
             )}
@@ -339,16 +336,16 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
                   title={collapsed ? link.label : undefined}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center rounded-md w-full",
-                      collapsed ? "justify-center p-2" : "px-3 py-2",
+                      "flex items-center rounded-lg w-full transition-all duration-200 hover:scale-[1.02]",
+                      collapsed ? "justify-center p-3" : "px-3 py-2.5",
                       isActive
-                        ? "bg-forensic-accent/10 text-forensic-accent font-medium"
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-primary/10 text-primary font-medium shadow-sm"
+                        : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
                     )
                   }
                 >
                   <span className={cn(!collapsed && "mr-3")}>{link.icon}</span>
-                  {!collapsed && <span>{link.label}</span>}
+                  {!collapsed && <span className="text-sm">{link.label}</span>}
                 </NavLink>
               ))}
             </nav>
@@ -357,7 +354,7 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
           {user && roleBasedLinks().length > 0 && (
             <div className="mb-6">
               {!collapsed && (
-                <p className="px-3 text-xs font-medium text-gray-500 uppercase mb-2">
+                <p className="px-3 text-xs font-medium text-muted-foreground uppercase mb-3 tracking-wider">
                   Role Specific
                 </p>
               )}
@@ -369,18 +366,18 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
                     title={collapsed ? link.label : undefined}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center rounded-md w-full",
-                        collapsed ? "justify-center p-2" : "px-3 py-2",
+                        "flex items-center rounded-lg w-full transition-all duration-200 hover:scale-[1.02]",
+                        collapsed ? "justify-center p-3" : "px-3 py-2.5",
                         isActive
-                          ? "bg-forensic-accent/10 text-forensic-accent font-medium"
-                          : "text-gray-700 hover:bg-gray-100"
+                          ? "bg-secondary/10 text-secondary font-medium shadow-sm"
+                          : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
                       )
                     }
                   >
                     <span className={cn(!collapsed && "mr-3")}>
                       {link.icon}
                     </span>
-                    {!collapsed && <span>{link.label}</span>}
+                    {!collapsed && <span className="text-sm">{link.label}</span>}
                   </NavLink>
                 ))}
               </nav>
@@ -389,7 +386,7 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
 
           <div>
             {!collapsed && (
-              <p className="px-3 text-xs font-medium text-gray-500 uppercase mb-2">
+              <p className="px-3 text-xs font-medium text-muted-foreground uppercase mb-3 tracking-wider">
                 Utilities
               </p>
             )}
@@ -401,16 +398,16 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
                   title={collapsed ? link.label : undefined}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center rounded-md w-full",
-                      collapsed ? "justify-center p-2" : "px-3 py-2",
+                      "flex items-center rounded-lg w-full transition-all duration-200 hover:scale-[1.02]",
+                      collapsed ? "justify-center p-3" : "px-3 py-2.5",
                       isActive
-                        ? "bg-forensic-accent/10 text-forensic-accent font-medium"
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-accent/10 text-accent font-medium shadow-sm"
+                        : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
                     )
                   }
                 >
                   <span className={cn(!collapsed && "mr-3")}>{link.icon}</span>
-                  {!collapsed && <span>{link.label}</span>}
+                  {!collapsed && <span className="text-sm">{link.label}</span>}
                 </NavLink>
               ))}
             </nav>

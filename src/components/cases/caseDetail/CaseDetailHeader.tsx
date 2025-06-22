@@ -1,24 +1,12 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileDigit, Scale } from "lucide-react";
-
-const getBadgeColor = (status: string) => {
-  switch (status) {
-    case "active":
-      return "bg-forensic-accent text-white";
-    case "closed":
-      return "bg-forensic-400 text-white";
-    case "pending":
-      return "bg-forensic-warning text-forensic-900";
-    default:
-      return "bg-forensic-600 text-white";
-  }
-};
+import { Share2, Printer, ShieldAlert } from "lucide-react";
+import { CaseStatus } from "@/types/case";
 
 interface CaseDetailHeaderProps {
   title: string;
-  status: string;
+  status: CaseStatus;
   id: string;
 }
 
@@ -27,26 +15,62 @@ const CaseDetailHeader: React.FC<CaseDetailHeaderProps> = ({
   status,
   id,
 }) => {
+  const getStatusVariant = (
+    status: CaseStatus
+  ): "success" | "destructive" | "warning" | "info" => {
+    switch (status) {
+      case "active":
+        return "success";
+      case "closed":
+        return "destructive";
+      case "pending":
+        return "warning";
+      default:
+        return "info";
+    }
+  };
+
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold text-forensic-800">{title}</h1>
-          <Badge className={getBadgeColor(status)}>
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </Badge>
+    <div className="rounded-xl border bg-card text-card-foreground shadow-lg p-6 bg-gradient-to-r from-card to-muted/30">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="p-3 bg-primary/10 rounded-lg">
+              <ShieldAlert className="h-7 w-7 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+                {title}
+              </h1>
+              <p className="text-sm text-muted-foreground font-mono">
+                Case ID: {id}
+              </p>
+            </div>
+          </div>
         </div>
-        <p className="text-forensic-500">Case ID: {id}</p>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" className="text-forensic-evidence">
-          <FileDigit className="h-4 w-4 mr-2" />
-          View Evidence
-        </Button>
-        <Button variant="outline" size="sm" className="text-forensic-court">
-          <Scale className="h-4 w-4 mr-2" />
-          Legal Documents
-        </Button>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-muted-foreground">
+              Status:
+            </span>
+            <Badge
+              variant={getStatusVariant(status)}
+              className="capitalize text-sm px-3 py-1"
+            >
+              {status}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2 border-l border-border pl-3 mt-3 sm:mt-0">
+            <Button variant="outline" size="sm">
+              <Share2 className="h-4 w-4 mr-2" />
+              Share
+            </Button>
+            <Button variant="outline" size="sm">
+              <Printer className="h-4 w-4 mr-2" />
+              Print
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

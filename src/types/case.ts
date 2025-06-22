@@ -1,3 +1,6 @@
+export type CaseStatus = "active" | "closed" | "pending";
+export type EvidenceStatus = "verified" | "pending" | "rejected";
+
 export interface Party {
   name: string;
   role: string;
@@ -7,7 +10,10 @@ export interface EvidenceItem {
   id: string;
   name: string;
   type: string;
-  status: string;
+  status: EvidenceStatus;
+  dateAdded: string;
+  fileHash: string;
+  ipfsHash: string;
 }
 
 export interface TimelineEvent {
@@ -19,14 +25,14 @@ export interface TimelineEvent {
 export interface CaseData {
   id: string;
   title: string;
-  status: string;
+  status: CaseStatus;
   dateCreated: string;
-  courtDate: string;
+  courtDate?: string;
   filingOfficer: string;
-  assignedJudge: string;
+  assignedJudge?: string;
   description: string;
-  evidenceCount: number;
   parties: Party[];
   evidenceItems: EvidenceItem[];
   timeline: TimelineEvent[];
+  tags?: string[];
 }

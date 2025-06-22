@@ -138,10 +138,10 @@ export class AuthErrorBoundary extends ErrorBoundary {
         <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100">
-                <AlertTriangle className="h-6 w-6 text-yellow-600" />
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-warning-100">
+                <AlertTriangle className="h-6 w-6 text-warning-600" />
               </div>
-              <CardTitle className="text-yellow-900">
+              <CardTitle className="text-warning-900">
                 Authentication Error
               </CardTitle>
               <CardDescription>
@@ -151,7 +151,7 @@ export class AuthErrorBoundary extends ErrorBoundary {
             </CardHeader>
             <CardContent>
               <div className="flex justify-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-600"></div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-warning-600"></div>
               </div>
             </CardContent>
           </Card>

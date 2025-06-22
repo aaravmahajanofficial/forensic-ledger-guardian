@@ -14,9 +14,11 @@ import {
   FileDigit,
   Download,
   FileCheck,
-  Shield,
+  ShieldCheck,
   Clock,
-  CheckCircle2,
+  ShieldAlert,
+  Eye,
+  FileSearch
 } from "lucide-react";
 
 export interface EvidenceItem {
@@ -34,45 +36,57 @@ interface CourtPreparationEvidenceProps {
   evidence: EvidenceItem[];
 }
 
+const StatCard = ({ icon, label, value, colorClass }: { icon: React.ReactNode, label: string, value: string | number, colorClass: string }) => (
+    <Card className={`text-white ${colorClass}`}>
+      <CardContent className="p-4 flex items-center gap-4">
+        <div className="p-3 bg-white/20 rounded-lg">{icon}</div>
+        <div>
+          <div className="text-sm font-medium">{label}</div>
+          <div className="text-2xl font-bold">{value}</div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
 const CourtPreparationEvidence: React.FC<CourtPreparationEvidenceProps> = ({
   evidence,
 }) => {
-  const getStatusColor = (status: string) => {
+  const getStatusBadgeVariant = (
+    status: "verified" | "pending" | "rejected"
+  ): "success" | "warning" | "destructive" => {
     switch (status) {
       case "verified":
-        return "bg-green-100 text-green-800";
+        return "success";
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return "warning";
       case "rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+        return "destructive";
     }
   };
 
-  const getRelevanceColor = (relevance: string) => {
+  const getRelevanceBadgeVariant = (
+    relevance: "high" | "medium" | "low"
+  ): "destructive" | "warning" | "success" => {
     switch (relevance) {
       case "high":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "destructive";
       case "medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "warning";
       case "low":
-        return "bg-green-100 text-green-800 border-green-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "success";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "verified":
-        return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+        return <ShieldCheck className="h-5 w-5 text-green-500" />;
       case "pending":
-        return <Clock className="h-4 w-4 text-yellow-600" />;
+        return <Clock className="h-5 w-5 text-yellow-500" />;
       case "rejected":
-        return <Shield className="h-4 w-4 text-red-600" />;
+        return <ShieldAlert className="h-5 w-5 text-red-500" />;
       default:
-        return <FileDigit className="h-4 w-4 text-gray-600" />;
+        return <FileDigit className="h-5 w-5 text-gray-500" />;
     }
   };
 
@@ -82,105 +96,104 @@ const CourtPreparationEvidence: React.FC<CourtPreparationEvidenceProps> = ({
   const pendingCount = evidence.filter(
     (item) => item.status === "pending"
   ).length;
-  const totalCount = evidence.length;
+  const rejectedCount = evidence.filter(
+    (item) => item.status === "rejected"
+  ).length;
 
   return (
     <div className="space-y-6">
       {/* Evidence Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <CheckCircle2 className="h-8 w-8 text-green-600 mx-auto mb-2" />
-            <h3 className="font-medium">Verified Evidence</h3>
-            <p className="text-2xl font-bold text-green-600">{verifiedCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Clock className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
-            <h3 className="font-medium">Pending Review</h3>
-            <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <FileDigit className="h-8 w-8 text-forensic-accent mx-auto mb-2" />
-            <h3 className="font-medium">Total Evidence</h3>
-            <p className="text-2xl font-bold text-forensic-accent">
-              {totalCount}
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+            icon={<ShieldCheck className="h-6 w-6" />} 
+            label="Verified" 
+            value={verifiedCount} 
+            colorClass="bg-green-600" 
+        />
+        <StatCard 
+            icon={<Clock className="h-6 w-6" />} 
+            label="Pending" 
+            value={pendingCount} 
+            colorClass="bg-yellow-500"
+        />
+        <StatCard 
+            icon={<ShieldAlert className="h-6 w-6" />} 
+            label="Rejected" 
+            value={rejectedCount} 
+            colorClass="bg-red-600"
+        />
+        <StatCard 
+            icon={<FileSearch className="h-6 w-6" />} 
+            label="Total Items" 
+            value={evidence.length} 
+            colorClass="bg-gray-700"
+        />
       </div>
 
       {/* Evidence Table */}
-      <Card>
+      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileCheck className="h-5 w-5 text-forensic-accent" />
-            Evidence Items
+          <CardTitle className="flex items-center gap-3 text-2xl font-bold text-gray-800 dark:text-white">
+            <FileCheck className="h-7 w-7 text-primary" />
+            Evidence Log
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Evidence Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Relevance</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead>Timestamp</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {evidence.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(item.status)}
-                      <span className="font-medium">{item.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{item.type}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(item.status)}>
-                      {item.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full border ${getRelevanceColor(
-                        item.relevance
-                      )}`}
-                    >
-                      {item.relevance}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-600">
-                    {item.size}
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-600">
-                    {item.timestamp}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline">
-                        <Download className="h-4 w-4 mr-1" />
-                        Download
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        View
-                      </Button>
-                    </div>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[35%]">Evidence</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Relevance</TableHead>
+                  <TableHead>Size</TableHead>
+                  <TableHead>Timestamp</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {evidence.map((item) => (
+                  <TableRow key={item.id} className="hover:bg-muted/50">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        {getStatusIcon(item.status)}
+                        <div>
+                            <div className="font-medium text-gray-800 dark:text-gray-200">{item.name}</div>
+                            <div className="text-xs text-muted-foreground">{item.type}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(item.status)} className="capitalize">
+                        {item.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getRelevanceBadgeVariant(item.relevance)} className="capitalize">
+                        {item.relevance}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {item.size}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {item.timestamp}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button size="sm" variant="outline">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

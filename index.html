@@ -3,12 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>forensic-ledger-guardian</title>
+    <title>Forensic Ledger Guardian</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
     <!-- Open Graph Metadata -->
-    <meta property="og:title" content="forensic-ledger-guardian" />
-    <meta property="og:description" content="A secure and powerful ledger application" />
+    <meta property="og:title" content="Forensic Ledger Guardian" />
+    <meta property="og:description" content="A secure and powerful blockchain-based forensic evidence management system" />
     <meta property="og:type" content="website" />
+    
+    <!-- Preload critical styles to avoid flash of unstyled content -->
+    <link rel="preload" href="/src/styles/critical-override.css" as="style">
+    <link rel="preload" href="/src/styles/foundations/theme.css" as="style">
+    
+    <!-- Theme initializer -->
+    <script src="/src/utils/themeInitializer.js"></script>
   </head>
 
   <body>

@@ -90,14 +90,6 @@ button, a, [role="button"] {
   }
 }
 
-/* High Contrast Mode Support */
-@media (prefers-contrast: high) {
-  :root {
-    --primary: 0 100% 50%;
-    --border: 0 0% 20%;
-  }
-}
-
 /* Print Styles */
 @media print {
   * {

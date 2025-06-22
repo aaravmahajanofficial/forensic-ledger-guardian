@@ -25,7 +25,6 @@ A comprehensive blockchain-based forensic evidence management system that ensure
 #### 🎨 **User Experience**
 
 - ✅ **Enhanced Loading States**: Beautiful, accessible loading components
-- ✅ **Improved Accessibility**: WCAG 2.2 compliant with proper ARIA labels
 - ✅ **Responsive Design**: Mobile-first approach with optimized layouts
 - ✅ **Modern UI Components**: Consistent design system with proper theming
 
@@ -49,7 +48,6 @@ A comprehensive blockchain-based forensic evidence management system that ensure
 - **Bundle Size**: 758KB main chunk (gzipped: 250KB)
 - **Code Coverage**: Basic test infrastructure established
 - **Type Safety**: 100% TypeScript coverage with strict mode
-- **Accessibility**: WCAG 2.2 AA compliant
 
 ---
 
@@ -80,7 +78,6 @@ A comprehensive blockchain-based forensic evidence management system that ensure
 ### 🛡️ Security & Compliance
 
 - **OWASP Security Standards**: Following industry best practices
-- **WCAG 2.2 Accessibility**: Ensuring inclusive access
 - **Data Protection**: GDPR-compliant data handling
 - **Role-based Access Control**: Granular permission management
 
@@ -341,7 +338,6 @@ bun preview
 
 ### Metrics
 
-- **Lighthouse Score**: 95+ (Performance, Accessibility, SEO)
 - **Core Web Vitals**: Optimized for all metrics
 - **Bundle Size**: Minimized with tree-shaking
 
