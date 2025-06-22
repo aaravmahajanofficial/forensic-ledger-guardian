@@ -352,7 +352,9 @@ class AuthenticationService {
       }
 
       const data = await response.json();
-      return data.user;
+
+      // Handle both the old format and new API format
+      return data.user || data;
     } catch (error) {
       logError(
         "API authentication failed",
