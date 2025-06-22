@@ -147,7 +147,7 @@ const CaseList: React.FC = () => {
       .filter((c) =>
         c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+        c.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       )
       .filter((c) => (statusFilter ? c.status === statusFilter : true))
       .sort((a, b) => {
@@ -264,7 +264,7 @@ const CaseList: React.FC = () => {
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-1">
-                  {caseItem.tags.map((tag, index) => (
+                  {caseItem.tags?.map((tag, index) => (
                     <Badge key={index} variant="secondary" className="text-xs font-normal">
                       {tag}
                     </Badge>

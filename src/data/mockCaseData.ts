@@ -8,8 +8,7 @@ export const caseData: CaseData = {
   courtDate: "2023-10-10T09:00:00Z",
   filingOfficer: "Officer James Wilson",
   assignedJudge: "Hon. Sarah Mitchell",
-  description:
-    "Case involving alleged theft of digital assets worth approximately $75,000 from a cryptocurrency exchange.",
+  description: "Case involving alleged theft of digital assets worth approximately $75,000 from a cryptocurrency exchange.",
   parties: [
     { name: "John Doe", role: "Defendant" },
     { name: "State", role: "Prosecutor" },
@@ -66,4 +65,5 @@ export const caseData: CaseData = {
     },
   ],
   tags: ["digital theft", "cryptocurrency", "fraud"],
+  evidenceCount: 0
 };

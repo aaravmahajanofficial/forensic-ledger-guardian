@@ -1,4 +1,4 @@
-export type CaseStatus = "active" | "closed" | "pending";
+export type CaseStatus = "active" | "closed" | "pending" | "open" | "review";
 export type EvidenceStatus = "verified" | "pending" | "rejected";
 
 export interface Party {
@@ -31,6 +31,7 @@ export interface CaseData {
   filingOfficer: string;
   assignedJudge?: string;
   description: string;
+  evidenceCount: number;
   parties: Party[];
   evidenceItems: EvidenceItem[];
   timeline: TimelineEvent[];
