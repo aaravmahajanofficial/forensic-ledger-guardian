@@ -1,0 +1,97 @@
+/* Modern Theme Variables - Forensic Ledger Guardian */
+@layer base {
+  :root {
+    /* Light Theme - Professional & Clean (Per Design Document) */
+    --background: 210 20% 98%; /* Ghost White #F9FAFB */
+    --foreground: 225 5% 11%; /* Jet Black #202124 */
+
+    --card: 0 0% 100%;
+    --card-foreground: 225 5% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 225 5% 11%;
+
+    --primary: 228 20% 14%; /* Deep Navy #1C1F2A */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 207 79% 46%; /* Cerulean Blue #1976D2 */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 40% 98%;
+    --muted-foreground: 215 4% 39%; /* Slate Grey #5F6368 */
+
+    --accent: 145 63% 49%; /* Emerald Green #2ECC71 */
+    --accent-foreground: 225 5% 11%;
+
+    --destructive: 1 78% 58%; /* Crimson Red #E53935 */
+    --destructive-foreground: 0 0% 100%;
+
+    --warning: 42 100% 50%; /* Amber #FFB300 */
+    --warning-foreground: 225 5% 11%;
+
+    --border: 220 8% 91%;
+    --input: 215 28% 96%;
+    --ring: 207 79% 46%; /* Cerulean Blue for focus rings */
+
+    --radius: 0.75rem;
+
+    /* Sidebar Variables */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 225 5% 11%; /* Jet Black */
+    --sidebar-primary: 228 20% 14%; /* Deep Navy */
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 98%;
+    --sidebar-accent-foreground: 225 5% 11%;
+    --sidebar-border: 220 8% 91%;
+    --sidebar-ring: 207 79% 46%; /* Cerulean Blue */
+
+    /* Custom Brand Variables (Per Design Document) */
+    --brand-gradient: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    --security-gradient: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(175, 96%, 37%));
+    --danger-gradient: linear-gradient(135deg, hsl(var(--destructive)) 0%, hsl(var(--destructive) / 0.8));
+  }
+
+  .dark {
+    /* Dark Theme - Professional Dark Mode (Per Design Document) */
+    --background: 0 0% 7%; /* Charcoal Grey #121212 */
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 12%; /* #1E1E1E */
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 228 20% 14%; /* Deep Navy */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 207 79% 46%; /* Cerulean Blue */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 12%;
+    --muted-foreground: 200 16% 73%; /* #B0BEC5 */
+
+    --accent: 156 65% 52%; /* Slightly lighter emerald for dark mode */
+    --accent-foreground: 0 0% 7%;
+
+    --destructive: 0 91% 71%; /* Lighter red for dark mode */
+    --destructive-foreground: 0 0% 7%;
+
+    --warning: 42 100% 50%; /* Amber for dark mode */
+    --warning-foreground: 0 0% 7%;
+
+    --border: 0 0% 25%;
+    --input: 0 0% 12%;
+    --ring: 207 79% 46%; /* Cerulean Blue */
+
+    /* Dark Sidebar Variables */
+    --sidebar-background: 0 0% 12%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 207 79% 46%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 25%;
+    --sidebar-ring: 207 79% 46%;
+  }
+}

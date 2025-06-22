@@ -1,9 +1,9 @@
-
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface StatCardProps {
   title: string;
@@ -11,61 +11,97 @@ interface StatCardProps {
   icon: React.ReactNode;
   linkTo?: string;
   className?: string;
+  valueClassName?: string;
+  index?: number; // For staggered animations
+  footerText?: string;
   highlight?: boolean;
-  valueClassName?: string;  // Added this prop to support styling the value text
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon, linkTo, className, highlight, valueClassName }) => {
+const StatCard: React.FC<StatCardProps> = ({
+  title,
+  value,
+  icon,
+  linkTo,
+  className,
+  valueClassName,
+  index = 0,
+  footerText = "View Details",
+  highlight = false,
+}) => {
   const content = (
-    <div className="p-6 flex items-center justify-between">
+    <CardContent className="p-6 flex items-center justify-between">
       <div className="space-y-2">
-        <p className="text-sm font-medium text-forensic-500">{title}</p>
-        <p className={cn(
-          "text-3xl font-bold text-forensic-800",
-          highlight && "text-forensic-warning",
-          valueClassName
-        )}>{value}</p>
+        <p className="text-sm font-medium text-muted-foreground">{title}</p>
+        <p className={cn("text-3xl font-bold text-foreground", valueClassName)}>
+          {value}
+        </p>
       </div>
-      <div className={cn(
-        "h-12 w-12 rounded-lg bg-forensic-50 flex items-center justify-center",
-        highlight && "bg-forensic-warning/10"
-      )}>
+      <div
+        className={cn(
+          "h-12 w-12 rounded-lg flex items-center justify-center",
+          highlight
+            ? "bg-destructive/10 text-destructive"
+            : "bg-primary/10 text-primary"
+        )}
+      >
         {icon}
       </div>
-    </div>
+    </CardContent>
   );
-  
+
+  const cardVariants = {
+    initial: { opacity: 0, y: 20 },
+    animate: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.4, delay: index * 0.1 },
+    },
+    hover: { y: -5, transition: { duration: 0.2 } },
+  };
+
   if (linkTo) {
     return (
-      <Link to={linkTo}>
-        <Card className={cn(
-          'group cursor-pointer border-forensic-200 hover:border-forensic-300 hover:shadow-md transition-all duration-300', 
-          highlight && 'border-forensic-warning/50',
-          className
-        )}>
-          <CardContent className="p-0">
-            <div className="relative">
-              {content}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-forensic-800/5 rounded-lg">
-                <ChevronRight className="h-6 w-6 text-forensic-accent" />
-              </div>
+      <Link to={linkTo} className="group">
+        <motion.div
+          variants={cardVariants}
+          initial="initial"
+          animate="animate"
+          whileHover="hover"
+        >
+          <Card
+            className={cn(
+              "overflow-hidden",
+              className,
+              { "border-destructive/50 shadow-lg shadow-destructive/20": highlight }
+            )}
+          >
+            {content}
+            <div
+              className={cn(
+                "px-6 py-2 flex items-center justify-end text-xs font-semibold",
+                highlight
+                  ? "bg-destructive/10 text-destructive"
+                  : "bg-primary/10 text-primary"
+              )}
+            >
+              {footerText}
+              <ArrowRight className="h-4 w-4 ml-2 transform transition-transform duration-300 group-hover:translate-x-1" />
             </div>
-          </CardContent>
-        </Card>
+          </Card>
+        </motion.div>
       </Link>
     );
   }
 
   return (
-    <Card className={cn(
-      'border-forensic-200', 
-      highlight && 'border-forensic-warning/50',
-      className
-    )}>
-      <CardContent className="p-0">
-        {content}
-      </CardContent>
-    </Card>
+    <motion.div
+      variants={cardVariants}
+      initial="initial"
+      animate="animate"
+      whileHover="hover"
+    >
+      <Card className={cn(className)}>{content}</Card>
+    </motion.div>
   );
 };
 

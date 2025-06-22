@@ -1,0 +1,31 @@
+
+/* Legacy Compatibility - Update existing forensic classes */
+@layer utilities {
+  .forensic-50 { color: hsl(var(--evidence-50)); }
+  .forensic-100 { color: hsl(var(--evidence-100)); }
+  .forensic-200 { color: hsl(var(--evidence-200)); }
+  .forensic-300 { color: hsl(var(--evidence-300)); }
+  .forensic-400 { color: hsl(var(--evidence-400)); }
+  .forensic-500 { color: hsl(var(--evidence-500)); }
+  .forensic-600 { color: hsl(var(--evidence-600)); }
+  .forensic-700 { color: hsl(var(--evidence-700)); }
+  .forensic-800 { color: hsl(var(--evidence-800)); }
+  .forensic-900 { color: hsl(var(--evidence-900)); }
+  .forensic-accent { color: hsl(var(--accent)); }
+  .forensic-evidence { color: hsl(var(--brand-600)); }
+  .forensic-court { color: hsl(var(--legal-600)); }
+  .forensic-success { color: hsl(var(--security-600)); }
+  .forensic-warning { color: hsl(var(--warning-600)); }
+  .forensic-danger { color: hsl(var(--danger-600)); }
+
+  /* Background variations */
+  .bg-forensic-50 { background-color: hsl(var(--evidence-50)); }
+  .bg-forensic-100 { background-color: hsl(var(--evidence-100)); }
+  .bg-forensic-accent { background-color: hsl(var(--accent)); }
+  .bg-forensic-evidence { background-color: hsl(var(--brand-600)); }
+  .bg-forensic-court { background-color: hsl(var(--legal-600)); }
+  
+  /* Border variations */
+  .border-forensic-200 { border-color: hsl(var(--evidence-200)); }
+  .border-forensic-accent { border-color: hsl(var(--accent)); }
+}

@@ -1,8 +1,7 @@
-
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { 
+import {
   LogOut,
   User,
   Menu,
@@ -10,10 +9,15 @@ import {
   Bell,
   Sparkles,
   HelpCircle,
-  Lock
+  Lock,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Role } from "@/services/web3Service";
+import { ROLES, ROLE_NAMES } from "@/constants";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { motion as m } from "framer-motion";
+
+// Role type and enum-like object for convenience
+type Role = (typeof ROLES)[keyof typeof ROLES];
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +28,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -35,19 +38,19 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
-  
+
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
-  const isHomePage = location.pathname === '/';
+  const isHomePage = location.pathname === "/";
 
   const scrollToSection = (sectionId: string) => {
     if (isHomePage) {
       const section = document.getElementById(sectionId);
       if (section) {
-        section.scrollIntoView({ behavior: 'smooth' });
+        section.scrollIntoView({ behavior: "smooth" });
       }
     } else {
       navigate(`/#${sectionId}`);
@@ -56,39 +59,52 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
 
   const getRoleBadgeColor = (role: Role) => {
     switch (role) {
-      case Role.Court:
-        return "bg-forensic-court text-white";
-      case Role.Officer:
-        return "bg-forensic-800 text-white";
-      case Role.Forensic:
-        return "bg-forensic-accent text-white";
-      case Role.Lawyer:
-        return "bg-forensic-warning text-forensic-900";
+      case ROLES.COURT:
+        return "bg-primary text-primary-foreground";
+      case ROLES.OFFICER:
+        return "bg-secondary text-secondary-foreground";
+      case ROLES.FORENSIC:
+        return "bg-accent text-accent-foreground";
+      case ROLES.LAWYER:
+        return "bg-warning text-warning-foreground";
       default:
-        return "bg-gray-500 text-white";
+        return "bg-muted text-muted-foreground";
     }
   };
 
+  const navVariants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1 },
+  };
+
   return (
-    <header className="bg-white border-b border-forensic-200 h-14 md:h-16">
-      <div className="h-full px-2 sm:px-4 flex items-center justify-between">
-        <div className="flex items-center">
+    <m.header
+      initial="hidden"
+      animate="visible"
+      variants={navVariants}
+      transition={{ duration: 0.5, ease: "easeInOut" }}
+      className="bg-card border-b border-border h-16 sticky top-0 z-50 backdrop-blur-sm bg-card/95"
+    >
+      <div className="h-full px-4 sm:px-6 flex items-center justify-between">
+        <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
-            className="mr-1 sm:mr-2"
+            className="shrink-0"
           >
             <Menu className="h-5 w-5" />
           </Button>
-          
-          {/* Show logo on mobile */}
+
+          {/* Enhanced Logo */}
           {isMobile && (
-            <div className="flex items-center">
-              <div className="flex items-center justify-center w-6 h-6 bg-gradient-to-r from-forensic-accent to-forensic-evidence rounded-md overflow-hidden">
-                <Shield className="h-4 w-4 text-white" />
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg shadow-md">
+                <Shield className="h-5 w-5 text-white" />
               </div>
-              <span className="ml-1 font-semibold text-sm md:text-base">ForensicChain</span>
+              <span className="font-semibold text-lg text-foreground">
+                Forensic Ledger Guardian
+              </span>
             </div>
           )}
         </div>
@@ -96,29 +112,29 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
         {/* Navigation links for homepage */}
         {isHomePage && !isMobile && (
           <div className="hidden md:flex space-x-6 ml-auto mr-6">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="flex items-center gap-1 text-forensic-600 hover:text-forensic-accent"
-              onClick={() => scrollToSection('features')}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => scrollToSection("features")}
             >
               <Sparkles className="h-4 w-4" />
               <span>Features</span>
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="flex items-center gap-1 text-forensic-600 hover:text-forensic-accent"
-              onClick={() => scrollToSection('how-it-works')}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => scrollToSection("how-it-works")}
             >
               <HelpCircle className="h-4 w-4" />
               <span>How It Works</span>
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="flex items-center gap-1 text-forensic-600 hover:text-forensic-accent"
-              onClick={() => scrollToSection('security')}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => scrollToSection("security")}
             >
               <Lock className="h-4 w-4" />
               <span>Security</span>
@@ -127,21 +143,34 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
         )}
 
         {user ? (
-          <div className="flex items-center gap-1 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
-              <Bell className="h-4 w-4 text-forensic-500" />
+            <Button variant="ghost" size="icon" className="hidden sm:flex relative">
+              <Bell className="h-5 w-5 text-muted-foreground" />
+              <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full flex items-center justify-center">
+                <span className="text-xs text-white">•</span>
+              </span>
             </Button>
-            
+
             {/* Role Badge - hide on very small screens */}
-            <Badge className={`${user.role ? getRoleBadgeColor(user.role) : "bg-gray-500"} px-2 py-1 hidden xs:inline-flex`}>
-              {user.roleTitle || "Unknown"}
+            <Badge
+              className={`${
+                user.role ? getRoleBadgeColor(user.role) : "bg-gray-500"
+              } px-3 py-1 hidden xs:inline-flex rounded-full font-medium`}
+            >
+              {user.role ? ROLE_NAMES[user.role] : "Unknown"}
             </Badge>
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2">
-                  <User className="h-4 w-4 text-forensic-accent" />
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2"
+                >
+                  <User className="h-4 w-4 text-accent" />
                   <span className="hidden sm:inline-block text-sm truncate max-w-[100px] md:max-w-none">
                     {user.name}
                   </span>
@@ -149,20 +178,29 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="flex items-center gap-2">
-                  <div className="flex items-center justify-center w-5 h-5 bg-gradient-to-r from-forensic-accent to-forensic-evidence rounded-md overflow-hidden">
-                    <Shield className="h-3 w-3 text-white" />
+                  <div className="flex items-center justify-center w-5 h-5 bg-primary rounded-md overflow-hidden">
+                    <Shield className="h-3 w-3 text-primary-foreground" />
                   </div>
                   <span>User Profile</span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/dashboard')}>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => navigate("/dashboard")}
+                >
                   Dashboard
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings')}>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => navigate("/settings")}
+                >
                   Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-forensic-danger cursor-pointer" onClick={handleLogout}>
+                <DropdownMenuItem
+                  className="text-destructive cursor-pointer"
+                  onClick={handleLogout}
+                >
                   <LogOut className="h-4 w-4 mr-2" />
                   <span>Logout</span>
                 </DropdownMenuItem>
@@ -173,14 +211,14 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="text-xs sm:text-sm"
           >
             Login
           </Button>
         )}
       </div>
-    </header>
+    </m.header>
   );
 };
 

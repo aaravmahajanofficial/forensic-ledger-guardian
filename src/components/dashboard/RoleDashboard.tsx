@@ -1,12 +1,14 @@
+import { useAuth } from "@/contexts/AuthContext";
+import { ROLES, ROLE_NAMES } from "@/constants";
+import { Badge } from "@/components/ui/badge";
 
-import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Role } from '@/services/web3Service';
-import { Badge } from '@/components/ui/badge';
-import ForensicDashboard from './roles/ForensicDashboard';
-import CourtDashboard from './roles/CourtDashboard';
-import OfficerDashboard from './roles/OfficerDashboard';
-import LawyerDashboard from './roles/LawyerDashboard';
+// Role type and enum-like object for convenience
+type Role = (typeof ROLES)[keyof typeof ROLES];
+const Role = ROLES;
+import ForensicDashboard from "./roles/ForensicDashboard";
+import CourtDashboard from "./roles/CourtDashboard";
+import OfficerDashboard from "./roles/OfficerDashboard";
+import LawyerDashboard from "./roles/LawyerDashboard";
 
 const RoleDashboard = () => {
   const { user } = useAuth();
@@ -17,29 +19,31 @@ const RoleDashboard = () => {
 
   const renderRoleBadge = () => {
     const roleColors: Record<Role, string> = {
-      [Role.None]: 'bg-gray-500',
-      [Role.Court]: 'bg-forensic-court text-white',
-      [Role.Officer]: 'bg-forensic-800 text-white',
-      [Role.Forensic]: 'bg-forensic-accent text-white',
-      [Role.Lawyer]: 'bg-forensic-warning text-forensic-900',
+      [Role.NONE]: "bg-muted text-muted-foreground",
+      [Role.COURT]: "bg-secondary text-secondary-foreground",
+      [Role.OFFICER]: "bg-primary text-primary-foreground",
+      [Role.FORENSIC]: "bg-accent text-accent-foreground",
+      [Role.LAWYER]: "bg-warning text-warning-foreground",
     };
 
     return (
-      <Badge className={`${roleColors[user.role]} px-3 py-1`}>
-        {user.roleTitle}
+      <Badge
+        className={`${roleColors[user.role]} px-3 py-1 font-semibold text-xs uppercase tracking-wider`}
+      >
+        {ROLE_NAMES[user.role as Role]}
       </Badge>
     );
   };
 
   const renderDashboardByRole = () => {
     switch (user.role) {
-      case Role.Court:
+      case Role.COURT:
         return <CourtDashboard />;
-      case Role.Officer:
+      case Role.OFFICER:
         return <OfficerDashboard />;
-      case Role.Forensic:
+      case Role.FORENSIC:
         return <ForensicDashboard />;
-      case Role.Lawyer:
+      case Role.LAWYER:
         return <LawyerDashboard />;
       default:
         return <div>Invalid role</div>;
@@ -47,13 +51,18 @@ const RoleDashboard = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-0">
-        <h1 className="text-2xl font-bold text-forensic-800">
-          Welcome, {user.name}
-        </h1>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-forensic-500">Role: </span>
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">
+            Welcome back, {user.name}!
+          </h1>
+          <p className="mt-1 text-muted-foreground">
+            Here&apos;s your personalized dashboard.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-sm font-medium text-muted-foreground">Your Role:</span>
           {renderRoleBadge()}
         </div>
       </div>
