@@ -2,10 +2,8 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   LayoutGrid,
-  FileText,
   Clock4,
   Users,
-  Gavel,
   FolderKanban,
 } from "lucide-react";
 import CaseOverview from "./CaseOverview";
