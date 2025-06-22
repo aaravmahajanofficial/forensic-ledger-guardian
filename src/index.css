@@ -16,6 +16,31 @@
 
 @source "src/**/*.{js,jsx,ts,tsx}";
 
+@theme {
+  --color-border: hsl(220 8% 91%);
+  --color-border-dark: hsl(0 0% 25%);
+  --color-background: hsl(210 20% 98%);
+  --color-foreground: hsl(225 5% 11%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(225 5% 11%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(225 5% 11%);
+  --color-primary: hsl(228 20% 14%);
+  --color-primary-foreground: hsl(210 40% 98%);
+  --color-secondary: hsl(207 79% 46%);
+  --color-secondary-foreground: hsl(0 0% 100%);
+  --color-muted: hsl(210 40% 98%);
+  --color-muted-foreground: hsl(215 4% 39%);
+  --color-accent: hsl(145 63% 49%);
+  --color-accent-foreground: hsl(225 5% 11%);
+  --color-destructive: hsl(1 78% 58%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-warning: hsl(42 100% 50%);
+  --color-warning-foreground: hsl(225 5% 11%);
+  --color-input: hsl(215 28% 96%);
+  --color-ring: hsl(207 79% 46%);
+}
+
 @layer components {
   /* Data Tables */
   .table-modern {
@@ -118,4 +143,29 @@
   }
 }
 
-@import "tailwindcss";
+/* Tailwind v4 Border Utilities */
+@layer utilities {
+  .border-border {
+    border-color: hsl(var(--border));
+  }
+  
+  .border-border\/10 {
+    border-color: hsl(var(--border) / 0.1);
+  }
+  
+  .border-border\/20 {
+    border-color: hsl(var(--border) / 0.2);
+  }
+  
+  .border-border\/40 {
+    border-color: hsl(var(--border) / 0.4);
+  }
+  
+  .border-border\/80 {
+    border-color: hsl(var(--border) / 0.8);
+  }
+}
+
+@theme {
+  --color-border: hsl(220 8% 91%);
+}
