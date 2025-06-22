@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   ChevronLeft,
@@ -6,8 +6,6 @@ import {
   Shield,
   Home,
   FolderClosed,
-  FileDigit,
-  Upload,
   CheckCircle,
   HelpCircle,
   Settings,
@@ -22,7 +20,13 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLES } from "@/constants";
-import { Badge } from "@/components/ui/badge";
+import { motion as m, AnimatePresence } from "framer-motion";
+
+interface NavLinkItem {
+  to: string;
+  label: string;
+  icon: React.ReactNode;
+}
 
 interface SidebarProps {
   collapsed: boolean;
@@ -33,14 +37,32 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const { user } = useAuth();
-  const [isOpen, setIsOpen] = useState(!isMobile);
 
   // Close sidebar on mobile when route changes
   useEffect(() => {
     if (isMobile) {
-      setIsOpen(false);
+      // setIsOpen(false); // This logic might need to be re-evaluated based on desired mobile behavior
     }
   }, [location.pathname, isMobile]);
+
+  const sidebarVariants = {
+    expanded: { width: isMobile ? "80%" : 280 },
+    collapsed: { width: 72 },
+  };
+
+  const navItemVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: { staggerChildren: 0.05, delayChildren: 0.2 },
+    },
+  };
+
+  const navLinkVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: { opacity: 1, x: 0 },
+  };
 
   const roleBasedLinks = () => {
     switch (user?.role) {
@@ -100,321 +122,138 @@ const Sidebar = ({ collapsed, toggleCollapsed }: SidebarProps) => {
     }
   };
 
-  // Core links shown to roles with adjustments based on requirements
-  const getCoreLinks = () => {
-    const baseLinks = [
-      { to: "/dashboard", label: "Dashboard", icon: <Home size={18} /> },
-      { to: "/cases", label: "Cases", icon: <FolderClosed size={18} /> },
-    ];
-
-    // For Lawyer (Defense Attorney) role - only show Cases and Evidence
-    if (user?.role === ROLES.LAWYER) {
-      baseLinks.push({
-        to: "/evidence",
-        label: "Evidence",
-        icon: <FileDigit size={18} />,
-      });
-      return baseLinks;
-    }
-
-    // Don't show Evidence link for Court role
-    if (user?.role !== ROLES.COURT) {
-      baseLinks.push({
-        to: "/evidence",
-        label: "Evidence",
-        icon: <FileDigit size={18} />,
-      });
-    }
-
-    // Don't show Upload and Verify for Court role
-    if (user?.role !== ROLES.COURT) {
-      // Add Upload button for Forensic role
-      if (user?.role === ROLES.FORENSIC || user?.role === ROLES.OFFICER) {
-        baseLinks.push({
-          to: "/upload",
-          label: "Upload",
-          icon: <Upload size={18} />,
-        });
-      }
-
-      // Keep Verify for Officer role and others except Court and Forensic
-      if (user?.role !== ROLES.FORENSIC) {
-        baseLinks.push({
-          to: "/verify",
-          label: "Verify",
-          icon: <CheckCircle size={18} />,
-        });
-      }
-    }
-
-    return baseLinks;
-  };
-
-  // Utility links shown at the bottom to all roles
-  const utilityLinks = [
-    { to: "/help", label: "Help", icon: <HelpCircle size={18} /> },
-    { to: "/settings", label: "Settings", icon: <Settings size={18} /> },
+  const commonLinks = [
+    { to: "/dashboard", label: "Dashboard", icon: <Home size={18} /> },
+    { to: "/cases", label: "Cases", icon: <FolderClosed size={18} /> },
   ];
 
-  // Check if sidebar should be rendered as mobile modal
-  if (isMobile) {
-    return (
-      <>
-        {/* Mobile overlay */}
-        {isOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
-            onClick={() => setIsOpen(false)}
-          />
-        )}
-
-        {/* Mobile sidebar */}
-        <div
-          className={cn(
-            "fixed top-0 left-0 z-50 h-full bg-card shadow-2xl transition-all duration-300 transform border-r border-border",
-            isOpen ? "translate-x-0" : "-translate-x-full",
-            "w-64"
-          )}
-        >
-          <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg shadow-md">
-                  <Shield className="h-5 w-5 text-white" />
-                </div>
-                <span className="font-semibold text-lg text-foreground">Forensic Ledger Guardian</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsOpen(false)}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3">
-              {user && (
-                <div className="mb-4 p-3 bg-muted/50 rounded-xl">
-                  <p className="text-sm font-medium text-foreground">{user.name}</p>
-                  <Badge className="mt-2 bg-accent text-accent-foreground">{user.roleTitle || "Unknown Role"}</Badge>
-                </div>
-              )}
-
-              <div className="mb-6">
-                <p className="px-3 text-xs font-medium text-muted-foreground uppercase mb-3 tracking-wider">
-                  Core
-                </p>
-                <nav className="space-y-1">
-                  {getCoreLinks().map((link) => (
-                    <NavLink
-                      key={link.to}
-                      to={link.to}
-                      className={({ isActive }) =>
-                        cn(
-                          "flex items-center px-3 py-2.5 text-sm rounded-lg w-full transition-all duration-200",
-                          isActive
-                            ? "bg-primary/10 text-primary font-medium shadow-sm"
-                            : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
-                        )
-                      }
-                      onClick={() => isMobile && setIsOpen(false)}
-                    >
-                      <span className="mr-3">{link.icon}</span>
-                      <span>{link.label}</span>
-                    </NavLink>
-                  ))}
-                </nav>
-              </div>
-
-              {user && roleBasedLinks().length > 0 && (
-                <div className="mb-6">
-                  <p className="px-3 text-xs font-medium text-muted-foreground uppercase mb-3 tracking-wider">
-                    Role Specific
-                  </p>
-                  <nav className="space-y-1">
-                    {roleBasedLinks().map((link) => (
-                      <NavLink
-                        key={link.to}
-                        to={link.to}
-                        className={({ isActive }) =>
-                          cn(
-                            "flex items-center px-3 py-2.5 text-sm rounded-lg w-full transition-all duration-200",
-                            isActive
-                              ? "bg-secondary/10 text-secondary font-medium shadow-sm"
-                              : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
-                          )
-                        }
-                        onClick={() => isMobile && setIsOpen(false)}
-                      >
-                        <span className="mr-3">{link.icon}</span>
-                        <span>{link.label}</span>
-                      </NavLink>
-                    ))}
-                  </nav>
-                </div>
-              )}
-
-              <div>
-                <p className="px-3 text-xs font-medium text-muted-foreground uppercase mb-3 tracking-wider">
-                  Utilities
-                </p>
-                <nav className="space-y-1">
-                  {utilityLinks.map((link) => (
-                    <NavLink
-                      key={link.to}
-                      to={link.to}
-                      className={({ isActive }) =>
-                        cn(
-                          "flex items-center px-3 py-2.5 text-sm rounded-lg w-full transition-all duration-200",
-                          isActive
-                            ? "bg-accent/10 text-accent font-medium shadow-sm"
-                            : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
-                        )
-                      }
-                      onClick={() => isMobile && setIsOpen(false)}
-                    >
-                      <span className="mr-3">{link.icon}</span>
-                      <span>{link.label}</span>
-                    </NavLink>
-                  ))}
-                </nav>
-              </div>
-            </div>
-          </div>
+  const renderNavLink = (link: NavLinkItem) => (
+    <m.li key={link.to} variants={navLinkVariants}>
+      <NavLink
+        to={link.to}
+        className={({ isActive }) =>
+          cn(
+            "flex items-center h-10 px-4 rounded-lg transition-colors duration-200",
+            "text-muted-foreground hover:bg-muted hover:text-foreground",
+            { "bg-primary/10 text-primary font-semibold": isActive }
+          )
+        }
+      >
+        <div className="w-6 mr-4 flex items-center justify-center">
+          {link.icon}
         </div>
-      </>
-    );
-  }
+        <AnimatePresence>
+          {!collapsed && (
+            <m.span
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="whitespace-nowrap"
+            >
+              {link.label}
+            </m.span>
+          )}
+        </AnimatePresence>
+      </NavLink>
+    </m.li>
+  );
 
-  // Desktop sidebar
   return (
-    <div
+    <m.aside
+      variants={sidebarVariants}
+      initial={false}
+      animate={collapsed ? "collapsed" : "expanded"}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       className={cn(
-        "h-screen bg-card border-r border-border transition-all duration-300 flex flex-col",
-        collapsed ? "w-16" : "w-64"
+        "relative flex flex-col h-full bg-card border-r border-border z-40",
+        { "shadow-xl": !collapsed }
       )}
     >
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="flex items-center justify-between p-4 h-16 border-b border-border">
+        <AnimatePresence>
           {!collapsed && (
-            <div className="flex items-center gap-3">
+            <m.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="flex items-center gap-2"
+            >
               <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg shadow-md">
                 <Shield className="h-5 w-5 text-white" />
               </div>
-              <span className="font-semibold text-lg text-foreground">Forensic Ledger Guardian</span>
-            </div>
+              <span className="font-semibold text-lg text-foreground whitespace-nowrap">
+                Forensic Ledger Guardian
+              </span>
+            </m.div>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleCollapsed}
-            className="shrink-0"
-          >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-3">
-          {user && !collapsed && (
-            <div className="mb-4 p-3 bg-muted/50 rounded-xl">
-              <p className="text-sm font-medium truncate text-foreground">{user.name}</p>
-              <Badge className="mt-2 bg-accent text-accent-foreground">{user.roleTitle || "Unknown Role"}</Badge>
-            </div>
+        </AnimatePresence>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleCollapsed}
+          className="absolute top-4 right-[-40px] bg-card border border-border rounded-full z-50 hidden md:flex"
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
           )}
-
-          <div className="mb-6">
-            {!collapsed && (
-              <p className="px-3 text-xs font-medium text-muted-foreground uppercase mb-3 tracking-wider">
-                Core
-              </p>
-            )}
-            <nav className="space-y-1">
-              {getCoreLinks().map((link) => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  title={collapsed ? link.label : undefined}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center rounded-lg w-full transition-all duration-200 hover:scale-[1.02]",
-                      collapsed ? "justify-center p-3" : "px-3 py-2.5",
-                      isActive
-                        ? "bg-primary/10 text-primary font-medium shadow-sm"
-                        : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
-                    )
-                  }
-                >
-                  <span className={cn(!collapsed && "mr-3")}>{link.icon}</span>
-                  {!collapsed && <span className="text-sm">{link.label}</span>}
-                </NavLink>
-              ))}
-            </nav>
-          </div>
-
-          {user && roleBasedLinks().length > 0 && (
-            <div className="mb-6">
-              {!collapsed && (
-                <p className="px-3 text-xs font-medium text-muted-foreground uppercase mb-3 tracking-wider">
-                  Role Specific
-                </p>
-              )}
-              <nav className="space-y-1">
-                {roleBasedLinks().map((link) => (
-                  <NavLink
-                    key={link.to}
-                    to={link.to}
-                    title={collapsed ? link.label : undefined}
-                    className={({ isActive }) =>
-                      cn(
-                        "flex items-center rounded-lg w-full transition-all duration-200 hover:scale-[1.02]",
-                        collapsed ? "justify-center p-3" : "px-3 py-2.5",
-                        isActive
-                          ? "bg-secondary/10 text-secondary font-medium shadow-sm"
-                          : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
-                      )
-                    }
-                  >
-                    <span className={cn(!collapsed && "mr-3")}>
-                      {link.icon}
-                    </span>
-                    {!collapsed && <span className="text-sm">{link.label}</span>}
-                  </NavLink>
-                ))}
-              </nav>
-            </div>
-          )}
-
-          <div>
-            {!collapsed && (
-              <p className="px-3 text-xs font-medium text-muted-foreground uppercase mb-3 tracking-wider">
-                Utilities
-              </p>
-            )}
-            <nav className="space-y-1">
-              {utilityLinks.map((link) => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  title={collapsed ? link.label : undefined}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center rounded-lg w-full transition-all duration-200 hover:scale-[1.02]",
-                      collapsed ? "justify-center p-3" : "px-3 py-2.5",
-                      isActive
-                        ? "bg-accent/10 text-accent font-medium shadow-sm"
-                        : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
-                    )
-                  }
-                >
-                  <span className={cn(!collapsed && "mr-3")}>{link.icon}</span>
-                  {!collapsed && <span className="text-sm">{link.label}</span>}
-                </NavLink>
-              ))}
-            </nav>
-          </div>
-        </div>
+        </Button>
       </div>
-    </div>
+
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-2">
+        <m.ul variants={navItemVariants} initial="hidden" animate="visible">
+          {commonLinks.map(renderNavLink)}
+        </m.ul>
+
+        {user && roleBasedLinks().length > 0 && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <AnimatePresence>
+              {!collapsed && (
+                <m.h3
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="px-4 mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                >
+                  Role-Specific Actions
+                </m.h3>
+              )}
+            </AnimatePresence>
+            <m.ul variants={navItemVariants} initial="hidden" animate="visible">
+              {roleBasedLinks().map(renderNavLink)}
+            </m.ul>
+          </div>
+        )}
+      </nav>
+
+      <div className="p-4 border-t border-border mt-auto">
+        <AnimatePresence>
+          {!collapsed && (
+            <m.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="p-4 rounded-lg bg-muted/50 text-center"
+            >
+              <p className="text-sm font-semibold text-foreground">
+                Need Assistance?
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 mb-3">
+                Check our help guides for support.
+              </p>
+              <Button size="sm" className="w-full">
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Help Center
+              </Button>
+            </m.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </m.aside>
   );
 };
 

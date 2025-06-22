@@ -3,12 +3,10 @@
  * Handles authentication and authorization for protected routes
  */
 
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLES, type RoleType } from "@/constants";
-
-type Role = RoleType;
 import {
   Card,
   CardContent,
@@ -17,8 +15,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, Lock, ArrowLeft } from "lucide-react";
+import { Shield, ArrowLeft, ShieldAlert } from "lucide-react";
 import { logSecurityEvent } from "@/utils/logger";
+import LoadingSpinner from "./LoadingSpinner";
+
+type Role = RoleType;
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -35,22 +36,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
-  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
-
-  useEffect(() => {
-    if (!isLoading) {
-      setHasCheckedAuth(true);
-    }
-  }, [isLoading]);
 
   // Show loading state while checking authentication
-  if (isLoading || !hasCheckedAuth) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Verifying access...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <LoadingSpinner size="large" text="Verifying access credentials..." />
       </div>
     );
   }
@@ -96,27 +87,30 @@ const UnauthorizedAccess: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-            <Lock className="h-6 w-6 text-red-600" />
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-md text-center border-destructive/50 shadow-lg">
+        <CardHeader>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+            <ShieldAlert className="h-8 w-8 text-destructive" />
           </div>
-          <CardTitle className="text-red-900">Access Denied</CardTitle>
-          <CardDescription>
-            You don&apos;t have permission to access this page. Contact your
-            administrator if you believe this is an error.
+          <CardTitle className="text-2xl font-bold text-destructive">
+            Access Denied
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            You do not have the necessary permissions to access this page.
+            Please contact your system administrator if you believe this is an
+            error.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button onClick={handleGoBack} variant="outline" className="flex-1">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Go Back
             </Button>
             <Button onClick={handleGoHome} className="flex-1">
               <Shield className="h-4 w-4 mr-2" />
-              Dashboard
+              Go to Dashboard
             </Button>
           </div>
         </CardContent>
@@ -150,8 +144,6 @@ export const LawEnforcementRoute: React.FC<{ children: ReactNode }> = ({
     {children}
   </ProtectedRoute>
 );
-
-// This route has been removed as it's not used in the application
 
 export const LegalRoute: React.FC<{ children: ReactNode }> = ({ children }) => (
   <ProtectedRoute allowedRoles={[ROLES.COURT, ROLES.LAWYER]}>

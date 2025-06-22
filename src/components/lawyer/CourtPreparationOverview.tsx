@@ -43,8 +43,8 @@ interface InfoItemProps {
 }
 
 const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value }) => (
-  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-    {icon}
+  <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-lg transition-colors hover:bg-muted">
+    <div className="flex-shrink-0 text-primary">{icon}</div>
     <div>
       <p className="text-sm font-medium text-muted-foreground">{label}</p>
       <p className="text-base font-semibold text-foreground">{value}</p>
@@ -56,22 +56,31 @@ interface StatCardProps {
   icon: React.ReactNode;
   label: string;
   value: number | string;
-  colorClass: string;
+  variant: "success" | "warning" | "info" | "default";
 }
 
-const StatCard: React.FC<StatCardProps> = ({ icon, label, value, colorClass }) => (
-  <Card
-    className={`text-white ${colorClass} hover:shadow-lg transition-shadow duration-200`}
-  >
-    <CardContent className="p-4 flex items-center gap-4">
-      <div className="p-3 bg-white/20 rounded-lg">{icon}</div>
-      <div>
-        <div className="text-sm font-medium">{label}</div>
-        <div className="text-2xl font-bold">{value}</div>
-      </div>
-    </CardContent>
-  </Card>
-);
+const StatCard: React.FC<StatCardProps> = ({ icon, label, value, variant }) => {
+  const variantClasses = {
+    success: "bg-success/10 text-success-foreground border-success/20",
+    warning: "bg-warning/10 text-warning-foreground border-warning/20",
+    info: "bg-info/10 text-info-foreground border-info/20",
+    default: "bg-secondary/80 text-secondary-foreground border-secondary/20",
+  };
+
+  return (
+    <Card
+      className={`transition-all duration-300 hover:shadow-md hover:-translate-y-1 ${variantClasses[variant]}`}
+    >
+      <CardContent className="p-4 flex items-center gap-4">
+        <div className={`p-3 rounded-lg bg-background/50`}>{icon}</div>
+        <div>
+          <div className="text-sm font-medium">{label}</div>
+          <div className="text-2xl font-bold">{value}</div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const CourtPreparationOverview: React.FC<CourtPreparationOverviewProps> = ({
   caseData,
@@ -90,27 +99,26 @@ const CourtPreparationOverview: React.FC<CourtPreparationOverviewProps> = ({
   };
 
   return (
-    <div className="space-y-8">
-      {/* Case Overview */}
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
+    <div className="space-y-6">
+      <Card className="border-border/40 shadow-sm">
         <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-primary/10 rounded-full">
                 <Gavel className="h-8 w-8 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-bold text-foreground">
+                <CardTitle className="text-2xl font-bold text-primary">
                   {caseData.title}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-muted-foreground">
                   Case #{caseData.caseNumber} - Preparation Status
                 </CardDescription>
               </div>
             </div>
             <Badge
               variant={getStatusBadgeVariant(caseData.status)}
-              className="text-base self-start md:self-center"
+              className="text-base self-start md:self-center whitespace-nowrap py-1.5 px-4 rounded-full"
             >
               {caseData.status}
             </Badge>
@@ -119,17 +127,17 @@ const CourtPreparationOverview: React.FC<CourtPreparationOverviewProps> = ({
         <CardContent className="space-y-6 pt-2">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <InfoItem
-              icon={<Calendar className="h-6 w-6 text-primary" />}
+              icon={<Calendar className="h-6 w-6" />}
               label="Hearing Date"
-              value={caseData.hearingDate}
+              value={new Date(caseData.hearingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
             />
             <InfoItem
-              icon={<Users className="h-6 w-6 text-primary" />}
+              icon={<Users className="h-6 w-6" />}
               label="Presiding Judge"
               value={caseData.judge}
             />
             <InfoItem
-              icon={<Clock className="h-6 w-6 text-primary" />}
+              icon={<Clock className="h-6 w-6" />}
               label="Courtroom"
               value={caseData.courtroom}
             />
@@ -138,38 +146,37 @@ const CourtPreparationOverview: React.FC<CourtPreparationOverviewProps> = ({
           <div className="space-y-2 pt-2">
             <div className="flex items-center justify-between font-medium">
               <span className="text-foreground">Overall Preparation Progress</span>
-              <span className="text-primary">{caseData.prepProgress}%</span>
+              <span className="text-primary font-semibold">{caseData.prepProgress}%</span>
             </div>
-            <Progress value={caseData.prepProgress} className="h-3" />
+            <Progress value={caseData.prepProgress} className="h-2.5" />
           </div>
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          icon={<CheckCircle2 className="h-7 w-7" />}
+          icon={<CheckCircle2 className="h-7 w-7 text-success" />}
           label="Ready Items"
           value={caseData.stats.readyItems}
-          colorClass="bg-green-600"
+          variant="success"
         />
         <StatCard
-          icon={<AlertTriangle className="h-7 w-7" />}
+          icon={<AlertTriangle className="h-7 w-7 text-warning" />}
           label="Pending Items"
           value={caseData.stats.pendingItems}
-          colorClass="bg-yellow-500"
+          variant="warning"
         />
         <StatCard
-          icon={<Users className="h-7 w-7" />}
+          icon={<Users className="h-7 w-7 text-info" />}
           label="Witnesses"
           value={caseData.stats.witnesses}
-          colorClass="bg-blue-600"
+          variant="info"
         />
         <StatCard
-          icon={<FileText className="h-7 w-7" />}
+          icon={<FileText className="h-7 w-7 text-secondary-foreground" />}
           label="Documents"
           value={caseData.stats.documents}
-          colorClass="bg-gray-700"
+          variant="default"
         />
       </div>
     </div>

@@ -14,6 +14,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLES, ROLE_NAMES } from "@/constants";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { motion as m } from "framer-motion";
 
 // Role type and enum-like object for convenience
 type Role = (typeof ROLES)[keyof typeof ROLES];
@@ -71,8 +72,19 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
     }
   };
 
+  const navVariants = {
+    hidden: { y: -50, opacity: 0 },
+    visible: { y: 0, opacity: 1 },
+  };
+
   return (
-    <header className="bg-card border-b border-border h-16 sticky top-0 z-50 backdrop-blur-sm bg-card/95">
+    <m.header
+      initial="hidden"
+      animate="visible"
+      variants={navVariants}
+      transition={{ duration: 0.5, ease: "easeInOut" }}
+      className="bg-card border-b border-border h-16 sticky top-0 z-50 backdrop-blur-sm bg-card/95"
+    >
       <div className="h-full px-4 sm:px-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
@@ -206,7 +218,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
           </Button>
         )}
       </div>
-    </header>
+    </m.header>
   );
 };
 

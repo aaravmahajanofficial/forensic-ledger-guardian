@@ -240,6 +240,7 @@ class SecureStorage {
       const iterations = options?.iterations || this.DEFAULT_ITERATIONS;
       const encryptionKey = options?.encryptionKey || this.encryptionKey;
 
+      // Use salt directly as BufferSource
       // Get the encryption key
       const cryptoKey = await this.deriveKey(encryptionKey, salt, iterations);
 

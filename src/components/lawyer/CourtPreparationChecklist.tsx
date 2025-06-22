@@ -4,7 +4,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, Plus, Calendar, Flag } from "lucide-react";
+import { CheckCircle2, Plus, Calendar, ListTodo } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -70,7 +70,7 @@ const CourtPreparationChecklist: React.FC<CourtPreparationChecklistProps> = ({
         dueDate: taskDueDate || undefined,
         priority: taskPriority,
       };
-      onUpdateChecklist([...checklist, newChecklistItem]);
+      onUpdateChecklist([newChecklistItem, ...checklist]);
       setNewTask("");
       setTaskDueDate("");
       setTaskPriority("medium");
@@ -80,14 +80,14 @@ const CourtPreparationChecklist: React.FC<CourtPreparationChecklistProps> = ({
 
   const getPriorityBadgeVariant = (
     priority: "high" | "medium" | "low"
-  ): "destructive" | "warning" | "success" => {
+  ): "destructive" | "warning" | "default" => {
     switch (priority) {
       case "high":
         return "destructive";
       case "medium":
         return "warning";
       case "low":
-        return "success";
+        return "default";
     }
   };
 
@@ -97,25 +97,28 @@ const CourtPreparationChecklist: React.FC<CourtPreparationChecklistProps> = ({
     totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   return (
-    <Card className="w-full shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
+    <Card className="w-full border-border/40 shadow-sm">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-3 text-2xl font-bold text-gray-800 dark:text-white">
-            <CheckCircle2 className="h-8 w-8 text-primary" />
-            Court Preparation Checklist
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <CardTitle className="flex items-center gap-3 text-xl font-semibold text-primary">
+            <ListTodo className="h-6 w-6" />
+            Preparation Checklist
           </CardTitle>
           <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button size="sm">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Task
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[480px]">
               <DialogHeader>
-                <DialogTitle>Add a new task</DialogTitle>
+                <DialogTitle>Add a new preparation task</DialogTitle>
+                <DialogDescription>
+                  Fill in the details below to add a new item to the checklist.
+                </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
+              <div className="grid gap-6 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="task" className="text-right">
                     Task
@@ -176,24 +179,29 @@ const CourtPreparationChecklist: React.FC<CourtPreparationChecklistProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <div className="flex justify-between items-center text-sm text-muted-foreground">
-            <span>Progress</span>
+          <div className="flex justify-between items-center text-sm font-medium text-muted-foreground">
+            <span className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" />
+              <span>{completedTasks} of {totalTasks} tasks completed</span>
+            </span>
             <span>{Math.round(completionPercentage)}%</span>
           </div>
           <Progress value={completionPercentage} className="h-2" />
-          <p className="text-sm text-muted-foreground text-center mt-1">
-            {completedTasks} of {totalTasks} tasks completed
-          </p>
         </div>
-        <div className="space-y-3 pt-4">
+        <div className="space-y-3 pt-4 border-t border-border/40">
+          {checklist.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>No tasks yet. Add a task to get started.</p>
+            </div>
+          )}
           {checklist.map((item) => (
             <div
               key={item.id}
               className={cn(
-                "flex items-center justify-between p-3 rounded-lg border transition-all",
+                "flex items-center justify-between p-3 rounded-lg border border-border/40 transition-all",
                 item.completed
-                  ? "bg-muted/50 border-dashed"
-                  : "bg-background hover:bg-muted/50"
+                  ? "bg-muted/50"
+                  : "bg-background hover:bg-muted/30"
               )}
             >
               <div className="flex items-center gap-4">
@@ -201,12 +209,13 @@ const CourtPreparationChecklist: React.FC<CourtPreparationChecklistProps> = ({
                   id={`task-${item.id}`}
                   checked={item.completed}
                   onCheckedChange={() => toggleTask(item.id)}
+                  aria-label={`Mark task as ${item.completed ? 'incomplete' : 'complete'}`}
                 />
                 <label
                   htmlFor={`task-${item.id}`}
                   className={cn(
-                    "font-medium",
-                    item.completed ? "line-through text-muted-foreground" : ""
+                    "font-medium text-sm",
+                    item.completed ? "line-through text-muted-foreground" : "text-foreground"
                   )}
                 >
                   {item.task}
@@ -214,16 +223,15 @@ const CourtPreparationChecklist: React.FC<CourtPreparationChecklistProps> = ({
               </div>
               <div className="flex items-center gap-4">
                 {item.dueDate && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>{item.dueDate}</span>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span>{new Date(item.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                   </div>
                 )}
                 <Badge
                   variant={getPriorityBadgeVariant(item.priority)}
-                  className="flex items-center gap-1"
+                  className="capitalize text-xs px-2 py-0.5 rounded-md"
                 >
-                  <Flag className="h-3 w-3" />
                   {item.priority}
                 </Badge>
               </div>
@@ -231,9 +239,6 @@ const CourtPreparationChecklist: React.FC<CourtPreparationChecklistProps> = ({
           ))}
         </div>
       </CardContent>
-      <CardFooter className="text-xs text-muted-foreground text-center">
-        Stay organized and ensure all preparations are complete before the court date.
-      </CardFooter>
     </Card>
   );
 };

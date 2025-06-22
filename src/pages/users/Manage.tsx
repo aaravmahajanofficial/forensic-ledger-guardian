@@ -138,17 +138,15 @@ const getRoleTitle = (roleId: number): string => {
 const getRoleBadge = (role: number) => {
   switch (role) {
     case ROLES.COURT:
-      return <Badge className="bg-forensic-court text-white">Court</Badge>;
+      return <Badge variant="secondary">Court</Badge>;
     case ROLES.OFFICER:
-      return <Badge className="bg-forensic-800 text-white">Officer</Badge>;
+      return <Badge variant="default">Officer</Badge>;
     case ROLES.FORENSIC:
-      return <Badge className="bg-forensic-accent text-white">Forensic</Badge>;
+      return <Badge variant="success">Forensic</Badge>;
     case ROLES.LAWYER:
-      return (
-        <Badge className="bg-forensic-warning text-forensic-900">Lawyer</Badge>
-      );
+      return <Badge variant="warning">Lawyer</Badge>;
     default:
-      return <Badge className="bg-gray-500 text-white">Unknown</Badge>;
+      return <Badge variant="destructive">Unknown</Badge>;
   }
 };
 
@@ -491,175 +489,185 @@ const ManageUsersPage = () => {
   };
 
   return (
-    <div className="container mx-auto py-10 animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-forensic-800">
-            User Management
-          </h1>
-          <p className="text-gray-500">
-            Manage all users in the forensic evidence system.
-          </p>
-        </div>
-        <Button
-          className="bg-forensic-court hover:bg-forensic-court/90 flex items-center gap-2"
-          onClick={() => navigate("/users/add")}
-        >
-          <UserPlus className="h-4 w-4" />
-          <span>Add New User</span>
-        </Button>
-      </div>
-
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search by name, email, or ID..."
-            className="pl-10"
-            value={filters.query}
-            onChange={(e) => handleFilterChange("query", e.target.value)}
-          />
-        </div>
-        <Select
-          value={filters.role}
-          onValueChange={(value) => handleFilterChange("role", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Filter by role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
-            {Object.values(ROLES).map((roleId) => (
-              <SelectItem key={roleId} value={roleId.toString()}>
-                {getRoleTitle(roleId)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={filters.status}
-          onValueChange={(value) => handleFilterChange("status", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* User List */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr className="text-left border-b">
-                  <th className="px-6 py-3 text-sm font-semibold text-gray-600">
-                    User
-                  </th>
-                  <th className="px-6 py-3 text-sm font-semibold text-gray-600">
-                    Role
-                  </th>
-                  <th className="px-6 py-3 text-sm font-semibold text-gray-600">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-sm font-semibold text-gray-600">
-                    Cases
-                  </th>
-                  <th className="px-6 py-3 text-sm font-semibold text-gray-600">
-                    Added On
-                  </th>
-                  <th className="px-6 py-3 text-sm font-semibold text-gray-600 text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">
-                        {user.name}
-                      </div>
-                      <div className="text-sm text-gray-500 font-mono truncate max-w-[150px]">
-                        {user.id}
-                      </div>
-                      <div className="text-sm text-gray-500">{user.email}</div>
-                    </td>
-                    <td className="px-6 py-4">{getRoleBadge(user.role)}</td>
-                    <td className="px-6 py-4">{getStatusBadge(user.status)}</td>
-                    <td className="px-6 py-4 text-gray-700">
-                      {user.caseCount}
-                    </td>
-                    <td className="px-6 py-4 text-gray-700">
-                      {new Date(user.added).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem
-                            onClick={() => openDialog("edit", user)}
-                          >
-                            <UserIcon className="mr-2 h-4 w-4" />
-                            Edit User
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleViewCases(user)}
-                          >
-                            <FileText className="mr-2 h-4 w-4" />
-                            View Cases
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => openDialog("changeRole", user)}
-                          >
-                            <UserCog className="mr-2 h-4 w-4" />
-                            Change Role
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => openDialog("toggleStatus", user)}
-                          >
-                            {user.status === "active" ? (
-                              <ShieldOff className="mr-2 h-4 w-4" />
-                            ) : (
-                              <ShieldCheck className="mr-2 h-4 w-4" />
-                            )}
-                            {user.status === "active"
-                              ? "Deactivate"
-                              : "Activate"}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => openDialog("remove", user)}
-                          >
-                            <UserX className="mr-2 h-4 w-4" />
-                            Remove Access
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+    <div className="space-y-8">
+      <header className="bg-background border-b sticky top-0 z-10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                User Management
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Manage system users and their permissions
+              </p>
+            </div>
+            <Button
+              onClick={() => navigate("/users/add")}
+              className="flex items-center gap-2"
+            >
+              <UserPlus className="h-4 w-4" />
+              Add User
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Filters */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, email, or ID..."
+                  className="pl-10"
+                  value={filters.query}
+                  onChange={(e) => handleFilterChange("query", e.target.value)}
+                />
+              </div>
+              <Select
+                value={filters.role}
+                onValueChange={(value) => handleFilterChange("role", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  {Object.values(ROLES).map((roleId) => (
+                    <SelectItem key={roleId} value={roleId.toString()}>
+                      {getRoleTitle(roleId)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={filters.status}
+                onValueChange={(value) => handleFilterChange("status", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* User List */}
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr className="text-left border-b">
+                    <th className="px-6 py-4 text-sm font-semibold text-foreground">
+                      User
+                    </th>
+                    <th className="px-6 py-4 text-sm font-semibold text-foreground">
+                      Role
+                    </th>
+                    <th className="px-6 py-4 text-sm font-semibold text-foreground">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-sm font-semibold text-foreground">
+                      Cases
+                    </th>
+                    <th className="px-6 py-4 text-sm font-semibold text-foreground">
+                      Added On
+                    </th>
+                    <th className="px-6 py-4 text-sm font-semibold text-foreground text-right">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-foreground">
+                          {user.name}
+                        </div>
+                        <div className="text-sm text-muted-foreground font-mono truncate max-w-[200px]">
+                          {user.id}
+                        </div>
+                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                      </td>
+                      <td className="px-6 py-4">{getRoleBadge(user.role)}</td>
+                      <td className="px-6 py-4">{getStatusBadge(user.status)}</td>
+                      <td className="px-6 py-4 text-foreground font-medium">
+                        {user.caseCount}
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {new Date(user.added).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem
+                              onClick={() => openDialog("edit", user)}
+                            >
+                              <UserIcon className="mr-2 h-4 w-4" />
+                              Edit User
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleViewCases(user)}
+                            >
+                              <FileText className="mr-2 h-4 w-4" />
+                              View Cases
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => openDialog("changeRole", user)}
+                            >
+                              <UserCog className="mr-2 h-4 w-4" />
+                              Change Role
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => openDialog("toggleStatus", user)}
+                            >
+                              {user.status === "active" ? (
+                                <ShieldOff className="mr-2 h-4 w-4" />
+                              ) : (
+                                <ShieldCheck className="mr-2 h-4 w-4" />
+                              )}
+                              {user.status === "active"
+                                ? "Deactivate"
+                                : "Activate"}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => openDialog("remove", user)}
+                            >
+                              <UserX className="mr-2 h-4 w-4" />
+                              Remove Access
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </main>
 
       {/* Dialogs */}
       {activeDialog.type && activeDialog.user && (

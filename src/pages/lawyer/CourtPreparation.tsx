@@ -2,18 +2,11 @@ import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Gavel, ClipboardList, ShieldCheck, FileText } from "lucide-react";
-
-// Import the new component parts
 import CourtPreparationOverview from "@/components/lawyer/CourtPreparationOverview";
-import CourtPreparationChecklist, { 
-  type ChecklistItem 
-} from "@/components/lawyer/CourtPreparationChecklist";
-import CourtPreparationEvidence, { 
-  type EvidenceItem 
-} from "@/components/lawyer/CourtPreparationEvidence";
-import CourtPreparationDocuments, { 
-  type DocumentItem 
-} from "@/components/lawyer/CourtPreparationDocuments";
+import CourtPreparationChecklist, { type ChecklistItem } from "@/components/lawyer/CourtPreparationChecklist";
+import CourtPreparationEvidence, { type EvidenceItem } from "@/components/lawyer/CourtPreparationEvidence";
+import CourtPreparationDocuments, { type DocumentItem } from "@/components/lawyer/CourtPreparationDocuments";
+import { Card, CardContent } from "@/components/ui/card";
 
 // Mock data - would normally come from props or API
 const caseData = {
@@ -135,62 +128,64 @@ const CourtPreparation: React.FC = () => {
   );
 
   return (
-    <div>
-      <div className="container mx-auto p-4 sm:p-6 lg:p-8 bg-background text-foreground">
-        <div className="mb-4 sm:mb-0">
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8 bg-background text-foreground font-sans">
+      <header className="flex flex-col sm:flex-row justify-between sm:items-center mb-6">
+        <div>
           <h1 className="text-3xl font-bold tracking-tight text-primary">
             Court Preparation
           </h1>
           <p className="text-muted-foreground mt-1">
-            Prepare case materials and evidence for court proceedings for case {caseData.caseNumber}
+            Case {caseData.caseNumber}: {caseData.title}
           </p>
         </div>
-        <Badge variant="outline" className="text-sm font-medium border-primary/50 text-primary">
+        <Badge variant="default" className="text-sm font-medium mt-4 sm:mt-0 self-start">
           <Calendar className="h-4 w-4 mr-2" />
           <span>{daysUntilCourt} Days Until Court</span>
         </Badge>
-      </div>
+      </header>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 rounded-lg p-1 bg-muted">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 rounded-lg p-1 bg-muted mb-6">
+          <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <Gavel className="h-5 w-5" />
             <span className="hidden sm:inline">Overview</span>
           </TabsTrigger>
-          <TabsTrigger value="checklist" className="flex items-center gap-2">
+          <TabsTrigger value="checklist" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <ClipboardList className="h-5 w-5" />
             <span className="hidden sm:inline">Checklist</span>
           </TabsTrigger>
-          <TabsTrigger value="evidence" className="flex items-center gap-2">
+          <TabsTrigger value="evidence" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <ShieldCheck className="h-5 w-5" />
             <span className="hidden sm:inline">Evidence</span>
           </TabsTrigger>
-          <TabsTrigger value="documents" className="flex items-center gap-2">
+          <TabsTrigger value="documents" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <FileText className="h-5 w-5" />
             <span className="hidden sm:inline">Documents</span>
           </TabsTrigger>
         </TabsList>
 
-        <div className="mt-6">
-          <TabsContent value="overview" className="animate-fade-in">
-            <CourtPreparationOverview caseData={caseData} />
-          </TabsContent>
+        <Card className="bg-card border-border/40 shadow-sm">
+          <CardContent className="p-0">
+            <TabsContent value="overview" className="animate-fade-in p-4 sm:p-6">
+              <CourtPreparationOverview caseData={caseData} />
+            </TabsContent>
 
-          <TabsContent value="checklist" className="animate-fade-in">
-            <CourtPreparationChecklist
-              checklist={checklist}
-              onUpdateChecklist={setChecklist}
-            />
-          </TabsContent>
+            <TabsContent value="checklist" className="animate-fade-in p-4 sm:p-6">
+              <CourtPreparationChecklist
+                checklist={checklist}
+                onUpdateChecklist={setChecklist}
+              />
+            </TabsContent>
 
-          <TabsContent value="evidence" className="animate-fade-in">
-            <CourtPreparationEvidence evidence={initialEvidenceItems} />
-          </TabsContent>
+            <TabsContent value="evidence" className="animate-fade-in p-4 sm:p-6">
+              <CourtPreparationEvidence evidence={initialEvidenceItems} />
+            </TabsContent>
 
-          <TabsContent value="documents" className="animate-fade-in">
-            <CourtPreparationDocuments documents={initialDocuments} />
-          </TabsContent>
-        </div>
+            <TabsContent value="documents" className="animate-fade-in p-4 sm:p-6">
+              <CourtPreparationDocuments documents={initialDocuments} />
+            </TabsContent>
+          </CardContent>
+        </Card>
       </Tabs>
     </div>
   );

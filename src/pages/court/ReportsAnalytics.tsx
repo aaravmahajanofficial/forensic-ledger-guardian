@@ -43,6 +43,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { TooltipProps } from 'recharts';
 
 // Mock data for case statistics
 const casesByType = [
@@ -136,14 +137,14 @@ const monthlyActiveUsers = [
   { month: "Dec", users: 58 },
 ];
 
-// Colors for charts
+// Updated colors from the design document
 const COLORS = [
-  "#4F6AFF",
-  "#FF6E36",
-  "#36D399",
-  "#FFBD49",
-  "#8257E5",
-  "#F688B1",
+  "#1976D2", // Cerulean Blue (Secondary)
+  "#2ECC71", // Emerald Green (Accent)
+  "#FFB300", // Amber (Warning)
+  "#1C1F2A", // Deep Navy (Primary)
+  "#5F6368", // Slate Grey (Text Secondary)
+  "#E53935", // Crimson Red (Error)
 ];
 
 const ReportsAnalytics = () => {
@@ -152,33 +153,54 @@ const ReportsAnalytics = () => {
 
   const handleDownloadReport = (reportType: string) => {
     toast({
-      title: "Report Downloaded",
-      description: `${reportType} report has been downloaded.`,
+      title: "Export Initiated",
+      description: `Generating and downloading ${reportType} report.`,
+      variant: "default",
     });
   };
 
   const handleRefreshData = () => {
     toast({
       title: "Data Refreshed",
-      description: "Analytics data has been updated to the latest information.",
+      description: "Analytics data has been updated.",
+      variant: "default",
     });
   };
 
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <h1 className="text-2xl font-bold text-forensic-800">
-          Reports & Analytics
-        </h1>
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="p-4 bg-background border rounded-lg shadow-lg">
+          <p className="label text-foreground font-bold">{`${label}`}</p>
+          {payload.map((pld, index) => (
+            <p key={index} style={{ color: pld.color }}>{`${pld.name}: ${pld.value}`}</p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
-        <div className="flex items-center gap-4">
+  return (
+    <div className="p-6 md:p-8 space-y-8 bg-background text-foreground">
+      <header className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-primary">
+            Reports & Analytics
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Visualize trends, analyze data, and export detailed reports.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[180px]">
-              <Calendar className="mr-2 h-4 w-4" />
+            <SelectTrigger className="w-[180px] bg-card border-border">
+              <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
               <SelectValue placeholder="Select time range" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="month">Last Month</SelectItem>
+              <SelectItem value="month">Last 30 Days</SelectItem>
               <SelectItem value="quarter">Last Quarter</SelectItem>
               <SelectItem value="year">Last Year</SelectItem>
               <SelectItem value="all">All Time</SelectItem>
@@ -187,115 +209,107 @@ const ReportsAnalytics = () => {
 
           <Button variant="outline" onClick={handleRefreshData}>
             <RefreshCcw className="h-4 w-4 mr-2" />
-            Refresh Data
+            Refresh
           </Button>
 
           <Button
-            className="bg-forensic-court hover:bg-forensic-court/90"
             onClick={() => handleDownloadReport("Full Analytics")}
           >
             <Download className="h-4 w-4 mr-2" />
             Export Report
           </Button>
         </div>
-      </div>
+      </header>
 
-      <Tabs defaultValue="cases">
-        <TabsList className="grid grid-cols-3 w-full md:w-[400px]">
-          <TabsTrigger value="cases" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Cases
+      <Tabs defaultValue="cases" className="w-full">
+        <TabsList className="grid grid-cols-1 sm:grid-cols-3 w-full md:w-auto md:inline-grid">
+          <TabsTrigger value="cases">
+            <FileText className="h-5 w-5 mr-2" />
+            Cases Analytics
           </TabsTrigger>
-          <TabsTrigger value="evidence" className="flex items-center gap-2">
-            <BarChart2 className="h-4 w-4" />
-            Evidence
+          <TabsTrigger value="evidence">
+            <BarChart2 className="h-5 w-5 mr-2" />
+            Evidence Analytics
           </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <PieChart className="h-4 w-4" />
-            Users
+          <TabsTrigger value="users">
+            <PieChart className="h-5 w-5 mr-2" />
+            User Analytics
           </TabsTrigger>
         </TabsList>
 
+        {/* Cases Analytics Tab */}
         <TabsContent value="cases" className="mt-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="md:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <LineChart className="h-5 w-5 text-forensic-court" />
+                  <LineChart className="h-6 w-6 text-secondary" />
                   Monthly Case Trends
                 </CardTitle>
                 <CardDescription>
-                  Case submission and resolution trends over time
+                  Case submission and resolution trends over the selected period.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px] w-full">
+                <div className="h-[350px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsLineChart
                       data={monthlyCases}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: '14px' }} />
                       <Line
                         type="monotone"
                         dataKey="submitted"
-                        stroke="#4F6AFF"
+                        stroke="var(--color-secondary)"
+                        strokeWidth={2}
                         name="Submitted Cases"
+                        dot={{ r: 4, fill: 'var(--color-secondary)' }}
                         activeDot={{ r: 8 }}
                       />
                       <Line
                         type="monotone"
                         dataKey="resolved"
-                        stroke="#36D399"
+                        stroke="var(--color-accent)"
+                        strokeWidth={2}
                         name="Resolved Cases"
+                        dot={{ r: 4, fill: 'var(--color-accent)' }}
+                        activeDot={{ r: 8 }}
                       />
                     </RechartsLineChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <p className="text-sm text-forensic-600">
-                  Total Cases:{" "}
-                  {monthlyCases.reduce((sum, item) => sum + item.submitted, 0)}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownloadReport("Case Trends")}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Chart
-                </Button>
-              </CardFooter>
             </Card>
 
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <PieChart className="h-5 w-5 text-forensic-court" />
-                  Case Distribution
+                  <PieChart className="h-6 w-6 text-secondary" />
+                  Case Type Distribution
                 </CardTitle>
-                <CardDescription>Breakdown of cases by type</CardDescription>
+                <CardDescription>Breakdown of cases by type.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[220px]">
+                <div className="h-[270px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsPieChart>
                       <Pie
                         data={casesByType}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
+                        innerRadius={70}
+                        outerRadius={100}
                         fill="#8884d8"
-                        paddingAngle={2}
+                        paddingAngle={5}
                         dataKey="value"
-                        label={({ name, percent }) =>
-                          `${name} ${(percent * 100).toFixed(0)}%`
+                        labelLine={false}
+                        label={({ _name, percent }) =>
+                          `${(percent * 100).toFixed(0)}%`
                         }
                       >
                         {casesByType.map((entry, index) => (
@@ -305,25 +319,26 @@ const ReportsAnalytics = () => {
                           />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip content={<CustomTooltip />} />
                     </RechartsPieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-1">
+                <div className="mt-4 space-y-2">
                   {casesByType.map((entry, index) => (
                     <div
                       key={`legend-${index}`}
-                      className="flex items-center gap-2 text-xs"
+                      className="flex items-center justify-between text-sm"
                     >
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{
-                          backgroundColor: COLORS[index % COLORS.length],
-                        }}
-                      />
-                      <span>
-                        {entry.name}: {entry.value}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{
+                            backgroundColor: COLORS[index % COLORS.length],
+                          }}
+                        />
+                        <span>{entry.name}</span>
+                      </div>
+                      <span className="font-semibold">{entry.value}</span>
                     </div>
                   ))}
                 </div>
@@ -334,11 +349,11 @@ const ReportsAnalytics = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <BarChart2 className="h-5 w-5 text-forensic-court" />
+                <BarChart2 className="h-6 w-6 text-secondary" />
                 Case Status Overview
               </CardTitle>
               <CardDescription>
-                Current status of all cases in the system
+                Current status of all cases in the system.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -346,14 +361,14 @@ const ReportsAnalytics = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={caseStatus}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="value" name="Cases" fill="#4F6AFF">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: '14px' }} />
+                    <Bar dataKey="value" name="Cases" radius={[4, 4, 0, 0]}>
                       {caseStatus.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
@@ -365,136 +380,113 @@ const ReportsAnalytics = () => {
                 </ResponsiveContainer>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <p className="text-sm text-forensic-600">
-                Total Cases:{" "}
-                {caseStatus.reduce((sum, item) => sum + item.value, 0)}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDownloadReport("Case Status")}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download Chart
-              </Button>
-            </CardFooter>
           </Card>
         </TabsContent>
 
+        {/* Evidence Analytics Tab */}
         <TabsContent value="evidence" className="mt-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="md:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <LineChart className="h-5 w-5 text-forensic-accent" />
+                  <LineChart className="h-6 w-6 text-accent" />
                   Evidence Processing Trends
                 </CardTitle>
                 <CardDescription>
-                  Evidence upload and verification trends over time
+                  Evidence upload and verification trends over time.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px] w-full">
+                <div className="h-[350px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsLineChart
                       data={monthlyEvidence}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: '14px' }} />
                       <Line
                         type="monotone"
                         dataKey="uploaded"
-                        stroke="#FF6E36"
+                        stroke="var(--color-warning)"
+                        strokeWidth={2}
                         name="Uploaded Evidence"
+                        dot={{ r: 4, fill: 'var(--color-warning)' }}
                         activeDot={{ r: 8 }}
                       />
                       <Line
                         type="monotone"
                         dataKey="verified"
-                        stroke="#36D399"
+                        stroke="var(--color-accent)"
+                        strokeWidth={2}
                         name="Verified Evidence"
+                        dot={{ r: 4, fill: 'var(--color-accent)' }}
+                        activeDot={{ r: 8 }}
                       />
                     </RechartsLineChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <p className="text-sm text-forensic-600">
-                  Total Evidence:{" "}
-                  {monthlyEvidence.reduce(
-                    (sum, item) => sum + item.uploaded,
-                    0
-                  )}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownloadReport("Evidence Trends")}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Chart
-                </Button>
-              </CardFooter>
             </Card>
 
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <PieChart className="h-5 w-5 text-forensic-accent" />
-                  Evidence Types
+                  <PieChart className="h-6 w-6 text-accent" />
+                  Evidence Type Distribution
                 </CardTitle>
                 <CardDescription>
-                  Breakdown of evidence by category
+                  Breakdown of evidence by category.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[220px]">
+                <div className="h-[270px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsPieChart>
                       <Pie
                         data={evidenceByType}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
+                        innerRadius={70}
+                        outerRadius={100}
                         fill="#8884d8"
-                        paddingAngle={2}
+                        paddingAngle={5}
                         dataKey="value"
-                        label={({ name, percent }) =>
-                          `${name} ${(percent * 100).toFixed(0)}%`
+                        labelLine={false}
+                        label={({ _name, percent }) =>
+                          `${(percent * 100).toFixed(0)}%`
                         }
                       >
                         {evidenceByType.map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
+                            fill={COLORS[(index + 1) % COLORS.length]}
                           />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip content={<CustomTooltip />} />
                     </RechartsPieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-1">
+                <div className="mt-4 space-y-2">
                   {evidenceByType.map((entry, index) => (
                     <div
                       key={`legend-${index}`}
-                      className="flex items-center gap-2 text-xs"
+                      className="flex items-center justify-between text-sm"
                     >
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{
-                          backgroundColor: COLORS[index % COLORS.length],
-                        }}
-                      />
-                      <span>
-                        {entry.name}: {entry.value}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{
+                            backgroundColor: COLORS[(index + 1) % COLORS.length],
+                          }}
+                        />
+                        <span>{entry.name}</span>
+                      </div>
+                      <span className="font-semibold">{entry.value}</span>
                     </div>
                   ))}
                 </div>
@@ -505,11 +497,11 @@ const ReportsAnalytics = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <BarChart2 className="h-5 w-5 text-forensic-accent" />
-                Verification Status
+                <BarChart2 className="h-6 w-6 text-accent" />
+                Evidence Verification Status
               </CardTitle>
               <CardDescription>
-                Current status of all evidence verifications
+                Current status of all evidence verifications.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -517,18 +509,18 @@ const ReportsAnalytics = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={verificationStatus}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="value" name="Evidence Items" fill="#FF6E36">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: '14px' }} />
+                    <Bar dataKey="value" name="Evidence Items" radius={[4, 4, 0, 0]}>
                       {verificationStatus.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
+                          fill={COLORS[(index + 1) % COLORS.length]}
                         />
                       ))}
                     </Bar>
@@ -536,126 +528,102 @@ const ReportsAnalytics = () => {
                 </ResponsiveContainer>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <p className="text-sm text-forensic-600">
-                Total Items:{" "}
-                {verificationStatus.reduce((sum, item) => sum + item.value, 0)}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDownloadReport("Verification Status")}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download Chart
-              </Button>
-            </CardFooter>
           </Card>
         </TabsContent>
 
+        {/* User Analytics Tab */}
         <TabsContent value="users" className="mt-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="md:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-forensic-warning" />
-                  Active Users Trend
+                  <TrendingUp className="h-6 w-6 text-warning" />
+                  Monthly Active Users
                 </CardTitle>
                 <CardDescription>
-                  Monthly active users in the system
+                  Trend of active users in the system.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px] w-full">
+                <div className="h-[350px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsLineChart
                       data={monthlyActiveUsers}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: '14px' }} />
                       <Line
                         type="monotone"
                         dataKey="users"
-                        stroke="#8257E5"
-                        name="Active Users"
-                        activeDot={{ r: 8 }}
+                        stroke="var(--color-primary)"
                         strokeWidth={2}
+                        name="Active Users"
+                        dot={{ r: 4, fill: 'var(--color-primary)' }}
+                        activeDot={{ r: 8 }}
                       />
                     </RechartsLineChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <p className="text-sm text-forensic-600">
-                  Current Active Users:{" "}
-                  {monthlyActiveUsers[monthlyActiveUsers.length - 1].users}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownloadReport("User Trends")}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Chart
-                </Button>
-              </CardFooter>
             </Card>
 
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <PieChart className="h-5 w-5 text-forensic-warning" />
-                  User Distribution
+                  <PieChart className="h-6 w-6 text-warning" />
+                  User Role Distribution
                 </CardTitle>
-                <CardDescription>Breakdown of users by role</CardDescription>
+                <CardDescription>Breakdown of users by role.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[220px]">
+                <div className="h-[270px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsPieChart>
                       <Pie
                         data={usersByRole}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
+                        innerRadius={70}
+                        outerRadius={100}
                         fill="#8884d8"
-                        paddingAngle={2}
+                        paddingAngle={5}
                         dataKey="value"
-                        label={({ name, percent }) =>
-                          `${name} ${(percent * 100).toFixed(0)}%`
+                        labelLine={false}
+                        label={({ _name, percent }) =>
+                          `${(percent * 100).toFixed(0)}%`
                         }
                       >
                         {usersByRole.map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
+                            fill={COLORS[(index + 2) % COLORS.length]}
                           />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip content={<CustomTooltip />} />
                     </RechartsPieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-1">
+                <div className="mt-4 space-y-2">
                   {usersByRole.map((entry, index) => (
                     <div
                       key={`legend-${index}`}
-                      className="flex items-center gap-2 text-xs"
+                      className="flex items-center justify-between text-sm"
                     >
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{
-                          backgroundColor: COLORS[index % COLORS.length],
-                        }}
-                      />
-                      <span>
-                        {entry.name}: {entry.value}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{
+                            backgroundColor: COLORS[(index + 2) % COLORS.length],
+                          }}
+                        />
+                        <span>{entry.name}</span>
+                      </div>
+                      <span className="font-semibold">{entry.value}</span>
                     </div>
                   ))}
                 </div>
@@ -666,11 +634,11 @@ const ReportsAnalytics = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <BarChart2 className="h-5 w-5 text-forensic-warning" />
+                <BarChart2 className="h-6 w-6 text-warning" />
                 User Activity Distribution
               </CardTitle>
               <CardDescription>
-                Breakdown of user activity by category
+                Breakdown of user activity by category.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -678,18 +646,18 @@ const ReportsAnalytics = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={userActivity}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="value" name="Activity Count" fill="#8257E5">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: '14px' }} />
+                    <Bar dataKey="value" name="Activity Count" radius={[4, 4, 0, 0]}>
                       {userActivity.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
+                          fill={COLORS[(index + 2) % COLORS.length]}
                         />
                       ))}
                     </Bar>
@@ -697,20 +665,6 @@ const ReportsAnalytics = () => {
                 </ResponsiveContainer>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <p className="text-sm text-forensic-600">
-                Total Activities:{" "}
-                {userActivity.reduce((sum, item) => sum + item.value, 0)}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDownloadReport("User Activity")}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download Chart
-              </Button>
-            </CardFooter>
           </Card>
         </TabsContent>
       </Tabs>
