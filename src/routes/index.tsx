@@ -1,16 +1,32 @@
-import React, { Suspense, lazy } from "react";
-import { Routes, Route, Outlet } from "react-router-dom";
+import { Suspense, lazy } from "react";
+import { Routes, Route } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import NotFound from "@/pages/NotFound";
-import Loading from "@/components/shared/Loading"; // I'll need to create this component
+import Loading from "@/components/shared/Loading";
 
 // Lazy-loaded pages
 const Index = lazy(() => import("@/pages/Index"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const CourtDashboardPage = lazy(() => import("@/pages/RoleDashboards").then(module => ({ default: module.CourtDashboardPage })));
-const OfficerDashboardPage = lazy(() => import("@/pages/RoleDashboards").then(module => ({ default: module.OfficerDashboardPage })));
-const ForensicDashboardPage = lazy(() => import("@/pages/RoleDashboards").then(module => ({ default: module.ForensicDashboardPage })));
-const LawyerDashboardPage = lazy(() => import("@/pages/RoleDashboards").then(module => ({ default: module.LawyerDashboardPage })));
+const CourtDashboardPage = lazy(() =>
+  import("@/pages/RoleDashboards").then((module) => ({
+    default: module.CourtDashboardPage,
+  }))
+);
+const OfficerDashboardPage = lazy(() =>
+  import("@/pages/RoleDashboards").then((module) => ({
+    default: module.OfficerDashboardPage,
+  }))
+);
+const ForensicDashboardPage = lazy(() =>
+  import("@/pages/RoleDashboards").then((module) => ({
+    default: module.ForensicDashboardPage,
+  }))
+);
+const LawyerDashboardPage = lazy(() =>
+  import("@/pages/RoleDashboards").then((module) => ({
+    default: module.LawyerDashboardPage,
+  }))
+);
 const Cases = lazy(() => import("@/pages/Cases"));
 const CaseDetail = lazy(() => import("@/pages/cases/CaseDetail"));
 const Evidence = lazy(() => import("@/pages/Evidence"));
@@ -50,59 +66,57 @@ const LegalReports = lazy(() => import("@/pages/lawyer/Reports"));
 const CourtPreparation = lazy(() => import("@/pages/lawyer/CourtPreparation"));
 const ClientManagement = lazy(() => import("@/pages/lawyer/ClientManagement"));
 
-const AppRoutes = () => {
-  const LayoutWrapper = () => (
-    <Layout>
-      <Outlet />
-    </Layout>
-  );
-
-  return (
-    <Suspense fallback={<Loading />}>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route element={<LayoutWrapper />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard/court" element={<CourtDashboardPage />} />
-          <Route path="/dashboard/officer" element={<OfficerDashboardPage />} />
-          <Route path="/dashboard/forensic" element={<ForensicDashboardPage />} />
-          <Route path="/dashboard/lawyer" element={<LawyerDashboardPage />} />
-          <Route path="/cases" element={<Cases />} />
-          <Route path="/cases/:caseId" element={<CaseDetail />} />
-          <Route path="/evidence" element={<Evidence />} />
-          <Route path="/upload" element={<Upload />} />
-          <Route path="/verify" element={<Verify />} />
-          <Route path="/help" element={<Help />} />
-          <Route path="/help/faq" element={<FAQ />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/activity" element={<Activity />} />
-          <Route path="/fir" element={<FIR />} />
-          <Route path="/fir/new" element={<FIRManagement mode="create" />} />
-          <Route path="/users/manage" element={<UserManagement />} />
-          <Route path="/users/add" element={<AddUser />} />
-          <Route path="/users/roles" element={<RoleManagement />} />
-          <Route path="/settings/security" element={<SystemConfiguration />} />
-          <Route path="/reports" element={<ReportsAnalytics />} />
-          <Route path="/cases/create" element={<CreateCase />} />
-          <Route path="/cases/approval" element={<CasesApproval />} />
-          <Route path="/cases/update" element={<Cases />} />
-          <Route path="/cases/assigned" element={<Cases />} />
-          <Route path="/evidence/confirm" element={<EvidenceConfirmation />} />
-          <Route path="/officer/reports" element={<OfficerReports />} />
-          <Route path="/evidence/analysis" element={<EvidenceAnalysis />} />
-          <Route path="/evidence/verify" element={<TechnicalVerification />} />
-          <Route path="/forensic/reports" element={<ForensicReports />} />
-          <Route path="/legal/documentation" element={<LegalDocumentation />} />
-          <Route path="/verify/custody" element={<ChainOfCustodyVerification />} />
-          <Route path="/legal/reports" element={<LegalReports />} />
-          <Route path="/cases/prepare" element={<CourtPreparation />} />
-          <Route path="/clients" element={<ClientManagement />} />
-          <Route path="/meetings" element={<ClientManagement view="meetings" />} />
-        </Route>
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Suspense>
-  );
-};
+const AppRoutes = () => (
+  <Suspense fallback={<Loading />}>
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route element={<Layout />}>
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="dashboard/court" element={<CourtDashboardPage />} />
+        <Route path="dashboard/officer" element={<OfficerDashboardPage />} />
+        <Route path="dashboard/forensic" element={<ForensicDashboardPage />} />
+        <Route path="dashboard/lawyer" element={<LawyerDashboardPage />} />
+        <Route path="cases" element={<Cases />} />
+        <Route path="cases/:caseId" element={<CaseDetail />} />
+        <Route path="evidence" element={<Evidence />} />
+        <Route path="upload" element={<Upload />} />
+        <Route path="verify" element={<Verify />} />
+        <Route path="help" element={<Help />} />
+        <Route path="help/faq" element={<FAQ />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="activity" element={<Activity />} />
+        <Route path="fir" element={<FIR />} />
+        <Route path="fir/new" element={<FIRManagement mode="create" />} />
+        <Route path="users/manage" element={<UserManagement />} />
+        <Route path="users/add" element={<AddUser />} />
+        <Route path="users/roles" element={<RoleManagement />} />
+        <Route path="settings/security" element={<SystemConfiguration />} />
+        <Route path="reports" element={<ReportsAnalytics />} />
+        <Route path="cases/create" element={<CreateCase />} />
+        <Route path="cases/approval" element={<CasesApproval />} />
+        <Route path="cases/update" element={<Cases />} />
+        <Route path="cases/assigned" element={<Cases />} />
+        <Route path="evidence/confirm" element={<EvidenceConfirmation />} />
+        <Route path="officer/reports" element={<OfficerReports />} />
+        <Route path="evidence/analysis" element={<EvidenceAnalysis />} />
+        <Route path="evidence/verify" element={<TechnicalVerification />} />
+        <Route path="forensic/reports" element={<ForensicReports />} />
+        <Route path="legal/documentation" element={<LegalDocumentation />} />
+        <Route
+          path="verify/custody"
+          element={<ChainOfCustodyVerification />}
+        />
+        <Route path="legal/reports" element={<LegalReports />} />
+        <Route path="cases/prepare" element={<CourtPreparation />} />
+        <Route path="clients" element={<ClientManagement />} />
+        <Route
+          path="meetings"
+          element={<ClientManagement view="meetings" />}
+        />
+      </Route>
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </Suspense>
+);
 
 export default AppRoutes;

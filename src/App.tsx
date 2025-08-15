@@ -2,7 +2,6 @@ import React from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
 import { Web3Provider } from "./contexts/Web3Context";
 import { AuthProvider } from "./contexts/AuthContext";
 import AppRoutes from "./routes";
@@ -24,9 +23,7 @@ const App: React.FC = () => {
         <AuthProvider>
           <Web3Provider>
             <Sonner />
-            <BrowserRouter>
-              <AppRoutes />
-            </BrowserRouter>
+            <AppRoutes />
           </Web3Provider>
         </AuthProvider>
       </TooltipProvider>
