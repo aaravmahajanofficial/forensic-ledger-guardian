@@ -11,7 +11,11 @@ import { supabase } from "@/lib/supabaseClient";
 import { Role } from "@/services/web3Service";
 import CryptoJS from "crypto-js";
 
-export interface User {
+// Helper function to derive a strong key from password and salt using PBKDF2
+function deriveKey(password: string, salt: string): CryptoJS.lib.WordArray {
+  // 256-bit key, 100,000 iterations
+  return CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: 100000 });
+}
   id: string;
   email: string;
   name: string;
@@ -30,8 +34,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Helper function to encrypt data before storing in localStorage
-function encryptData(data: object, key: string): string {
-  const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(data), key).toString();
+function encryptData(data: object, password: string, salt: string): string {
+  const derivedKey = deriveKey(password, salt);
+  const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(data), derivedKey).toString();
   return ciphertext;
 }
 
@@ -42,7 +47,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
 
-  const loadUserProfile = async (userId: string, email: string) => {
+  const loadUserProfile = async (userId: string, email: string, password: string) => {
     const parseRole = (role: unknown): Role => {
       if (typeof role === "string") {
         const roleKey = Object.keys(Role).find(
@@ -82,7 +87,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             setUser(fullUser);
             localStorage.setItem(
               "forensicLedgerUser",
-              encryptData(fullUser, email) // Use email as key for demonstration
+              encryptData(fullUser, password, email) // Use password and email as salt
             );
             return fullUser;
         }
@@ -102,7 +107,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setUser(fullUser);
       localStorage.setItem(
         "forensicLedgerUser",
-        encryptData(fullUser, email) // Use email as key for demonstration
+        encryptData(fullUser, password, email) // Use password and email as salt
       );
       return fullUser;
     } catch (err) {
@@ -133,7 +138,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       });
 
       if (data.user) {
-        await loadUserProfile(data.user.id, email);
+        await loadUserProfile(data.user.id, email, password);
       }
       return true;
     } catch (err) {
