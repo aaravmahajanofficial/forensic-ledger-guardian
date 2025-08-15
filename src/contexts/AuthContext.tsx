@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { Role } from "@/services/web3Service";
+import CryptoJS from "crypto-js";
 
 export interface User {
   id: string;
@@ -27,6 +28,12 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Helper function to encrypt data before storing in localStorage
+function encryptData(data: object, key: string): string {
+  const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(data), key).toString();
+  return ciphertext;
+}
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
@@ -73,7 +80,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
                 address: undefined,
             };
             setUser(fullUser);
-            localStorage.setItem("forensicLedgerUser", JSON.stringify(fullUser));
+            localStorage.setItem(
+              "forensicLedgerUser",
+              encryptData(fullUser, email) // Use email as key for demonstration
+            );
             return fullUser;
         }
 
@@ -90,7 +100,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         address: data.address || undefined,
       };
       setUser(fullUser);
-      localStorage.setItem("forensicLedgerUser", JSON.stringify(fullUser));
+      localStorage.setItem(
+        "forensicLedgerUser",
+        encryptData(fullUser, email) // Use email as key for demonstration
+      );
       return fullUser;
     } catch (err) {
       console.error("Unexpected error loading profile", err);
