@@ -1,12 +1,10 @@
-
-import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Role } from '@/services/web3Service';
-import { Badge } from '@/components/ui/badge';
-import ForensicDashboard from './roles/ForensicDashboard';
-import CourtDashboard from './roles/CourtDashboard';
-import OfficerDashboard from './roles/OfficerDashboard';
-import LawyerDashboard from './roles/LawyerDashboard';
+import { useAuth } from "@/contexts/AuthContext";
+import { Role } from "@/services/web3Service";
+import { Badge } from "@/components/ui/badge";
+import ForensicDashboard from "./roles/ForensicDashboard";
+import CourtDashboard from "./roles/CourtDashboard";
+import OfficerDashboard from "./roles/OfficerDashboard";
+import LawyerDashboard from "./roles/LawyerDashboard";
 
 const RoleDashboard = () => {
   const { user } = useAuth();
@@ -17,11 +15,11 @@ const RoleDashboard = () => {
 
   const renderRoleBadge = () => {
     const roleColors: Record<Role, string> = {
-      [Role.None]: 'bg-gray-500',
-      [Role.Court]: 'bg-forensic-court text-white',
-      [Role.Officer]: 'bg-forensic-800 text-white',
-      [Role.Forensic]: 'bg-forensic-accent text-white',
-      [Role.Lawyer]: 'bg-forensic-warning text-forensic-900',
+      [Role.None]: "bg-gray-500",
+      [Role.Court]: "bg-forensic-court text-white",
+      [Role.Officer]: "bg-forensic-800 text-white",
+      [Role.Forensic]: "bg-forensic-accent text-white",
+      [Role.Lawyer]: "bg-forensic-warning text-forensic-900",
     };
 
     return (

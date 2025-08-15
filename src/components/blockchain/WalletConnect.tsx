@@ -1,12 +1,18 @@
+import type { FC } from "react";
+import { Button } from "@/components/ui/button";
+import { useWeb3 } from "@/contexts/Web3Context";
+import { Wallet, LogOut, Loader2, Shield } from "lucide-react";
+import web3Service, { Role } from "@/services/web3Service";
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { useWeb3 } from '@/contexts/Web3Context';
-import { Wallet, LogOut, Loader2, Shield } from 'lucide-react';
-import web3Service, { Role } from '@/services/web3Service';
-
-const WalletConnect: React.FC = () => {
-  const { isConnected, account, userRole, connecting, connectWallet, disconnectWallet } = useWeb3();
+const WalletConnect: FC = () => {
+  const {
+    isConnected,
+    account,
+    userRole,
+    connecting,
+    connectWallet,
+    disconnectWallet,
+  } = useWeb3();
 
   return (
     <div className="flex items-center gap-2">
@@ -16,15 +22,16 @@ const WalletConnect: React.FC = () => {
             <Shield className="h-3.5 w-3.5 text-forensic-accent" />
             <span>Role: {web3Service.getRoleString(userRole)}</span>
           </div>
-          
+
           <div className="hidden sm:block text-sm font-mono bg-forensic-50 px-3 py-1 rounded-lg text-forensic-800">
-            {account?.substring(0, 6)}...{account?.substring(account.length - 4)}
+            {account?.substring(0, 6)}...
+            {account?.substring(account.length - 4)}
           </div>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={disconnectWallet} 
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={disconnectWallet}
             className="border-forensic-300"
           >
             <LogOut className="h-4 w-4 mr-1" />
@@ -32,10 +39,10 @@ const WalletConnect: React.FC = () => {
           </Button>
         </>
       ) : (
-        <Button 
-          onClick={connectWallet} 
-          size="sm" 
-          disabled={connecting} 
+        <Button
+          onClick={connectWallet}
+          size="sm"
+          disabled={connecting}
           className="bg-forensic-accent hover:bg-forensic-accent/90"
         >
           {connecting ? (

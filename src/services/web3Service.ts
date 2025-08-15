@@ -1,6 +1,10 @@
-
-import { ethers } from 'ethers';
-import { toast } from '@/hooks/use-toast';
+import {
+  BrowserProvider,
+  Contract,
+  type JsonRpcSigner,
+  type Eip1193Provider,
+} from "ethers";
+import { toast } from "@/hooks/use-toast";
 
 // ABI would be generated when compiling the smart contract
 const CONTRACT_ABI = [
@@ -15,14 +19,14 @@ export enum Role {
   Court = 1,
   Officer = 2,
   Forensic = 3,
-  Lawyer = 4
+  Lawyer = 4,
 }
 
 export enum EvidenceType {
   Image = 0,
   Video = 1,
   Document = 2,
-  Other = 3
+  Other = 3,
 }
 
 export interface Evidence {
@@ -56,9 +60,15 @@ export interface FIR {
   associatedCaseId: string;
 }
 
+type EthereumProvider = {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  on: (eventName: string, callback: (...args: unknown[]) => void) => void;
+};
+
 class Web3Service {
-  private provider: ethers.providers.Web3Provider | null = null;
-  private contract: ethers.Contract | null = null;
+  private provider: BrowserProvider | null = null;
+  private contract: Contract | null = null;
+  private signer: JsonRpcSigner | null = null;
   private account: string | null = null;
 
   constructor() {
@@ -66,71 +76,88 @@ class Web3Service {
   }
 
   private async initWeb3() {
-    if (typeof window !== 'undefined' && window.ethereum) {
+    if (typeof window !== "undefined" && window.ethereum) {
       try {
         // Request account access
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        this.provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = this.provider.getSigner();
-        this.account = await signer.getAddress();
-        this.contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        const accounts = (await window.ethereum.request({
+          method: "eth_requestAccounts",
+        })) as string[];
+        const eth = window.ethereum as unknown as EthereumProvider;
+        this.provider = new BrowserProvider(eth as unknown as Eip1193Provider);
+        this.signer = await this.provider.getSigner();
+        this.account = accounts && accounts.length > 0 ? accounts[0] : null;
+        if (this.signer)
+          this.contract = new Contract(
+            CONTRACT_ADDRESS,
+            CONTRACT_ABI,
+            this.signer
+          );
 
         // Listen for account changes
-        window.ethereum.on('accountsChanged', (accounts: string[]) => {
+        window.ethereum.on("accountsChanged", (accounts: string[]) => {
           if (accounts.length === 0) {
             this.account = null;
             toast({
               title: "Disconnected",
               description: "Wallet disconnected.",
-              variant: "destructive"
+              variant: "destructive",
             });
           } else {
             this.account = accounts[0];
             this.initContract();
             toast({
               title: "Connected",
-              description: `Connected to account ${this.shortenAddress(accounts[0])}`
+              description: `Connected to account ${this.shortenAddress(
+                accounts[0]
+              )}`,
             });
           }
         });
       } catch (error) {
-        console.error("User denied account access or another error occurred:", error);
+        console.error(
+          "User denied account access or another error occurred:",
+          error
+        );
         toast({
           title: "Connection Failed",
           description: "Failed to connect to Ethereum wallet.",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     } else {
       console.error("No ethereum browser extension detected");
       toast({
         title: "Web3 Not Available",
-        description: "Please install MetaMask or another Ethereum wallet extension.",
-        variant: "destructive"
+        description:
+          "Please install MetaMask or another Ethereum wallet extension.",
+        variant: "destructive",
       });
     }
   }
 
   private initContract() {
-    if (this.provider && this.account) {
-      const signer = this.provider.getSigner();
-      this.contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    if (this.signer) {
+      this.contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, this.signer);
     }
   }
 
   private shortenAddress(address: string): string {
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+    return `${address.substring(0, 6)}...${address.substring(
+      address.length - 4
+    )}`;
   }
 
   public async connectWallet(): Promise<string | null> {
     if (!this.provider) {
       await this.initWeb3();
     }
-    
+
     if (this.provider) {
       try {
-        const accounts = await this.provider.send('eth_requestAccounts', []);
-        if (accounts.length > 0) {
+        const accounts = await (window.ethereum?.request({
+          method: "eth_requestAccounts",
+        }) as Promise<string[]>);
+        if (accounts && accounts.length > 0) {
           this.account = accounts[0];
           this.initContract();
           return this.account;
@@ -140,11 +167,11 @@ class Web3Service {
         toast({
           title: "Connection Error",
           description: "Could not connect to wallet.",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     }
-    
+
     return null;
   }
 
@@ -154,7 +181,7 @@ class Web3Service {
 
   public async getUserRole(): Promise<Role> {
     if (!this.contract || !this.account) return Role.None;
-    
+
     try {
       const role = await this.contract.getGlobalRole(this.account);
       return role;
@@ -166,7 +193,7 @@ class Web3Service {
 
   public async getUserCaseRole(caseId: string): Promise<Role> {
     if (!this.contract || !this.account) return Role.None;
-    
+
     try {
       const role = await this.contract.getMyRoleInCase(caseId);
       return role;
@@ -179,7 +206,7 @@ class Web3Service {
   // FIR Management
   public async fileFIR(firId: string, description: string): Promise<boolean> {
     if (!this.contract) return false;
-    
+
     try {
       const tx = await this.contract.fileFIR(firId, description);
       await tx.wait();
@@ -189,7 +216,7 @@ class Web3Service {
       toast({
         title: "Transaction Failed",
         description: "Failed to file FIR. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
@@ -197,7 +224,7 @@ class Web3Service {
 
   public async getFIR(firId: string): Promise<FIR | null> {
     if (!this.contract) return null;
-    
+
     try {
       const fir = await this.contract.getFIR(firId);
       return {
@@ -206,7 +233,7 @@ class Web3Service {
         description: fir.description,
         timestamp: fir.timestamp.toNumber(),
         promotedToCase: fir.promotedToCase,
-        associatedCaseId: fir.associatedCaseId
+        associatedCaseId: fir.associatedCaseId,
       };
     } catch (error) {
       console.error(`Error getting FIR ${firId}:`, error);
@@ -223,9 +250,15 @@ class Web3Service {
     tags: string[]
   ): Promise<boolean> {
     if (!this.contract) return false;
-    
+
     try {
-      const tx = await this.contract.createCaseFromFIR(caseId, firId, title, description, tags);
+      const tx = await this.contract.createCaseFromFIR(
+        caseId,
+        firId,
+        title,
+        description,
+        tags
+      );
       await tx.wait();
       return true;
     } catch (error) {
@@ -233,15 +266,19 @@ class Web3Service {
       toast({
         title: "Transaction Failed",
         description: "Failed to create case. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
   }
 
-  public async assignCaseRole(caseId: string, user: string, role: Role): Promise<boolean> {
+  public async assignCaseRole(
+    caseId: string,
+    user: string,
+    role: Role
+  ): Promise<boolean> {
     if (!this.contract) return false;
-    
+
     try {
       const tx = await this.contract.assignCaseRole(caseId, user, role);
       await tx.wait();
@@ -251,7 +288,7 @@ class Web3Service {
       toast({
         title: "Transaction Failed",
         description: "Failed to assign role. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
@@ -259,7 +296,7 @@ class Web3Service {
 
   public async getCase(caseId: string): Promise<Case | null> {
     if (!this.contract) return null;
-    
+
     try {
       const caseData = await this.contract.getCase(caseId);
       return {
@@ -270,7 +307,7 @@ class Web3Service {
         seal: caseData.seal,
         open: caseData.open,
         tags: caseData.tags,
-        evidenceCount: caseData.evidenceCount.toNumber()
+        evidenceCount: caseData.evidenceCount.toNumber(),
       };
     } catch (error) {
       console.error(`Error getting case ${caseId}:`, error);
@@ -280,7 +317,7 @@ class Web3Service {
 
   public async sealCase(caseId: string): Promise<boolean> {
     if (!this.contract) return false;
-    
+
     try {
       const tx = await this.contract.sealCase(caseId);
       await tx.wait();
@@ -290,7 +327,7 @@ class Web3Service {
       toast({
         title: "Transaction Failed",
         description: "Failed to seal case. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
@@ -298,7 +335,7 @@ class Web3Service {
 
   public async reopenCase(caseId: string): Promise<boolean> {
     if (!this.contract) return false;
-    
+
     try {
       const tx = await this.contract.reopenCase(caseId);
       await tx.wait();
@@ -308,7 +345,7 @@ class Web3Service {
       toast({
         title: "Transaction Failed",
         description: "Failed to reopen case. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
@@ -316,7 +353,7 @@ class Web3Service {
 
   public async closeCase(caseId: string): Promise<boolean> {
     if (!this.contract) return false;
-    
+
     try {
       const tx = await this.contract.closeCase(caseId);
       await tx.wait();
@@ -326,7 +363,7 @@ class Web3Service {
       toast({
         title: "Transaction Failed",
         description: "Failed to close case. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
@@ -341,7 +378,7 @@ class Web3Service {
     evidenceType: EvidenceType
   ): Promise<boolean> {
     if (!this.contract) return false;
-    
+
     try {
       const tx = await this.contract.submitCaseEvidence(
         caseId,
@@ -357,7 +394,7 @@ class Web3Service {
       toast({
         title: "Transaction Failed",
         description: "Failed to submit evidence. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
@@ -371,7 +408,7 @@ class Web3Service {
     evidenceType: EvidenceType
   ): Promise<boolean> {
     if (!this.contract) return false;
-    
+
     try {
       const tx = await this.contract.submitFIREvidence(
         firId,
@@ -387,15 +424,18 @@ class Web3Service {
       toast({
         title: "Transaction Failed",
         description: "Failed to submit FIR evidence. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
   }
 
-  public async confirmCaseEvidence(caseId: string, index: number): Promise<boolean> {
+  public async confirmCaseEvidence(
+    caseId: string,
+    index: number
+  ): Promise<boolean> {
     if (!this.contract) return false;
-    
+
     try {
       const tx = await this.contract.confirmCaseEvidence(caseId, index);
       await tx.wait();
@@ -405,15 +445,18 @@ class Web3Service {
       toast({
         title: "Transaction Failed",
         description: "Failed to confirm evidence. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
   }
 
-  public async accessEvidenceLog(caseId: string, index: number): Promise<boolean> {
+  public async accessEvidenceLog(
+    caseId: string,
+    index: number
+  ): Promise<boolean> {
     if (!this.contract) return false;
-    
+
     try {
       const tx = await this.contract.accessEvidenceLog(caseId, index);
       await tx.wait();
@@ -423,15 +466,18 @@ class Web3Service {
       toast({
         title: "Transaction Failed",
         description: "Failed to access evidence log. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
   }
 
-  public async getEvidence(caseId: string, index: number): Promise<Evidence | null> {
+  public async getEvidence(
+    caseId: string,
+    index: number
+  ): Promise<Evidence | null> {
     if (!this.contract) return null;
-    
+
     try {
       const evidence = await this.contract.getEvidence(caseId, index);
       return {
@@ -442,7 +488,7 @@ class Web3Service {
         submittedBy: evidence.submittedBy,
         confirmed: evidence.confirmed,
         submittedAt: evidence.submittedAt.toNumber(),
-        chainOfCustody: evidence.chainOfCustody
+        chainOfCustody: evidence.chainOfCustody,
       };
     } catch (error) {
       console.error(`Error getting evidence index ${index}:`, error);
@@ -453,7 +499,7 @@ class Web3Service {
   // System Management
   public async toggleSystemLock(): Promise<boolean> {
     if (!this.contract) return false;
-    
+
     try {
       const tx = await this.contract.toggleSystemLock();
       await tx.wait();
@@ -463,7 +509,7 @@ class Web3Service {
       toast({
         title: "Transaction Failed",
         description: "Failed to toggle system lock. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
@@ -471,7 +517,7 @@ class Web3Service {
 
   public async setGlobalRole(user: string, role: Role): Promise<boolean> {
     if (!this.contract) return false;
-    
+
     try {
       const tx = await this.contract.setGlobalRole(user, role);
       await tx.wait();
@@ -481,7 +527,7 @@ class Web3Service {
       toast({
         title: "Transaction Failed",
         description: "Failed to set global role. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return false;
     }
@@ -490,20 +536,29 @@ class Web3Service {
   // Helper Functions
   public getRoleString(role: Role): string {
     switch (role) {
-      case Role.Court: return "Court";
-      case Role.Officer: return "Officer";
-      case Role.Forensic: return "Forensic";
-      case Role.Lawyer: return "Lawyer";
-      default: return "None";
+      case Role.Court:
+        return "Court";
+      case Role.Officer:
+        return "Officer";
+      case Role.Forensic:
+        return "Forensic";
+      case Role.Lawyer:
+        return "Lawyer";
+      default:
+        return "None";
     }
   }
 
   public getEvidenceTypeString(type: EvidenceType): string {
     switch (type) {
-      case EvidenceType.Image: return "Image";
-      case EvidenceType.Video: return "Video";
-      case EvidenceType.Document: return "Document";
-      default: return "Other";
+      case EvidenceType.Image:
+        return "Image";
+      case EvidenceType.Video:
+        return "Video";
+      case EvidenceType.Document:
+        return "Document";
+      default:
+        return "Other";
     }
   }
 }

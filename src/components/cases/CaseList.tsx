@@ -1,28 +1,33 @@
-
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { FC } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { 
-  FolderPlus, 
-  Search, 
-  Filter, 
-  ArrowUpDown, 
-  FileCheck, 
-  Shield, 
-  Clock 
+import {
+  FolderPlus,
+  Search,
+  Filter,
+  ArrowUpDown,
+  FileCheck,
+  Shield,
+  Clock,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from "@/contexts/AuthContext";
 
 // Mock data for cases
 const mockCases = [
@@ -33,7 +38,7 @@ const mockCases = [
     date: "2023-04-08T10:30:00Z",
     filedBy: "Officer Johnson",
     evidenceCount: 8,
-    tags: ["cybercrime", "data breach", "corporate"]
+    tags: ["cybercrime", "data breach", "corporate"],
   },
   {
     id: "FF-2023-092",
@@ -42,7 +47,7 @@ const mockCases = [
     date: "2023-04-05T14:15:00Z",
     filedBy: "Detective Williams",
     evidenceCount: 12,
-    tags: ["fraud", "financial", "evidence collection"]
+    tags: ["fraud", "financial", "evidence collection"],
   },
   {
     id: "FF-2023-104",
@@ -51,7 +56,7 @@ const mockCases = [
     date: "2023-03-28T09:45:00Z",
     filedBy: "Specialist Chen",
     evidenceCount: 5,
-    tags: ["ip theft", "corporate espionage"]
+    tags: ["ip theft", "corporate espionage"],
   },
   {
     id: "FF-2023-118",
@@ -60,16 +65,16 @@ const mockCases = [
     date: "2023-03-15T16:20:00Z",
     filedBy: "Officer Martinez",
     evidenceCount: 10,
-    tags: ["physical breach", "security", "theft"]
+    tags: ["physical breach", "security", "theft"],
   },
 ];
 
-const CaseList: React.FC = () => {
+const CaseList: FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const handleNewCase = () => {
-    navigate('/cases/create');
+    navigate("/cases/create");
   };
 
   const handleCaseClick = (caseId: string) => {
@@ -77,7 +82,7 @@ const CaseList: React.FC = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    switch(status) {
+    switch (status) {
       case "open":
         return <Badge className="bg-forensic-accent">Open</Badge>;
       case "active":
@@ -85,7 +90,11 @@ const CaseList: React.FC = () => {
       case "review":
         return <Badge className="bg-forensic-warning">Under Review</Badge>;
       case "closed":
-        return <Badge variant="outline" className="text-forensic-500">Closed</Badge>;
+        return (
+          <Badge variant="outline" className="text-forensic-500">
+            Closed
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -94,8 +103,10 @@ const CaseList: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-forensic-800">Case Management</h1>
-        <Button 
+        <h1 className="text-2xl font-bold text-forensic-800">
+          Case Management
+        </h1>
+        <Button
           onClick={handleNewCase}
           className="bg-forensic-accent hover:bg-forensic-accent/90"
         >
@@ -115,10 +126,7 @@ const CaseList: React.FC = () => {
           <div className="flex items-center space-x-2 mb-4">
             <div className="relative max-w-md w-full">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-forensic-400" />
-              <Input 
-                placeholder="Search cases..." 
-                className="pl-8"
-              />
+              <Input placeholder="Search cases..." className="pl-8" />
             </div>
             <Button variant="outline" size="icon" className="h-10 w-10">
               <Filter className="h-4 w-4" />
@@ -143,15 +151,17 @@ const CaseList: React.FC = () => {
               </TableHeader>
               <TableBody>
                 {mockCases.map((caseItem) => (
-                  <TableRow 
-                    key={caseItem.id} 
+                  <TableRow
+                    key={caseItem.id}
                     className="cursor-pointer hover:bg-forensic-50"
                     onClick={() => handleCaseClick(caseItem.id)}
                   >
                     <TableCell className="font-medium">{caseItem.id}</TableCell>
                     <TableCell>{caseItem.title}</TableCell>
                     <TableCell>{getStatusBadge(caseItem.status)}</TableCell>
-                    <TableCell>{new Date(caseItem.date).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      {new Date(caseItem.date).toLocaleDateString()}
+                    </TableCell>
                     <TableCell>{caseItem.filedBy}</TableCell>
                     <TableCell>
                       <div className="flex items-center">
@@ -162,7 +172,11 @@ const CaseList: React.FC = () => {
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {caseItem.tags.map((tag, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {tag}
                           </Badge>
                         ))}

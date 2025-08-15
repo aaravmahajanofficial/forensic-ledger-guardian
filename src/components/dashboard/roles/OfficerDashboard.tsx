@@ -1,94 +1,103 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+// React automatic runtime is enabled; explicit default import removed
+import { Link } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  FileDigit, 
-  FolderKanban, 
-  Upload, 
-  CheckCircle, 
+import {
+  FileDigit,
+  FolderKanban,
+  Upload,
+  CheckCircle,
   BarChart3,
-  ArrowUpRight, 
+  ArrowUpRight,
   AlignLeft,
   Clock,
   FileCheck,
-  Filter
+  Filter,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import RecentActivityList from '../RecentActivityList';
-import StatCard from '../StatCard';
+import RecentActivityList from "../RecentActivityList";
+import StatCard from "../StatCard";
 import { useWeb3 } from "@/contexts/Web3Context";
 
 const OfficerDashboard = () => {
   const { account } = useWeb3();
-  
+
   // Mock data - would come from API/blockchain in real implementation
   const stats = {
     totalCases: 17,
     activeCases: 12,
     totalEvidence: 98,
     pendingConfirmation: 7,
-    awaitingSubmission: 3
+    awaitingSubmission: 3,
   };
 
-    // Pending evidence confirmation data
-    const pendingConfirmations = [
-      {
-        id: "EV-2023-087",
-        caseId: "CC-2023-056",
-        title: "Server Access Logs",
-        submittedBy: "Sarah Lee",
-        date: "Apr 09, 2025",
-        isOwnSubmission: false
-      },
-      {
-        id: "EV-2023-086",
-        caseId: "CC-2023-056",
-        title: "Network Traffic Capture",
-        submittedBy: "Sarah Lee", 
-        date: "Apr 09, 2025",
-        isOwnSubmission: false
-      },
-      {
-        id: "EV-2023-085",
-        caseId: "CC-2023-078",
-        title: "Transaction Records",
-        submittedBy: "Michael Chen",
-        date: "Apr 08, 2025",
-        isOwnSubmission: true
-      }
-    ];
+  // Pending evidence confirmation data
+  const pendingConfirmations = [
+    {
+      id: "EV-2023-087",
+      caseId: "CC-2023-056",
+      title: "Server Access Logs",
+      submittedBy: "Sarah Lee",
+      date: "Apr 09, 2025",
+      isOwnSubmission: false,
+    },
+    {
+      id: "EV-2023-086",
+      caseId: "CC-2023-056",
+      title: "Network Traffic Capture",
+      submittedBy: "Sarah Lee",
+      date: "Apr 09, 2025",
+      isOwnSubmission: false,
+    },
+    {
+      id: "EV-2023-085",
+      caseId: "CC-2023-078",
+      title: "Transaction Records",
+      submittedBy: "Michael Chen",
+      date: "Apr 08, 2025",
+      isOwnSubmission: true,
+    },
+  ];
 
   // Filter for eligible confirmations (not self-submitted)
-  const eligibleConfirmations = pendingConfirmations.filter(item => !item.isOwnSubmission);
+  const eligibleConfirmations = pendingConfirmations.filter(
+    (item) => !item.isOwnSubmission
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard 
-          title="Total Cases" 
-          value={stats.totalCases} 
-          icon={<FolderKanban className="h-5 w-5 text-forensic-evidence" />} 
+        <StatCard
+          title="Total Cases"
+          value={stats.totalCases}
+          icon={<FolderKanban className="h-5 w-5 text-forensic-evidence" />}
           linkTo="/cases"
         />
-        <StatCard 
-          title="Active Cases" 
-          value={stats.activeCases} 
-          icon={<FolderKanban className="h-5 w-5 text-forensic-accent" />} 
+        <StatCard
+          title="Active Cases"
+          value={stats.activeCases}
+          icon={<FolderKanban className="h-5 w-5 text-forensic-accent" />}
           linkTo="/cases?status=active"
         />
-        <StatCard 
-          title="Total Evidence" 
-          value={stats.totalEvidence} 
-          icon={<FileDigit className="h-5 w-5 text-forensic-court" />} 
+        <StatCard
+          title="Total Evidence"
+          value={stats.totalEvidence}
+          icon={<FileDigit className="h-5 w-5 text-forensic-court" />}
           linkTo="/evidence"
         />
-        <StatCard 
-          title="Pending Confirmation" 
+        <StatCard
+          title="Pending Confirmation"
           value={eligibleConfirmations.length}
-          icon={<CheckCircle className="h-5 w-5 text-forensic-warning" />} 
+          icon={<CheckCircle className="h-5 w-5 text-forensic-warning" />}
           linkTo="/evidence/confirm?filter=eligible"
           highlight={eligibleConfirmations.length > 0}
         />
@@ -101,35 +110,57 @@ const OfficerDashboard = () => {
             <CheckCircle className="h-5 w-5 mr-2 text-forensic-accent" />
             Evidence Confirmation
           </CardTitle>
-          <CardDescription>Review and confirm submitted evidence</CardDescription>
+          <CardDescription>
+            Review and confirm submitted evidence
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="eligible">
             <div className="flex items-center justify-between mb-4">
               <TabsList>
-                <TabsTrigger value="eligible">Eligible ({eligibleConfirmations.length})</TabsTrigger>
-                <TabsTrigger value="all">All Pending ({pendingConfirmations.length})</TabsTrigger>
+                <TabsTrigger value="eligible">
+                  Eligible ({eligibleConfirmations.length})
+                </TabsTrigger>
+                <TabsTrigger value="all">
+                  All Pending ({pendingConfirmations.length})
+                </TabsTrigger>
               </TabsList>
-              
-              <Button variant="ghost" size="sm" className="text-forensic-500 flex items-center gap-1">
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-forensic-500 flex items-center gap-1"
+              >
                 <Filter className="h-4 w-4" />
                 <span>Filter</span>
               </Button>
             </div>
-            
+
             <TabsContent value="eligible" className="space-y-2">
               {eligibleConfirmations.length > 0 ? (
-                eligibleConfirmations.map(item => (
-                  <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-forensic-100">
+                eligibleConfirmations.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-3 bg-white rounded-lg border border-forensic-100"
+                  >
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-forensic-800">{item.title}</p>
-                        <Badge variant="outline" className="bg-forensic-50 text-xs">{item.id}</Badge>
+                        <p className="font-medium text-forensic-800">
+                          {item.title}
+                        </p>
+                        <Badge
+                          variant="outline"
+                          className="bg-forensic-50 text-xs"
+                        >
+                          {item.id}
+                        </Badge>
                       </div>
-                      <p className="text-sm text-forensic-600">Case #{item.caseId} • Submitted by {item.submittedBy}</p>
+                      <p className="text-sm text-forensic-600">
+                        Case #{item.caseId} • Submitted by {item.submittedBy}
+                      </p>
                     </div>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       className="bg-forensic-accent hover:bg-forensic-accent/90"
                     >
                       Confirm
@@ -142,26 +173,42 @@ const OfficerDashboard = () => {
                 </div>
               )}
             </TabsContent>
-            
+
             <TabsContent value="all" className="space-y-2">
-              {pendingConfirmations.map(item => (
-                <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-forensic-100">
+              {pendingConfirmations.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between p-3 bg-white rounded-lg border border-forensic-100"
+                >
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-forensic-800">{item.title}</p>
-                      <Badge variant="outline" className="bg-forensic-50 text-xs">{item.id}</Badge>
+                      <p className="font-medium text-forensic-800">
+                        {item.title}
+                      </p>
+                      <Badge
+                        variant="outline"
+                        className="bg-forensic-50 text-xs"
+                      >
+                        {item.id}
+                      </Badge>
                     </div>
                     <p className="text-sm text-forensic-600">
                       Case #{item.caseId} • Submitted by {item.submittedBy}
                       {item.isOwnSubmission && (
-                        <Badge className="ml-2 bg-forensic-warning/20 text-forensic-warning text-xs">Your submission</Badge>
+                        <Badge className="ml-2 bg-forensic-warning/20 text-forensic-warning text-xs">
+                          Your submission
+                        </Badge>
                       )}
                     </p>
                   </div>
-                  <Button 
+                  <Button
                     size="sm"
                     variant={item.isOwnSubmission ? "outline" : "default"}
-                    className={item.isOwnSubmission ? "text-forensic-500" : "bg-forensic-accent hover:bg-forensic-accent/90"}
+                    className={
+                      item.isOwnSubmission
+                        ? "text-forensic-500"
+                        : "bg-forensic-accent hover:bg-forensic-accent/90"
+                    }
                     disabled={item.isOwnSubmission}
                   >
                     {item.isOwnSubmission ? "Cannot confirm own" : "Confirm"}
@@ -173,9 +220,7 @@ const OfficerDashboard = () => {
         </CardContent>
         <CardFooter>
           <Button asChild variant="outline" className="w-full">
-            <Link to="/evidence/confirm">
-              View All Pending Confirmation
-            </Link>
+            <Link to="/evidence/confirm">View All Pending Confirmation</Link>
           </Button>
         </CardFooter>
       </Card>
@@ -196,7 +241,10 @@ const OfficerDashboard = () => {
             </p>
           </CardContent>
           <CardFooter>
-            <Button asChild className="w-full bg-forensic-evidence hover:bg-forensic-evidence/90 shadow-sm transition-all duration-300">
+            <Button
+              asChild
+              className="w-full bg-forensic-evidence hover:bg-forensic-evidence/90 shadow-sm transition-all duration-300"
+            >
               <Link to="/fir" className="flex items-center justify-center">
                 <span>Manage FIRs</span>
                 <ArrowUpRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -217,21 +265,31 @@ const OfficerDashboard = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">FIR Evidence:</span>
-                <Badge variant="outline" className="bg-forensic-50">{stats.awaitingSubmission} awaiting</Badge>
+                <Badge variant="outline" className="bg-forensic-50">
+                  {stats.awaitingSubmission} awaiting
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Case Evidence:</span>
-                <Badge variant="outline" className="bg-forensic-50">{stats.pendingConfirmation} pending</Badge>
+                <Badge variant="outline" className="bg-forensic-50">
+                  {stats.pendingConfirmation} pending
+                </Badge>
               </div>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-2">
-            <Button asChild className="w-full bg-forensic-accent hover:bg-forensic-accent/90 shadow-sm">
+            <Button
+              asChild
+              className="w-full bg-forensic-accent hover:bg-forensic-accent/90 shadow-sm"
+            >
               <Link to="/upload?type=fir">
                 <span>Upload FIR Evidence</span>
               </Link>
             </Button>
-            <Button asChild className="w-full bg-forensic-accent/80 hover:bg-forensic-accent/90 shadow-sm">
+            <Button
+              asChild
+              className="w-full bg-forensic-accent/80 hover:bg-forensic-accent/90 shadow-sm"
+            >
               <Link to="/upload?type=case">
                 <span>Upload Case Evidence</span>
               </Link>
@@ -256,26 +314,38 @@ const OfficerDashboard = () => {
                 </div>
                 <Progress value={100} className="h-2 bg-forensic-100" />
               </div>
-              
+
               <div className="space-y-1">
                 <div className="flex justify-between items-center text-sm">
                   <span>Awaiting Confirmation</span>
-                  <span className="font-medium">{stats.pendingConfirmation}</span>
+                  <span className="font-medium">
+                    {stats.pendingConfirmation}
+                  </span>
                 </div>
-                <Progress value={(stats.pendingConfirmation / stats.totalEvidence) * 100} 
-                  className="h-2 bg-forensic-100" 
+                <Progress
+                  value={
+                    (stats.pendingConfirmation / stats.totalEvidence) * 100
+                  }
+                  className="h-2 bg-forensic-100"
                   indicatorClassName="bg-forensic-warning"
                 />
               </div>
-              
+
               <div className="space-y-1">
                 <div className="flex justify-between items-center text-sm">
                   <span>Confirmed</span>
-                  <span className="font-medium">{stats.totalEvidence - stats.pendingConfirmation}</span>
+                  <span className="font-medium">
+                    {stats.totalEvidence - stats.pendingConfirmation}
+                  </span>
                 </div>
-                <Progress value={((stats.totalEvidence - stats.pendingConfirmation) / stats.totalEvidence) * 100} 
+                <Progress
+                  value={
+                    ((stats.totalEvidence - stats.pendingConfirmation) /
+                      stats.totalEvidence) *
+                    100
+                  }
                   className="h-2 bg-forensic-100"
-                  indicatorClassName="bg-forensic-success" 
+                  indicatorClassName="bg-forensic-success"
                 />
               </div>
             </div>
@@ -299,13 +369,19 @@ const OfficerDashboard = () => {
               <Clock className="h-5 w-5 mr-2 text-forensic-600" />
               Recent Activity
             </CardTitle>
-            <CardDescription>Latest evidence chain of custody events</CardDescription>
+            <CardDescription>
+              Latest evidence chain of custody events
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <RecentActivityList />
           </CardContent>
           <CardFooter>
-            <Button variant="outline" asChild className="w-full hover:bg-forensic-50 transition-colors">
+            <Button
+              variant="outline"
+              asChild
+              className="w-full hover:bg-forensic-50 transition-colors"
+            >
               <Link to="/activity">View All Activity</Link>
             </Button>
           </CardFooter>

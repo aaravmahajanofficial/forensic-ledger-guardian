@@ -39,9 +39,9 @@ const ForgotPasswordForm = ({ onBack }: { onBack: () => void }) => {
         description: "Check your inbox for password reset instructions",
       });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err instanceof z.ZodError) {
-        setError(err.errors[0].message);
+        setError(err.issues[0].message);
       } else {
         setError(err.message || "An unexpected error occurred. Please try again.");
         toast({
