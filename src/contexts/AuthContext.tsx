@@ -1,5 +1,6 @@
 // AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import CryptoJS from 'crypto-js';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabaseClient';
@@ -14,7 +15,6 @@ export interface User {
   address?: string;
 }
 
-interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     setUser(fullUser);
-    localStorage.setItem('forensicLedgerUser', JSON.stringify(fullUser));
+    localStorage.setItem('forensicLedgerUser', encryptData(JSON.stringify(fullUser)));
     return fullUser;
   };
 
