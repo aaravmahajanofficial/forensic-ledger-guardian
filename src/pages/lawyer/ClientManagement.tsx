@@ -312,66 +312,68 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Case(s)</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last Contact</TableHead>
-                  <TableHead>Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClients.map((client) => (
-                  <TableRow key={client.id}>
-                    <TableCell className="font-medium">{client.id}</TableCell>
-                    <TableCell>{client.name}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="flex items-center text-sm">
-                          <Mail className="h-3 w-3 mr-1 text-forensic-500" />
-                          {client.email}
-                        </span>
-                        <span className="flex items-center text-sm mt-1">
-                          <Phone className="h-3 w-3 mr-1 text-forensic-500" />
-                          {client.phone}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {client.cases.length > 0 ? (
-                        client.cases.map(caseId => (
-                          <Badge key={caseId} variant="outline" className="mr-1">
-                            {caseId}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-forensic-500 text-sm">No cases</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{getClientStatusBadge(client.status)}</TableCell>
-                    <TableCell className="text-sm text-forensic-600">
-                      {new Date(client.lastContact).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">View</Button>
-                        <Button 
-                          size="sm" 
-                          className="bg-forensic-accent hover:bg-forensic-accent/90"
-                          onClick={() => setShowNewMeetingDialog(true)}
-                        >
-                          Schedule
-                        </Button>
-                      </div>
-                    </TableCell>
+            <div className="table-container">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Case(s)</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Last Contact</TableHead>
+                    <TableHead>Action</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredClients.map((client) => (
+                    <TableRow key={client.id}>
+                      <TableCell className="font-medium">{client.id}</TableCell>
+                      <TableCell>{client.name}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="flex items-center text-sm">
+                            <Mail className="h-3 w-3 mr-1 text-forensic-500" />
+                            {client.email}
+                          </span>
+                          <span className="flex items-center text-sm mt-1">
+                            <Phone className="h-3 w-3 mr-1 text-forensic-500" />
+                            {client.phone}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {client.cases.length > 0 ? (
+                          client.cases.map(caseId => (
+                            <Badge key={caseId} variant="outline" className="mr-1">
+                              {caseId}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-forensic-500 text-sm">No cases</span>
+                        )}
+                      </TableCell>
+                      <TableCell>{getClientStatusBadge(client.status)}</TableCell>
+                      <TableCell className="text-sm text-forensic-600">
+                        {new Date(client.lastContact).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline">View</Button>
+                          <Button
+                            size="sm"
+                            className="bg-forensic-accent hover:bg-forensic-accent/90"
+                            onClick={() => setShowNewMeetingDialog(true)}
+                          >
+                            Schedule
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
             
             {filteredClients.length === 0 && (
               <div className="text-center py-8">
@@ -397,56 +399,58 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Meeting</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Schedule</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredMeetings
-                    .filter(meeting => meeting.status !== 'completed')
-                    .map((meeting) => (
-                    <TableRow key={meeting.id}>
-                      <TableCell>
-                        <div className="font-medium">{meeting.title}</div>
-                        <div className="text-sm text-forensic-500 truncate max-w-[200px]">
-                          {meeting.notes}
-                        </div>
-                      </TableCell>
-                      <TableCell>{meeting.clientName}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1 text-forensic-500" />
-                          <span className="text-sm">{new Date(meeting.date).toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex items-center mt-1">
-                          <Clock className="h-3 w-3 mr-1 text-forensic-500" />
-                          <span className="text-sm">
-                            {new Date(meeting.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            {' '} ({meeting.duration} min)
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{meeting.location}</TableCell>
-                      <TableCell>{getMeetingStatusBadge(meeting.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">Details</Button>
-                          <Button size="sm" className="bg-forensic-accent hover:bg-forensic-accent/90">
-                            Start
-                          </Button>
-                        </div>
-                      </TableCell>
+              <div className="table-container">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Meeting</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Schedule</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Action</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredMeetings
+                      .filter(meeting => meeting.status !== 'completed')
+                      .map((meeting) => (
+                      <TableRow key={meeting.id}>
+                        <TableCell>
+                          <div className="font-medium">{meeting.title}</div>
+                          <div className="text-sm text-forensic-500 truncate max-w-[200px]">
+                            {meeting.notes}
+                          </div>
+                        </TableCell>
+                        <TableCell>{meeting.clientName}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <Calendar className="h-3 w-3 mr-1 text-forensic-500" />
+                            <span className="text-sm">{new Date(meeting.date).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center mt-1">
+                            <Clock className="h-3 w-3 mr-1 text-forensic-500" />
+                            <span className="text-sm">
+                              {new Date(meeting.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {' '} ({meeting.duration} min)
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{meeting.location}</TableCell>
+                        <TableCell>{getMeetingStatusBadge(meeting.status)}</TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button size="sm" variant="outline">Details</Button>
+                            <Button size="sm" className="bg-forensic-accent hover:bg-forensic-accent/90">
+                              Start
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
               
               {filteredMeetings.filter(m => m.status !== 'completed').length === 0 && (
                 <div className="text-center py-8">
@@ -468,44 +472,46 @@ const ClientManagement: React.FC<ClientManagementProps> = ({ view = 'clients' })
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Meeting</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredMeetings
-                    .filter(meeting => meeting.status === 'completed')
-                    .map((meeting) => (
-                    <TableRow key={meeting.id}>
-                      <TableCell>
-                        <div className="font-medium">{meeting.title}</div>
-                        <div className="text-sm text-forensic-500 truncate max-w-[200px]">
-                          {meeting.notes}
-                        </div>
-                      </TableCell>
-                      <TableCell>{meeting.clientName}</TableCell>
-                      <TableCell className="text-sm text-forensic-600">
-                        {new Date(meeting.date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>{getMeetingStatusBadge(meeting.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button size="sm" variant="outline" className="flex items-center gap-1">
-                            <FileText className="h-3 w-3" />
-                            <span>View Notes</span>
-                          </Button>
-                        </div>
-                      </TableCell>
+              <div className="table-container">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Meeting</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Action</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredMeetings
+                      .filter(meeting => meeting.status === 'completed')
+                      .map((meeting) => (
+                      <TableRow key={meeting.id}>
+                        <TableCell>
+                          <div className="font-medium">{meeting.title}</div>
+                          <div className="text-sm text-forensic-500 truncate max-w-[200px]">
+                            {meeting.notes}
+                          </div>
+                        </TableCell>
+                        <TableCell>{meeting.clientName}</TableCell>
+                        <TableCell className="text-sm text-forensic-600">
+                          {new Date(meeting.date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>{getMeetingStatusBadge(meeting.status)}</TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button size="sm" variant="outline" className="flex items-center gap-1">
+                              <FileText className="h-3 w-3" />
+                              <span>View Notes</span>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </>

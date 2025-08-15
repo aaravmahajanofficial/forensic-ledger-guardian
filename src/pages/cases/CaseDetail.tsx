@@ -164,16 +164,18 @@ const CaseDetail = () => {
                 <CardDescription>People associated with this case</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {caseData.parties.map((party, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <User className="h-4 w-4 text-forensic-600 mr-2" />
-                        <span>{party.name}</span>
+                <div className="table-container">
+                  <div className="space-y-4">
+                    {caseData.parties.map((party, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 text-forensic-600 mr-2" />
+                          <span>{party.name}</span>
+                        </div>
+                        <Badge variant="outline">{party.role}</Badge>
                       </div>
-                      <Badge variant="outline">{party.role}</Badge>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -184,20 +186,22 @@ const CaseDetail = () => {
                 <CardDescription>Recent evidence submissions</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {caseData.evidenceItems.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <FileDigit className="h-4 w-4 text-forensic-accent mr-2" />
-                        <span>{item.name}</span>
+                <div className="table-container">
+                  <div className="space-y-4">
+                    {caseData.evidenceItems.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <FileDigit className="h-4 w-4 text-forensic-accent mr-2" />
+                          <span>{item.name}</span>
+                        </div>
+                        <Badge
+                          className={item.status === 'verified' ? 'bg-green-500' : 'bg-amber-500'}
+                        >
+                          {item.status}
+                        </Badge>
                       </div>
-                      <Badge 
-                        className={item.status === 'verified' ? 'bg-green-500' : 'bg-amber-500'}
-                      >
-                        {item.status}
-                      </Badge>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </CardContent>
               <CardFooter>
@@ -219,29 +223,31 @@ const CaseDetail = () => {
               <CardDescription>All evidence associated with this case</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {caseData.evidenceItems.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-md">
-                    <div>
-                      <div className="flex items-center">
-                        <FileDigit className="h-4 w-4 text-forensic-accent mr-2" />
-                        <span className="font-medium">{item.name}</span>
+              <div className="table-container">
+                <div className="space-y-4">
+                  {caseData.evidenceItems.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-md">
+                      <div>
+                        <div className="flex items-center">
+                          <FileDigit className="h-4 w-4 text-forensic-accent mr-2" />
+                          <span className="font-medium">{item.name}</span>
+                        </div>
+                        <div className="text-sm text-forensic-500 mt-1">ID: {item.id} | Type: {item.type}</div>
                       </div>
-                      <div className="text-sm text-forensic-500 mt-1">ID: {item.id} | Type: {item.type}</div>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          className={item.status === 'verified' ? 'bg-green-500' : 'bg-amber-500'}
+                        >
+                          {item.status}
+                        </Badge>
+                        <Button size="sm" className="bg-forensic-accent">
+                          <span>View</span>
+                          <ArrowUpRight className="ml-1 h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge 
-                        className={item.status === 'verified' ? 'bg-green-500' : 'bg-amber-500'}
-                      >
-                        {item.status}
-                      </Badge>
-                      <Button size="sm" className="bg-forensic-accent">
-                        <span>View</span>
-                        <ArrowUpRight className="ml-1 h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </CardContent>
             <CardFooter>
