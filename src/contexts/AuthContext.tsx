@@ -36,6 +36,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const { toast } = useToast();
 
   const loadUserProfile = async (userId: string, email: string) => {
+    const parseRole = (role: unknown): Role => {
+      if (typeof role === "string") {
+        const roleKey = Object.keys(Role).find(
+          (key) => key.toLowerCase() === role.toLowerCase()
+        );
+        if (roleKey) {
+          return Role[roleKey as keyof typeof Role];
+        }
+      }
+      if (typeof role === "number" && Role[role]) {
+        return role;
+      }
+      return Role.None; // Default or error case
+    };
+
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -43,14 +58,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         .eq("id", userId)
         .single();
       if (error) {
-        console.error("Error loading profile:", error);
+        console.warn("Could not load profile, attempting to create fallback for demo user", error);
+        const roleFromEmail = email.split('@')[0];
+        const role = parseRole(roleFromEmail);
+
+        if (role !== Role.None) {
+            const name = roleFromEmail.charAt(0).toUpperCase() + roleFromEmail.slice(1) + " User";
+            const fullUser: User = {
+                id: userId,
+                email,
+                name: name,
+                role: role,
+                roleTitle: roleFromEmail.charAt(0).toUpperCase() + roleFromEmail.slice(1),
+                address: undefined,
+            };
+            setUser(fullUser);
+            localStorage.setItem("forensicLedgerUser", JSON.stringify(fullUser));
+            return fullUser;
+        }
+
+        console.error("Error loading profile and could not create fallback:", error);
         return null;
       }
+
       const fullUser: User = {
         id: userId,
         email,
         name: data.name,
-        role: data.role as Role,
+        role: parseRole(data.role),
         roleTitle: data.roleTitle,
         address: data.address || undefined,
       };
