@@ -1,18 +1,17 @@
-
-import React, { useState } from 'react';
-import { 
-  FileUp, 
-  Eye, 
-  Lock, 
-  Unlock, 
-  FileCheck, 
-  User, 
+import { useState } from "react";
+import {
+  FileUp,
+  Eye,
+  Lock,
+  Unlock,
+  FileCheck,
+  User,
   Shield,
   FileCog,
   Download,
   ExternalLink,
   Clock,
-  Info
+  Info,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -27,11 +26,11 @@ import {
 
 export interface CustodyEvent {
   id: string;
-  type: 'upload' | 'access' | 'lock' | 'unlock' | 'verify' | 'modify';
+  type: "upload" | "access" | "lock" | "unlock" | "verify" | "modify";
   timestamp: string;
   user: {
     name: string;
-    role: 'Forensic' | 'Officer' | 'Court' | 'Lawyer';
+    role: "Forensic" | "Officer" | "Court" | "Lawyer";
     initials: string;
   };
   details: string;
@@ -45,87 +44,103 @@ interface ChainOfCustodyProps {
 }
 
 const roleColors = {
-  Forensic: "bg-forensic-evidence/20 text-forensic-evidence border-forensic-evidence/30",
-  Officer: "bg-forensic-accent/20 text-forensic-accent border-forensic-accent/30",
+  Forensic:
+    "bg-forensic-evidence/20 text-forensic-evidence border-forensic-evidence/30",
+  Officer:
+    "bg-forensic-accent/20 text-forensic-accent border-forensic-accent/30",
   Court: "bg-forensic-court/20 text-forensic-court border-forensic-court/30",
-  Lawyer: "bg-forensic-warning/20 text-forensic-warning border-forensic-warning/30"
+  Lawyer:
+    "bg-forensic-warning/20 text-forensic-warning border-forensic-warning/30",
 };
 
-const eventTypeIcon = (type: CustodyEvent['type']) => {
+const eventTypeIcon = (type: CustodyEvent["type"]) => {
   switch (type) {
-    case 'upload': return <FileUp className="h-4 w-4" />;
-    case 'access': return <Eye className="h-4 w-4" />;
-    case 'lock': return <Lock className="h-4 w-4" />;
-    case 'unlock': return <Unlock className="h-4 w-4" />;
-    case 'verify': return <FileCheck className="h-4 w-4" />;
-    case 'modify': return <FileCog className="h-4 w-4" />;
+    case "upload":
+      return <FileUp className="h-4 w-4" />;
+    case "access":
+      return <Eye className="h-4 w-4" />;
+    case "lock":
+      return <Lock className="h-4 w-4" />;
+    case "unlock":
+      return <Unlock className="h-4 w-4" />;
+    case "verify":
+      return <FileCheck className="h-4 w-4" />;
+    case "modify":
+      return <FileCog className="h-4 w-4" />;
   }
 };
 
 // Sample data - would come from blockchain in real implementation
 const sampleEvents: CustodyEvent[] = [
   {
-    id: '1',
-    type: 'upload',
-    timestamp: '2025-04-08T10:23:45Z',
-    user: { name: 'John Smith', role: 'Forensic', initials: 'JS' },
-    details: 'Evidence initially uploaded and hashed',
-    transactionHash: '0x7a8d9e2f3c4b5a6d7e8f9a0b1c2d3e4f5a6b7c8d'
+    id: "1",
+    type: "upload",
+    timestamp: "2025-04-08T10:23:45Z",
+    user: { name: "John Smith", role: "Forensic", initials: "JS" },
+    details: "Evidence initially uploaded and hashed",
+    transactionHash: "0x7a8d9e2f3c4b5a6d7e8f9a0b1c2d3e4f5a6b7c8d",
   },
   {
-    id: '2',
-    type: 'verify',
-    timestamp: '2025-04-08T10:25:12Z',
-    user: { name: 'Sarah Lee', role: 'Forensic', initials: 'SL' },
-    details: 'Evidence integrity verified by secondary investigator',
-    transactionHash: '0x8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c'
+    id: "2",
+    type: "verify",
+    timestamp: "2025-04-08T10:25:12Z",
+    user: { name: "Sarah Lee", role: "Forensic", initials: "SL" },
+    details: "Evidence integrity verified by secondary investigator",
+    transactionHash: "0x8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c",
   },
   {
-    id: '3',
-    type: 'access',
-    timestamp: '2025-04-09T14:12:33Z',
-    user: { name: 'Emily Johnson', role: 'Officer', initials: 'EJ' },
-    details: 'Evidence accessed for case review',
-    transactionHash: '0x9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d'
+    id: "3",
+    type: "access",
+    timestamp: "2025-04-09T14:12:33Z",
+    user: { name: "Emily Johnson", role: "Officer", initials: "EJ" },
+    details: "Evidence accessed for case review",
+    transactionHash: "0x9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d",
   },
   {
-    id: '4',
-    type: 'access',
-    timestamp: '2025-04-09T16:37:21Z',
-    user: { name: 'Michael Chen', role: 'Court', initials: 'MC' },
-    details: 'Evidence accessed for court preparation',
-    transactionHash: '0x0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e'
+    id: "4",
+    type: "access",
+    timestamp: "2025-04-09T16:37:21Z",
+    user: { name: "Michael Chen", role: "Court", initials: "MC" },
+    details: "Evidence accessed for court preparation",
+    transactionHash: "0x0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e",
   },
   {
-    id: '5',
-    type: 'lock',
-    timestamp: '2025-04-09T17:05:48Z',
-    user: { name: 'Michael Chen', role: 'Court', initials: 'MC' },
-    details: 'Evidence locked for court proceedings',
-    transactionHash: '0x1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f'
-  }
+    id: "5",
+    type: "lock",
+    timestamp: "2025-04-09T17:05:48Z",
+    user: { name: "Michael Chen", role: "Court", initials: "MC" },
+    details: "Evidence locked for court proceedings",
+    transactionHash: "0x1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f",
+  },
 ];
 
-const ChainOfCustody: React.FC<Partial<ChainOfCustodyProps>> = ({ 
+const ChainOfCustody: React.FC<Partial<ChainOfCustodyProps>> = ({
   evidenceId = "EV-104-001",
   caseId = "FF-2023-104",
-  events = sampleEvents
+  events = sampleEvents,
 }) => {
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
-  
+
   const toggleEventExpansion = (eventId: string) => {
-    setExpandedEvent(prev => prev === eventId ? null : eventId);
+    setExpandedEvent((prev) => (prev === eventId ? null : eventId));
   };
 
   const formatDateTime = (dateString: string) => {
     try {
       const date = new Date(dateString);
       return {
-        date: date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-        time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        date: date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+        time: date.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
     } catch (e) {
-      return { date: 'Invalid date', time: '' };
+      return { date: "Invalid date", time: "" };
     }
   };
 
@@ -153,7 +168,9 @@ const ChainOfCustody: React.FC<Partial<ChainOfCustodyProps>> = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="max-w-xs text-xs">All custody events are immutably recorded on the blockchain</p>
+                <p className="max-w-xs text-xs">
+                  All custody events are immutably recorded on the blockchain
+                </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -165,18 +182,22 @@ const ChainOfCustody: React.FC<Partial<ChainOfCustodyProps>> = ({
         {events.map((event, index) => {
           const { date, time } = formatDateTime(event.timestamp);
           const isExpanded = expandedEvent === event.id;
-          
+
           return (
-            <div key={event.id} className="relative animate-slide-in" style={{animationDelay: `${index * 100}ms`}}>
+            <div
+              key={event.id}
+              className="relative animate-slide-in"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
               {/* Timeline node */}
               <div className="absolute -left-[25px] p-1 rounded-full bg-white border-2 border-forensic-200">
                 <div className="p-1 rounded-full bg-forensic-accent text-white">
                   {eventTypeIcon(event.type)}
                 </div>
               </div>
-              
+
               {/* Event content */}
-              <div 
+              <div
                 className={cn(
                   "bg-white rounded-lg shadow-sm border border-forensic-200 p-4 transition-all duration-300",
                   isExpanded ? "shadow-md" : ""
@@ -186,10 +207,12 @@ const ChainOfCustody: React.FC<Partial<ChainOfCustodyProps>> = ({
                   <div className="flex items-center">
                     <Avatar className="h-7 w-7 mr-2">
                       <AvatarImage src="" />
-                      <AvatarFallback className={cn(
-                        "text-xs border",
-                        roleColors[event.user.role]
-                      )}>
+                      <AvatarFallback
+                        className={cn(
+                          "text-xs border",
+                          roleColors[event.user.role]
+                        )}
+                      >
                         {event.user.initials}
                       </AvatarFallback>
                     </Avatar>
@@ -203,18 +226,18 @@ const ChainOfCustody: React.FC<Partial<ChainOfCustodyProps>> = ({
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="mt-2 md:mt-0 text-sm text-forensic-500 flex items-center">
                     <Clock className="h-3 w-3 mr-1" />
                     <span className="mr-1">{date}</span>
                     <span>{time}</span>
                   </div>
                 </div>
-                
+
                 <p className="text-forensic-700 my-2">{event.details}</p>
-                
+
                 {event.transactionHash && (
-                  <div 
+                  <div
                     className={cn(
                       "overflow-hidden transition-all duration-300",
                       isExpanded ? "max-h-96" : "max-h-0"
@@ -222,9 +245,11 @@ const ChainOfCustody: React.FC<Partial<ChainOfCustodyProps>> = ({
                   >
                     <div className="text-xs font-mono bg-forensic-50 p-2 rounded border border-forensic-200 overflow-x-auto mt-2">
                       <span className="text-forensic-500">TX: </span>
-                      <span className="text-forensic-800">{event.transactionHash}</span>
+                      <span className="text-forensic-800">
+                        {event.transactionHash}
+                      </span>
                     </div>
-                    
+
                     <div className="flex justify-end mt-2 gap-2">
                       <Button variant="ghost" size="sm" className="h-7 text-xs">
                         <ExternalLink className="h-3 w-3 mr-1" />
@@ -237,10 +262,10 @@ const ChainOfCustody: React.FC<Partial<ChainOfCustodyProps>> = ({
                     </div>
                   </div>
                 )}
-                
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => toggleEventExpansion(event.id)}
                   className="w-full mt-2 text-forensic-500 hover:text-forensic-700 h-7"
                 >

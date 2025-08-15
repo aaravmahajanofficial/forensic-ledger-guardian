@@ -1,8 +1,6 @@
-
-import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { 
+import {
   LogOut,
   User,
   Menu,
@@ -10,7 +8,7 @@ import {
   Bell,
   Sparkles,
   HelpCircle,
-  Lock
+  Lock,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Role } from "@/services/web3Service";
@@ -35,19 +33,19 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
-  
+
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
-  const isHomePage = location.pathname === '/';
+  const isHomePage = location.pathname === "/";
 
   const scrollToSection = (sectionId: string) => {
     if (isHomePage) {
       const section = document.getElementById(sectionId);
       if (section) {
-        section.scrollIntoView({ behavior: 'smooth' });
+        section.scrollIntoView({ behavior: "smooth" });
       }
     } else {
       navigate(`/#${sectionId}`);
@@ -81,14 +79,16 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          
+
           {/* Show logo on mobile */}
           {isMobile && (
             <div className="flex items-center">
               <div className="flex items-center justify-center w-6 h-6 bg-gradient-to-r from-forensic-accent to-forensic-evidence rounded-md overflow-hidden">
                 <Shield className="h-4 w-4 text-white" />
               </div>
-              <span className="ml-1 font-semibold text-sm md:text-base">ForensicChain</span>
+              <span className="ml-1 font-semibold text-sm md:text-base">
+                ForensicChain
+              </span>
             </div>
           )}
         </div>
@@ -96,29 +96,29 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
         {/* Navigation links for homepage */}
         {isHomePage && !isMobile && (
           <div className="hidden md:flex space-x-6 ml-auto mr-6">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="flex items-center gap-1 text-forensic-600 hover:text-forensic-accent"
-              onClick={() => scrollToSection('features')}
+              onClick={() => scrollToSection("features")}
             >
               <Sparkles className="h-4 w-4" />
               <span>Features</span>
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="flex items-center gap-1 text-forensic-600 hover:text-forensic-accent"
-              onClick={() => scrollToSection('how-it-works')}
+              onClick={() => scrollToSection("how-it-works")}
             >
               <HelpCircle className="h-4 w-4" />
               <span>How It Works</span>
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="flex items-center gap-1 text-forensic-600 hover:text-forensic-accent"
-              onClick={() => scrollToSection('security')}
+              onClick={() => scrollToSection("security")}
             >
               <Lock className="h-4 w-4" />
               <span>Security</span>
@@ -132,15 +132,22 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
             <Button variant="ghost" size="icon" className="hidden sm:flex">
               <Bell className="h-4 w-4 text-forensic-500" />
             </Button>
-            
+
             {/* Role Badge - hide on very small screens */}
-            <Badge className={`${user.role ? getRoleBadgeColor(user.role) : "bg-gray-500"} px-2 py-1 hidden xs:inline-flex`}>
+            <Badge
+              className={`${
+                user.role ? getRoleBadgeColor(user.role) : "bg-gray-500"
+              } px-2 py-1 hidden xs:inline-flex`}
+            >
               {user.roleTitle || "Unknown"}
             </Badge>
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2">
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2"
+                >
                   <User className="h-4 w-4 text-forensic-accent" />
                   <span className="hidden sm:inline-block text-sm truncate max-w-[100px] md:max-w-none">
                     {user.name}
@@ -155,14 +162,23 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
                   <span>User Profile</span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/dashboard')}>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => navigate("/dashboard")}
+                >
                   Dashboard
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings')}>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => navigate("/settings")}
+                >
                   Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-forensic-danger cursor-pointer" onClick={handleLogout}>
+                <DropdownMenuItem
+                  className="text-forensic-danger cursor-pointer"
+                  onClick={handleLogout}
+                >
                   <LogOut className="h-4 w-4 mr-2" />
                   <span>Logout</span>
                 </DropdownMenuItem>
@@ -173,7 +189,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="text-xs sm:text-sm"
           >
             Login

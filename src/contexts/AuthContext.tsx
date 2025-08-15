@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useContext,
   useState,
@@ -28,9 +28,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
@@ -150,23 +148,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   useEffect(() => {
     if (user) {
-      // Redirect to role-specific dashboard
-      switch (user.role) {
-        case Role.Court:
-          navigate("/dashboard/court");
-          break;
-        case Role.Officer:
-          navigate("/dashboard/officer");
-          break;
-        case Role.Forensic:
-          navigate("/dashboard/forensic");
-          break;
-        case Role.Lawyer:
-          navigate("/dashboard/lawyer");
-          break;
-        default:
-          navigate("/dashboard");
-      }
+      // Small delay to ensure the user state is fully set before navigation
+      const timeoutId = setTimeout(() => {
+        // Redirect to role-specific dashboard
+        switch (user.role) {
+          case Role.Court:
+            navigate("/dashboard/court");
+            break;
+          case Role.Officer:
+            navigate("/dashboard/officer");
+            break;
+          case Role.Forensic:
+            navigate("/dashboard/forensic");
+            break;
+          case Role.Lawyer:
+            navigate("/dashboard/lawyer");
+            break;
+          default:
+            navigate("/dashboard");
+        }
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
     }
   }, [user, navigate]);
 

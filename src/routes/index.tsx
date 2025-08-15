@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import { Suspense, lazy } from "react";
 import { Routes, Route, Outlet } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import NotFound from "@/pages/NotFound";
@@ -7,10 +7,26 @@ import Loading from "@/components/shared/Loading"; // I'll need to create this c
 // Lazy-loaded pages
 const Index = lazy(() => import("@/pages/Index"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const CourtDashboardPage = lazy(() => import("@/pages/RoleDashboards").then(module => ({ default: module.CourtDashboardPage })));
-const OfficerDashboardPage = lazy(() => import("@/pages/RoleDashboards").then(module => ({ default: module.OfficerDashboardPage })));
-const ForensicDashboardPage = lazy(() => import("@/pages/RoleDashboards").then(module => ({ default: module.ForensicDashboardPage })));
-const LawyerDashboardPage = lazy(() => import("@/pages/RoleDashboards").then(module => ({ default: module.LawyerDashboardPage })));
+const CourtDashboardPage = lazy(() =>
+  import("@/pages/RoleDashboards").then((module) => ({
+    default: module.CourtDashboardPage,
+  }))
+);
+const OfficerDashboardPage = lazy(() =>
+  import("@/pages/RoleDashboards").then((module) => ({
+    default: module.OfficerDashboardPage,
+  }))
+);
+const ForensicDashboardPage = lazy(() =>
+  import("@/pages/RoleDashboards").then((module) => ({
+    default: module.ForensicDashboardPage,
+  }))
+);
+const LawyerDashboardPage = lazy(() =>
+  import("@/pages/RoleDashboards").then((module) => ({
+    default: module.LawyerDashboardPage,
+  }))
+);
 const Cases = lazy(() => import("@/pages/Cases"));
 const CaseDetail = lazy(() => import("@/pages/cases/CaseDetail"));
 const Evidence = lazy(() => import("@/pages/Evidence"));
@@ -35,7 +51,9 @@ const EvidenceConfirmation = lazy(
   () => import("@/pages/officer/EvidenceConfirmation")
 );
 const OfficerReports = lazy(() => import("@/pages/officer/Reports"));
-const EvidenceAnalysis = lazy(() => import("@/pages/forensic/EvidenceAnalysis"));
+const EvidenceAnalysis = lazy(
+  () => import("@/pages/forensic/EvidenceAnalysis")
+);
 const TechnicalVerification = lazy(
   () => import("@/pages/forensic/TechnicalVerification")
 );
@@ -49,8 +67,11 @@ const ChainOfCustodyVerification = lazy(
 const LegalReports = lazy(() => import("@/pages/lawyer/Reports"));
 const CourtPreparation = lazy(() => import("@/pages/lawyer/CourtPreparation"));
 const ClientManagement = lazy(() => import("@/pages/lawyer/ClientManagement"));
+const RouteTest = lazy(() => import("@/pages/RouteTest"));
 
 const AppRoutes = () => {
+  console.log("AppRoutes component is rendering...");
+
   const LayoutWrapper = () => (
     <Layout>
       <Outlet />
@@ -65,7 +86,10 @@ const AppRoutes = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/court" element={<CourtDashboardPage />} />
           <Route path="/dashboard/officer" element={<OfficerDashboardPage />} />
-          <Route path="/dashboard/forensic" element={<ForensicDashboardPage />} />
+          <Route
+            path="/dashboard/forensic"
+            element={<ForensicDashboardPage />}
+          />
           <Route path="/dashboard/lawyer" element={<LawyerDashboardPage />} />
           <Route path="/cases" element={<Cases />} />
           <Route path="/cases/:caseId" element={<CaseDetail />} />
@@ -93,11 +117,18 @@ const AppRoutes = () => {
           <Route path="/evidence/verify" element={<TechnicalVerification />} />
           <Route path="/forensic/reports" element={<ForensicReports />} />
           <Route path="/legal/documentation" element={<LegalDocumentation />} />
-          <Route path="/verify/custody" element={<ChainOfCustodyVerification />} />
+          <Route
+            path="/verify/custody"
+            element={<ChainOfCustodyVerification />}
+          />
           <Route path="/legal/reports" element={<LegalReports />} />
           <Route path="/cases/prepare" element={<CourtPreparation />} />
           <Route path="/clients" element={<ClientManagement />} />
-          <Route path="/meetings" element={<ClientManagement view="meetings" />} />
+          <Route
+            path="/meetings"
+            element={<ClientManagement view="meetings" />}
+          />
+          <Route path="/route-test" element={<RouteTest />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

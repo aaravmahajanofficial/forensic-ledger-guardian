@@ -1,17 +1,26 @@
-import React, { useState } from 'react';
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Shield, ArrowLeft, Send, CheckCircle } from "lucide-react";
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from "@/lib/supabaseClient";
 
-const emailSchema = z.string().email({ message: "Please enter a valid email address" });
+const emailSchema = z
+  .string()
+  .email({ message: "Please enter a valid email address" });
 
 const ForgotPasswordForm = ({ onBack }: { onBack: () => void }) => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,9 +36,10 @@ const ForgotPasswordForm = ({ onBack }: { onBack: () => void }) => {
 
       setIsLoading(true);
 
-      const { error: supabaseError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
+      const { error: supabaseError } =
+        await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
 
       if (supabaseError) throw new Error(supabaseError.message);
 
@@ -38,20 +48,20 @@ const ForgotPasswordForm = ({ onBack }: { onBack: () => void }) => {
         title: "Recovery email sent",
         description: "Check your inbox for password reset instructions",
       });
-
     } catch (err: unknown) {
-        if (err instanceof z.ZodError) {
-          setError(err.issues[0].message);
-        } else {
-          const message = err instanceof Error ? err.message : String(err);
-          setError(message || "An unexpected error occurred. Please try again.");
-          toast({
-            title: "Password reset failed",
-            description: message || "An error occurred while sending the recovery email",
-            variant: "destructive",
-          });
-        }
-      } finally {
+      if (err instanceof z.ZodError) {
+        setError(err.issues[0].message);
+      } else {
+        const message = err instanceof Error ? err.message : String(err);
+        setError(message || "An unexpected error occurred. Please try again.");
+        toast({
+          title: "Password reset failed",
+          description:
+            message || "An error occurred while sending the recovery email",
+          variant: "destructive",
+        });
+      }
+    } finally {
       setIsLoading(false);
     }
   };
@@ -138,10 +148,12 @@ const ForgotPasswordForm = ({ onBack }: { onBack: () => void }) => {
               <div className="space-y-2">
                 <h3 className="font-medium text-lg">Recovery Email Sent</h3>
                 <p className="text-muted-foreground text-sm">
-                  We've sent a password reset link to <span className="font-medium text-forensic-800">{email}</span>
+                  We've sent a password reset link to{" "}
+                  <span className="font-medium text-forensic-800">{email}</span>
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  If you don't see the email in your inbox, please check your spam folder.
+                  If you don't see the email in your inbox, please check your
+                  spam folder.
                 </p>
               </div>
               <Button
@@ -149,7 +161,7 @@ const ForgotPasswordForm = ({ onBack }: { onBack: () => void }) => {
                 className="mt-4"
                 onClick={() => {
                   setIsSubmitted(false);
-                  setEmail('');
+                  setEmail("");
                 }}
               >
                 Try a different email

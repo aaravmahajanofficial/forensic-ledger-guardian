@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,8 +30,21 @@ const LoginForm = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await login(email, password);
-    setIsLoading(false);
+
+    try {
+      const success = await login(email, password);
+      if (success) {
+        // Navigation will be handled by the AuthContext useEffect
+        toast({
+          title: "Login Successful",
+          description: "Redirecting to your dashboard...",
+        });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleMetaMaskLogin = async () => {

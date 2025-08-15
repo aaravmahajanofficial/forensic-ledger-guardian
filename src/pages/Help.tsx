@@ -12,8 +12,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { BookOpen, HelpCircle, MessageSquare, Mail } from "lucide-react";
+import {
+  BookOpen,
+  HelpCircle,
+  MessageSquare,
+  Mail,
+  Navigation,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const Help = () => {
   return (
@@ -60,6 +67,28 @@ const Help = () => {
               <span>Contact Support</span>
               <Mail className="ml-2 h-4 w-4" />
             </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Navigation className="h-5 w-5 mr-2 text-forensic-accent" />
+              Route Testing
+            </CardTitle>
+            <CardDescription>Test application navigation</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-forensic-600 mb-4">
+              Test different routes and navigation in the application to ensure
+              everything is working correctly.
+            </p>
+            <Link to="/route-test">
+              <Button className="w-full bg-forensic-accent hover:bg-forensic-accent/90 flex items-center justify-center">
+                <span>Open Route Tester</span>
+                <Navigation className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>
