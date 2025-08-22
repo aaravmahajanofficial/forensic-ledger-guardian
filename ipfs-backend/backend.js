@@ -20,9 +20,7 @@ const ForensicChainABI = JSON.parse(fs.readFileSync(abiPath, 'utf-8'));
 
 dotenv.config();
 const app = express();
-const upload = multer({
-  limits: { fileSize: 10 * 1024 * 1024 } // 10 MB limit
-});
+const upload = multer();
 app.use(express.json());
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
@@ -48,35 +46,31 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     if (!file) return res.status(400).json({ error: "No file uploaded" });
     if (!ALLOWED_MIME.includes(file.mimetype)) return res.status(400).json({ error: "File type not allowed" });
 
-    
-    const key = crypto.randomBytes(32);
+    const key = crypto.randomBytes(32); 
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
     const encrypted = Buffer.concat([cipher.update(file.buffer), cipher.final()]);
 
-   
     const data = new FormData();
     data.append("file", encrypted, file.originalname);
 
-    const ipfsResp = await axios.post(
+    const ipfsResp=await axios.post(
       "https://api.pinata.cloud/pinning/pinFileToIPFS",
       data,
       {
         maxBodyLength: Infinity,
-        headers: { Authorization: `Bearer ${process.env.PINATA_JWT}`, ...data.getHeaders() }
+        headers: { Authorization: `Bearer ${process.env.PINATA_JWT}`, 
+        ...data.getHeaders() }
       }
     );
-    const cid = ipfsResp.data.IpfsHash;
+    const cid=ipfsResp.data.IpfsHash;
 
-    
-    const hashOriginal = crypto.createHash("sha256").update(file.buffer).digest("hex");       
-    const hashEncrypted = crypto.createHash("sha256").update(encrypted).digest("hex");       
+    const hashOriginal=crypto.createHash("sha256").update(file.buffer).digest("hex");
 
-    
-    const masterKey = crypto.createHash("sha256").update(process.env.MASTER_PASSWORD).digest();
-    const keyCipher = crypto.createCipheriv("aes-256-cbc", masterKey, iv);
-    const keyEncrypted = Buffer.concat([keyCipher.update(key), keyCipher.final()]).toString("hex");
-    const ivEncrypted = iv.toString("hex");
+    const masterKey=crypto.createHash("sha256").update(process.env.MASTER_PASSWORD).digest();
+    const keyCipher=crypto.createCipheriv("aes-256-cbc", masterKey, iv);
+    const keyEncrypted=Buffer.concat([keyCipher.update(key), keyCipher.final()]).toString("hex");
+    const ivEncrypted = iv.toString("hex"); 
 
     
     const { error } = await supabase.from("evidence").insert([{
@@ -85,41 +79,18 @@ app.post("/upload", upload.single("file"), async (req, res) => {
       cid: cid,
       key_encrypted: keyEncrypted,
       iv_encrypted: ivEncrypted,
-      hash_original: hashOriginal,
-      // optional: hash_encrypted: hashEncrypted,
-      // optional: original_name: file.originalname,
-      // optional: mime: file.mimetype
+      hash_original: hashOriginal
     }]);
 
     if (error) return res.status(500).json({ error: error.message });
 
-    
-    const encryptionKeyHash = ethers.hexlify(
-      crypto.createHash("sha256").update(key).digest()
-    );
-
-    const EvidenceTypeMap = {
-      "Image": 0,
-      "Video": 1,
-      "Document": 2,
-      "Other": 3
-    };
-
-    const evidenceTypeEnum = Number.isNaN(Number(evidenceType)) ? EvidenceTypeMap[evidenceType] : Number(evidenceType);
-
-    if (evidenceTypeEnum === undefined || evidenceTypeEnum === null || Number.isNaN(evidenceTypeEnum)) {
-      return res.status(400).json({ error: "Invalid evidenceType (must be Image/Video/Document/Other or numeric enum)" });
-    }
-
-
     const tx = await contract.submitCaseEvidence(
       caseId,
       evidenceId,
-      cid,
-      hashEncrypted,           
-      hashOriginal,            
-      encryptionKeyHash,       
-      evidenceTypeEnum        
+      cid,            
+      hashOriginal,    
+      crypto.createHash("sha256").update(key).digest(),
+      evidenceType
     );
     await tx.wait();
 
@@ -132,9 +103,36 @@ app.post("/upload", upload.single("file"), async (req, res) => {
 });
 
 
+app.post("/confirmEvidence", async (req, res) => {
+    try {
+        const { caseId, index } = req.body;
+
+        if (!caseId || index === undefined) {
+            return res.status(400).json({ error: "caseId and index are required" });
+        }
+
+        const tx = await contract.confirmCaseEvidence(caseId, index);
+        await tx.wait();
+
+        res.json({ message: "Evidence confirmed on-chain", caseId, index });
+
+    } catch (err) {
+        console.error(err);
+        if (err.reason) {
+        return res.status(400).json({ error: err.reason }); 
+        }
+        res.status(500).json({ error: "Confirmation failed" });
+    }
+});
+
+
 app.get("/retrieve/:caseId/:evidenceId", async (req, res) => {
+
   try {
-    const { caseId, evidenceId } = req.params;
+    let { caseId, evidenceId } = req.params;
+    caseId=caseId.trim();
+    evidenceId=evidenceId.trim();
+    console.log("CaseId param:", caseId, "EvidenceId param:", evidenceId);
 
     const { data, error } = await supabase.from("evidence")
       .select("*")
@@ -142,7 +140,12 @@ app.get("/retrieve/:caseId/:evidenceId", async (req, res) => {
       .eq("evidence_id", evidenceId)
       .single();
 
-    if (error || !data) return res.status(404).json({ error: "Evidence not found" });
+
+    if (error || !data){
+      console.error("Supabase error:", error);
+      return res.status(404).json({ error: "Evidence not found" });
+    } 
+
 
     const iv = Buffer.from(data.iv_encrypted, "hex");
     const masterKey = crypto.createHash("sha256").update(process.env.MASTER_PASSWORD).digest();
@@ -159,10 +162,11 @@ app.get("/retrieve/:caseId/:evidenceId", async (req, res) => {
     res.setHeader("Content-Disposition", `attachment; filename="${evidenceId}"`);
     res.send(decrypted);
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Retrieve failed" });
-  }
+  }catch (err) {
+  console.error("Retrieve failed:", err.message, err.stack, err.response?.data);
+  res.status(500).json({ error: "Retrieve failed: " + err.message });
+}
+
 });
 
 app.listen(4000, () => console.log("Backend running at http://localhost:4000"));
