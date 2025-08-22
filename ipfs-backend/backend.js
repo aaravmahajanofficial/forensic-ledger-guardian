@@ -20,7 +20,9 @@ const ForensicChainABI = JSON.parse(fs.readFileSync(abiPath, 'utf-8'));
 
 dotenv.config();
 const app = express();
-const upload = multer();
+const upload = multer({
+  limits: { fileSize: 10 * 1024 * 1024 } // 10 MB limit
+});
 app.use(express.json());
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
