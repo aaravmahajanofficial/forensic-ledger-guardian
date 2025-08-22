@@ -843,7 +843,9 @@ class Web3Service {
     try {
       // Check if FIR already exists
       const existingFIR = await this.contract.firs(firId);
-      if (existingFIR.filedBy !== "0x0000000000000000000000000000000000000000") {
+      if (
+        existingFIR.filedBy !== "0x0000000000000000000000000000000000000000"
+      ) {
         console.log("FIR already exists:", firId);
         return true;
       }
