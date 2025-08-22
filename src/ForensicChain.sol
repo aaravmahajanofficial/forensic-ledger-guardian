@@ -67,6 +67,25 @@ contract ForensicChain {
         _;
     }
 
+    // More flexible role check for case/FIR operations
+    modifier canCreateCase() {
+        require(
+            globalRoles[msg.sender] == Role.Officer || 
+            globalRoles[msg.sender] == Role.Court,
+            "Only Officers or Court can create cases"
+        );
+        _;
+    }
+
+    modifier canFileFIR() {
+        require(
+            globalRoles[msg.sender] == Role.Officer || 
+            globalRoles[msg.sender] == Role.Court,
+            "Only Officers or Court can file FIRs"
+        );
+        _;
+    }
+
     modifier onlyCourt() {
         require(globalRoles[msg.sender] == Role.Court, "Only Court can perform this action");
         _;
@@ -101,7 +120,7 @@ contract ForensicChain {
         globalRoles[user] = role;
     }
 
-    function fileFIR(string memory firId, string memory description) external notLocked onlyRole(Role.Officer) {
+    function fileFIR(string memory firId, string memory description) external notLocked canFileFIR {
         require(firs[firId].filedBy == address(0), "FIR already exists");
         firs[firId] = FIR({
             firId: firId,
@@ -162,7 +181,7 @@ contract ForensicChain {
     string memory title,
     string memory description,
     string[] memory tags
-) external notLocked onlyRole(Role.Officer) {
+) external notLocked canCreateCase {
     require(cases[caseId].createdBy == address(0), "Case already exists");
     require(firs[firId].filedBy != address(0), "FIR not found");
     require(!firs[firId].promotedToCase, "FIR already promoted");

@@ -833,6 +833,31 @@ class Web3Service {
     }
   }
 
+  // Create a default FIR if needed
+  public async ensureDefaultFIR(firId: string): Promise<boolean> {
+    if (!this.contract) {
+      console.error("Contract not initialized");
+      return false;
+    }
+
+    try {
+      // Check if FIR already exists
+      const existingFIR = await this.contract.firs(firId);
+      if (existingFIR.filedBy !== "0x0000000000000000000000000000000000000000") {
+        console.log("FIR already exists:", firId);
+        return true;
+      }
+
+      // Create default FIR
+      console.log("Creating default FIR:", firId);
+      const defaultDescription = `Default FIR created for case processing - ${new Date().toISOString()}`;
+      return await this.fileFIR(firId, defaultDescription);
+    } catch (error) {
+      console.error("Error ensuring default FIR:", error);
+      return false;
+    }
+  }
+
   public async getFIR(firId: string): Promise<FIR | null> {
     if (!this.contract) return null;
 
@@ -887,6 +912,12 @@ class Web3Service {
     }
 
     try {
+      // First ensure the FIR exists, create a default one if needed
+      const firExists = await this.ensureDefaultFIR(firId);
+      if (!firExists) {
+        throw new Error("Could not create or find required FIR");
+      }
+
       console.log("Calling createCaseFromFIR with params:", {
         caseId,
         firId,
