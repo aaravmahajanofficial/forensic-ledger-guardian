@@ -1,6 +1,7 @@
 import express from "express";
 import multer from "multer";
 import axios from "axios";
+import { CID } from "multiformats/cid";
 import dotenv from "dotenv";
 import FormData from "form-data";
 
@@ -51,6 +52,14 @@ app.post("/upload", upload.single("file"), async (req, res) => {
 app.get("/retrieve/:cid", async (req, res) => {
   const { cid } = req.params;
   try {
+    // Validate that 'cid' is a valid IPFS CID.
+    let parsedCID;
+    try {
+      parsedCID = CID.parse(cid);
+    } catch (e) {
+      return res.status(400).json({ error: "Invalid CID format." });
+    }
+
     const url = `https://gateway.pinata.cloud/ipfs/${cid}`; 
     const response = await axios.get(url, { responseType: "arraybuffer" });
 
