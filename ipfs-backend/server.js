@@ -60,9 +60,9 @@ app.get("/retrieve/:cid", async (req, res) => {
       return res.status(400).json({ error: "Invalid CID format." });
     }
 
-    const url = `https://gateway.pinata.cloud/ipfs/${cid}`; 
+    // Use only the validated, canonical CID string below:
+    const url = `https://gateway.pinata.cloud/ipfs/${parsedCID.toString()}`; 
     const response = await axios.get(url, { responseType: "arraybuffer" });
-
     
     res.setHeader("Content-Type", response.headers["content-type"]);
     res.send(response.data);
