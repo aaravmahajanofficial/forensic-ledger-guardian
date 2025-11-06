@@ -115,6 +115,21 @@ app.post("/upload", (req, res, next) => {
 app.get("/retrieve/:cid", async (req, res) => {
   const { cid } = req.params;
 
+// Strict CID validation using multiformats/cid
+function validateCid(cid) {
+  try {
+    // Ensure cid is a string, does not contain `/`, `.`, or other path-altering chars
+    if (typeof cid !== "string") return false;
+    if (/[^a-zA-Z0-9]+/.test(cid)) return false; // basic alpha-numeric only
+    if (cid.includes('/') || cid.includes('.') || cid.includes('..')) return false;
+    // Try parsing as a CID (will throw if invalid)
+    CID.parse(cid);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
   if (!validateCid(cid)) {
     return res.status(400).json({ error: "Invalid CID" });
   }
