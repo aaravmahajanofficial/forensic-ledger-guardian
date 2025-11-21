@@ -1,5 +1,5 @@
 # Use Node.js 20 LTS as the base image
-FROM mcr.microsoft.com/devcontainers/javascript-node:1-20-bookworm
+FROM mcr.microsoft.com/devcontainers/javascript-node:4-20-bookworm
 
 # Install system dependencies
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
