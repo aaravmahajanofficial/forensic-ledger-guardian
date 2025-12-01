@@ -308,6 +308,13 @@ const CONTRACT_ABI = [
   },
   {
     type: "function",
+    name: "revokeGlobalRole",
+    inputs: [{ name: "user", type: "address", internalType: "address" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "submitCaseEvidence",
     inputs: [
       { name: "caseId", type: "string", internalType: "string" },
@@ -522,15 +529,16 @@ const CONTRACT_ABI = [
   },
 ];
 
-// Network-specific contract addresses
-const CONTRACT_ADDRESSES: Record<string, string> = {
-  "0xaa36a7": "0xf95af9ef3f9cdbd39cc3847707285dc90022104a", // Sepolia testnet
-  "0x7a69": "0xf95af9ef3f9cdbd39cc3847707285dc90022104a", // Anvil local
-  "0x1": "0x0000000000000000000000000000000000000000", // Mainnet (placeholder)
-};
+// Contract address from environment variable (set in .env as VITE_CONTRACT_ADDRESS)
+// Falls back to hardcoded address if not set
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
-// Default contract address (Sepolia)
-const CONTRACT_ADDRESS = "0xf95af9ef3f9cdbd39cc3847707285dc90022104a";
+// // Network-specific contract addresses (can override with env variable)
+// const CONTRACT_ADDRESSES: Record<string, string> = {
+//   "0xaa36a7": CONTRACT_ADDRESS, // Sepolia testnet
+//   "0x7a69": CONTRACT_ADDRESS, // Anvil local
+//   "0x1": "0x0000000000000000000000000000000000000000", // Mainnet (placeholder)
+// };
 
 export enum Role {
   None = 0,
@@ -802,6 +810,31 @@ class Web3Service {
       return role;
     } catch (error) {
       console.error("getUserRole: Error getting user role:", error);
+      return Role.None;
+    }
+  }
+
+  // Get role for any address (not just the connected account)
+  public async getRoleForAddress(address: string): Promise<Role> {
+    if (!this.contract) {
+      console.log("getRoleForAddress: No contract available");
+      return Role.None;
+    }
+
+    try {
+      const roleRaw = await this.contract.getGlobalRole(address);
+      const role = this.toNumber(roleRaw) as Role;
+      console.log(
+        `getRoleForAddress: Address ${address} has role ${this.getRoleString(
+          role
+        )}`
+      );
+      return role;
+    } catch (error) {
+      console.error(
+        `getRoleForAddress: Error getting role for ${address}:`,
+        error
+      );
       return Role.None;
     }
   }
@@ -1307,6 +1340,49 @@ class Web3Service {
       toast({
         title: "Transaction Failed",
         description: "Failed to set global role. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  }
+
+  public async revokeGlobalRole(user: string): Promise<boolean> {
+    if (!this.contract) {
+      console.log("revokeGlobalRole: No contract available");
+      return false;
+    }
+
+    try {
+      console.log(`revokeGlobalRole: Revoking role for user ${user}`);
+      const tx = await this.contract.revokeGlobalRole(user);
+      console.log(`revokeGlobalRole: Transaction sent, hash: ${tx.hash}`);
+      await tx.wait();
+      console.log(`revokeGlobalRole: Transaction confirmed for ${user}`);
+
+      // Verify the role was revoked correctly
+      const verifyRole = await this.contract.getGlobalRole(user);
+      const verifiedRole = this.toNumber(verifyRole) as Role;
+      console.log(
+        `revokeGlobalRole: Verified role for ${user}: ${this.getRoleString(
+          verifiedRole
+        )}`
+      );
+
+      if (verifiedRole !== Role.None) {
+        console.warn(
+          `revokeGlobalRole: Role not properly revoked, still ${this.getRoleString(
+            verifiedRole
+          )}`
+        );
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("revokeGlobalRole: Error revoking global role:", error);
+      toast({
+        title: "Transaction Failed",
+        description: "Failed to revoke global role. Please try again.",
         variant: "destructive",
       });
       return false;

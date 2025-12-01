@@ -2,65 +2,98 @@
 pragma solidity ^0.8.29;
 
 contract ForensicChain {
-    enum Role { None, Court, Officer, Forensic, Lawyer }
-    enum EvidenceType { Image, Video, Document, Other }
+    enum Role {
+        None,
+        Court,
+        Officer,
+        Forensic,
+        Lawyer
+    }
+    enum EvidenceType {
+        Image,
+        Video,
+        Document,
+        Other
+    }
 
     struct Evidence {
-        string evidenceId;          
-        string cid;        
-        string hashOriginal; 
-        EvidenceType evidenceType;  
-        address submittedBy;        
-        bool confirmed;             
-        uint256 submittedAt;        
-        address[] chainOfCustody;   
+        string evidenceId;
+        string cid;
+        string hashOriginal;
+        EvidenceType evidenceType;
+        address submittedBy;
+        bool confirmed;
+        uint256 submittedAt;
+        address[] chainOfCustody;
     }
-   
+
     struct FIR {
-        string firId;               
-        address filedBy;     
-        string description;     
-        uint256 timestamp;          
-        bool promotedToCase;        
-        string associatedCaseId;    
+        string firId;
+        address filedBy;
+        string description;
+        uint256 timestamp;
+        bool promotedToCase;
+        string associatedCaseId;
     }
 
     struct Case {
-        string caseId;              
-        string title;               
-        string description;         
-        address createdBy;        
-        bool seal;                
-        bool open;                
-        string[] tags;              
-        uint256 evidenceCount;     
+        string caseId;
+        string title;
+        string description;
+        address createdBy;
+        bool seal;
+        bool open;
+        string[] tags;
+        uint256 evidenceCount;
     }
 
-    address public owner;          
-    bool public isSystemLocked;    
+    address public owner;
+    bool public isSystemLocked;
 
-    mapping(address => Role) public globalRoles;                               
-    mapping(string => FIR) public firs;                                         
+    mapping(address => Role) public globalRoles;
+    mapping(string => FIR) public firs;
 
     mapping(string => mapping(uint256 => Evidence)) public evidenceMapping;
-    mapping(string => mapping(string => uint256)) private evidenceIndex; 
+    mapping(string => mapping(string => uint256)) private evidenceIndex;
     mapping(string => uint256) public evidenceCount;
 
-    mapping(string => Case) public cases;                                       
-    mapping(string => mapping(address => Role)) public caseRoles;              
+    mapping(string => Case) public cases;
+    mapping(string => mapping(address => Role)) public caseRoles;
 
-    mapping(string => mapping(address => bool)) public evidenceConfirmed;       
-    mapping(bytes32 => bool) public usedCIDHash;                               
-    mapping(string => address[]) public caseAuditTrail;                         
-    mapping(string => mapping(uint => mapping(address => bool))) public evidenceAccessed; 
-   
+    mapping(string => mapping(address => bool)) public evidenceConfirmed;
+    mapping(bytes32 => bool) public usedCIDHash;
+    mapping(string => address[]) public caseAuditTrail;
+    mapping(string => mapping(uint => mapping(address => bool)))
+        public evidenceAccessed;
+
     string[] public caseIds;
 
-    event EvidenceSubmitted(string indexed caseId, string evidenceId, string cid, address submitter);
-    event EvidenceAccessed(string indexed caseId, uint256 indexed index, address accessor);
-    event EvidenceConfirmed(string indexed caseId, uint256 indexed index, address confirmer);
-    event CaseCreated(string indexed caseId, string indexed firId, address creator);
-    event CaseStatusChanged(string indexed caseId, bool statusSealed, bool open);
+    event EvidenceSubmitted(
+        string indexed caseId,
+        string evidenceId,
+        string cid,
+        address submitter
+    );
+    event EvidenceAccessed(
+        string indexed caseId,
+        uint256 indexed index,
+        address accessor
+    );
+    event EvidenceConfirmed(
+        string indexed caseId,
+        uint256 indexed index,
+        address confirmer
+    );
+    event CaseCreated(
+        string indexed caseId,
+        string indexed firId,
+        address creator
+    );
+    event CaseStatusChanged(
+        string indexed caseId,
+        bool statusSealed,
+        bool open
+    );
     event RoleAssigned(string indexed caseId, address indexed user, Role role);
     event FIRFiled(string indexed firId, address indexed filedBy);
 
@@ -70,17 +103,26 @@ contract ForensicChain {
     }
 
     modifier onlyCourt() {
-        require(globalRoles[msg.sender] == Role.Court, "Only Court can perform this action");
+        require(
+            globalRoles[msg.sender] == Role.Court,
+            "Only Court can perform this action"
+        );
         _;
     }
 
     modifier onlyCaseAssigned(string memory caseId) {
-        require(caseRoles[caseId][msg.sender] != Role.None, "Not assigned to case");
+        require(
+            caseRoles[caseId][msg.sender] != Role.None,
+            "Not assigned to case"
+        );
         _;
     }
 
     modifier caseOpen(string memory caseId) {
-        require(cases[caseId].open && !cases[caseId].seal, "Case is not open or is sealed");
+        require(
+            cases[caseId].open && !cases[caseId].seal,
+            "Case is not open or is sealed"
+        );
         _;
     }
 
@@ -103,7 +145,16 @@ contract ForensicChain {
         globalRoles[user] = role;
     }
 
-    function fileFIR(string memory firId, string memory description) external notLocked onlyRole(Role.Officer) {
+    function revokeGlobalRole(address user) external onlyCourt {
+        require(globalRoles[user] != Role.None, "User has no role to revoke");
+        require(user != owner, "Cannot revoke owner's role");
+        globalRoles[user] = Role.None;
+    }
+
+    function fileFIR(
+        string memory firId,
+        string memory description
+    ) external notLocked onlyRole(Role.Officer) {
         require(firs[firId].filedBy == address(0), "FIR already exists");
         firs[firId] = FIR({
             firId: firId,
@@ -127,7 +178,11 @@ contract ForensicChain {
         string memory hashOriginal,
         EvidenceType evidenceType
     ) external notLocked {
-        require(globalRoles[msg.sender] == Role.Officer || globalRoles[msg.sender] == Role.Forensic, "Unauthorized");
+        require(
+            globalRoles[msg.sender] == Role.Officer ||
+                globalRoles[msg.sender] == Role.Forensic,
+            "Unauthorized"
+        );
         require(firs[firId].filedBy != address(0), "FIR not found");
         // Must not be promoted yet (we store evidence to FIR while pending)
         require(!firs[firId].promotedToCase, "FIR already promoted to case");
@@ -220,7 +275,12 @@ contract ForensicChain {
             _addNewEvidence(caseId, newE);
 
             // Emit EvidenceSubmitted for case so off-chain indexers see it as case evidence
-            emit EvidenceSubmitted(caseId, fe.evidenceId, fe.cid, fe.submittedBy);
+            emit EvidenceSubmitted(
+                caseId,
+                fe.evidenceId,
+                fe.cid,
+                fe.submittedBy
+            );
 
             // delete old storage entry to free space
             delete evidenceMapping[firId][i];
@@ -238,7 +298,11 @@ contract ForensicChain {
         emit CaseCreated(caseId, firId, msg.sender);
     }
 
-    function assignCaseRole(string memory caseId, address user, Role role) external notLocked onlyCourt {
+    function assignCaseRole(
+        string memory caseId,
+        address user,
+        Role role
+    ) external notLocked onlyCourt {
         require(role != Role.None, "Cannot assign None role");
         caseRoles[caseId][user] = role;
         caseAuditTrail[caseId].push(user);
@@ -253,7 +317,8 @@ contract ForensicChain {
         EvidenceType evidenceType
     ) external notLocked onlyCaseAssigned(caseId) caseOpen(caseId) {
         require(
-            globalRoles[msg.sender] == Role.Officer || globalRoles[msg.sender] == Role.Forensic,
+            globalRoles[msg.sender] == Role.Officer ||
+                globalRoles[msg.sender] == Role.Forensic,
             "Unauthorized role to submit evidence"
         );
 
@@ -276,7 +341,10 @@ contract ForensicChain {
         emit EvidenceSubmitted(caseId, evidenceId, cid, msg.sender);
     }
 
-    function confirmEvidence(string memory containerId, uint256 index) external notLocked {
+    function confirmEvidence(
+        string memory containerId,
+        uint256 index
+    ) external notLocked {
         require(index < evidenceCount[containerId], "Invalid evidence index");
         Evidence storage e = evidenceMapping[containerId][index];
         require(!e.confirmed, "Already confirmed");
@@ -285,8 +353,6 @@ contract ForensicChain {
         e.chainOfCustody.push(msg.sender);
         emit EvidenceConfirmed(containerId, index, msg.sender);
     }
-
-
 
     function sealCase(string memory caseId) external onlyCourt {
         Case storage c = cases[caseId];
@@ -312,8 +378,10 @@ contract ForensicChain {
         emit CaseStatusChanged(caseId, c.seal, false);
     }
 
-    function accessEvidence(string memory caseId, uint256 index) 
-        external onlyCaseAssigned(caseId) returns (string memory) {
+    function accessEvidence(
+        string memory caseId,
+        uint256 index
+    ) external onlyCaseAssigned(caseId) returns (string memory) {
         require(index < cases[caseId].evidenceCount, "Invalid evidence index");
         Evidence storage e = evidenceMapping[caseId][index];
 
@@ -323,14 +391,21 @@ contract ForensicChain {
         return e.cid; // Return CID for off-chain retrieval
     }
 
-    function verifyEvidence(string memory caseId, uint256 index, string memory providedHash) 
-        external view onlyCaseAssigned(caseId) returns (bool) {
+    function verifyEvidence(
+        string memory caseId,
+        uint256 index,
+        string memory providedHash
+    ) external view onlyCaseAssigned(caseId) returns (bool) {
         Evidence memory e = evidenceMapping[caseId][index];
         require(index < cases[caseId].evidenceCount, "Invalid evidence index");
-        return keccak256(abi.encodePacked(providedHash)) == keccak256(abi.encodePacked(e.hashOriginal));
+        return
+            keccak256(abi.encodePacked(providedHash)) ==
+            keccak256(abi.encodePacked(e.hashOriginal));
     }
 
-    function getMyRoleInCase(string memory caseId) external view returns (Role) {
+    function getMyRoleInCase(
+        string memory caseId
+    ) external view returns (Role) {
         return caseRoles[caseId][msg.sender];
     }
 
@@ -346,16 +421,21 @@ contract ForensicChain {
         return firs[firId];
     }
 
-    function getEvidence(string memory containerId, uint256 index) external view returns (Evidence memory) {
+    function getEvidence(
+        string memory containerId,
+        uint256 index
+    ) external view returns (Evidence memory) {
         return evidenceMapping[containerId][index];
     }
 
-    function getEvidenceById(string memory containerId, string memory evidenceId) external view returns (Evidence memory) {
+    function getEvidenceById(
+        string memory containerId,
+        string memory evidenceId
+    ) external view returns (Evidence memory) {
         uint256 index = evidenceIndex[containerId][evidenceId];
         require(index < evidenceCount[containerId], "Evidence not found");
         return evidenceMapping[containerId][index];
     }
-
 
     function getAllCases() external view returns (Case[] memory) {
         Case[] memory allCases = new Case[](caseIds.length);
@@ -365,6 +445,3 @@ contract ForensicChain {
         return allCases;
     }
 }
-
-
-

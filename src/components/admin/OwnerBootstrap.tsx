@@ -32,8 +32,23 @@ import {
   roleManagementService,
   RoleAssignment,
 } from "@/services/roleManagementService";
-import { Shield, Crown, UserPlus, CheckCircle, Trash2 } from "lucide-react";
+import {
+  Shield,
+  Crown,
+  UserPlus,
+  CheckCircle,
+  Trash2,
+  AlertCircle,
+  Link,
+} from "lucide-react";
 import RoleDebugger from "@/components/admin/debug/RoleDebugger";
+
+// Extended assignment type with blockchain status
+interface AssignmentWithBlockchainStatus extends RoleAssignment {
+  blockchainRole?: Role;
+  blockchainSynced?: boolean;
+  checkingBlockchain?: boolean;
+}
 
 const OwnerBootstrap = () => {
   const [isOwner, setIsOwner] = useState(false);
@@ -42,17 +57,56 @@ const OwnerBootstrap = () => {
   const [assigning, setAssigning] = useState(false);
   const [walletAddress, setWalletAddress] = useState("");
   const [selectedRole, setSelectedRole] = useState<Role>(Role.Officer);
-  const [roleAssignments, setRoleAssignments] = useState<RoleAssignment[]>([]);
+  const [roleAssignments, setRoleAssignments] = useState<
+    AssignmentWithBlockchainStatus[]
+  >([]);
   const [refreshing, setRefreshing] = useState(false);
   const { account, userRole } = useWeb3();
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Check blockchain status for a single assignment
+  const checkBlockchainStatus = useCallback(
+    async (address: string): Promise<{ role: Role; synced: boolean }> => {
+      if (!web3Service.isContractConnected()) {
+        return { role: Role.None, synced: false };
+      }
+      try {
+        const blockchainRole = await web3Service.getRoleForAddress(address);
+        return { role: blockchainRole, synced: true };
+      } catch (error) {
+        console.error(
+          `Error checking blockchain status for ${address}:`,
+          error
+        );
+        return { role: Role.None, synced: false };
+      }
+    },
+    []
+  );
+
   const loadRoleAssignments = useCallback(async () => {
     setRefreshing(true);
     try {
       const assignments = await roleManagementService.getAllRoleAssignments();
-      setRoleAssignments(assignments);
+
+      // Load blockchain status for all assignments in parallel
+      const assignmentsWithStatus: AssignmentWithBlockchainStatus[] =
+        await Promise.all(
+          assignments.map(async (assignment) => {
+            const { role, synced } = await checkBlockchainStatus(
+              assignment.address
+            );
+            return {
+              ...assignment,
+              blockchainRole: role,
+              blockchainSynced: synced && role === assignment.role,
+              checkingBlockchain: false,
+            };
+          })
+        );
+
+      setRoleAssignments(assignmentsWithStatus);
     } catch (error) {
       console.error("Error loading role assignments:", error);
       toast({
@@ -63,7 +117,7 @@ const OwnerBootstrap = () => {
     } finally {
       setRefreshing(false);
     }
-  }, [toast]);
+  }, [toast, checkBlockchainStatus]);
 
   // Check if current user is contract owner or court admin
   useEffect(() => {
@@ -142,7 +196,7 @@ const OwnerBootstrap = () => {
     checkPermissions();
   }, [account, user, loadRoleAssignments]);
   const handleAssignRole = async () => {
-    if (!walletAddress || (!web3Service && !user)) {
+    if (!walletAddress) {
       toast({
         title: "Error",
         description: "Please enter a valid wallet address",
@@ -161,11 +215,14 @@ const OwnerBootstrap = () => {
       return;
     }
 
+    // Normalize address to lowercase for consistency
+    const normalizedAddress = walletAddress.toLowerCase();
+
     setAssigning(true);
     try {
-      // Check if wallet is already assigned
+      // Check if wallet is already assigned in database
       const isAssigned = await roleManagementService.isWalletAssigned(
-        walletAddress
+        normalizedAddress
       );
       if (isAssigned) {
         toast({
@@ -177,41 +234,76 @@ const OwnerBootstrap = () => {
         return;
       }
 
-      // Assign role in database first
+      // Step 1: Assign role on blockchain FIRST (this is the source of truth)
+      let blockchainSuccess = false;
+
+      if (web3Service.isContractConnected() && account) {
+        console.log(
+          `Assigning role ${selectedRole} to ${normalizedAddress} on blockchain...`
+        );
+
+        toast({
+          title: "Transaction Pending",
+          description: "Please confirm the transaction in your wallet...",
+        });
+
+        blockchainSuccess = await web3Service.setGlobalRole(
+          normalizedAddress,
+          selectedRole
+        );
+
+        if (!blockchainSuccess) {
+          throw new Error(
+            "Blockchain transaction failed. Please check your wallet and try again."
+          );
+        }
+
+        console.log(
+          `Blockchain role assignment successful for ${normalizedAddress}`
+        );
+      } else {
+        // If blockchain is not connected, warn user but allow database-only assignment
+        console.warn(
+          "Blockchain not connected. Assigning role in database only."
+        );
+        toast({
+          title: "Warning",
+          description:
+            "Blockchain not connected. Role will be assigned in database only. Connect wallet for full functionality.",
+          variant: "default",
+        });
+      }
+
+      // Step 2: Record role assignment in database (for UI/tracking purposes)
       const assignedBy = user?.email || account || "system";
       const dbSuccess = await roleManagementService.assignWalletToRole(
-        walletAddress,
+        normalizedAddress,
         selectedRole,
         assignedBy
       );
 
       if (!dbSuccess) {
-        throw new Error("Failed to assign role in database");
-      }
-
-      // If blockchain is connected, also assign role on blockchain
-      let blockchainSuccess = true;
-      if (web3Service.isContractConnected() && account) {
-        blockchainSuccess = await web3Service.setGlobalRole(
-          walletAddress,
-          selectedRole
-        );
-
-        if (!blockchainSuccess) {
+        // If DB fails but blockchain succeeded, notify user
+        if (blockchainSuccess) {
           toast({
             title: "Partial Success",
             description:
-              "Role assigned in database, but blockchain assignment failed. The user can still login.",
+              "Role assigned on blockchain but database update failed. The role is still valid on-chain.",
             variant: "default",
           });
+        } else {
+          throw new Error("Failed to assign role in database");
         }
       }
 
+      // Success notification
       toast({
         title: "Role Assigned Successfully",
         description: `${getRoleTitle(
           selectedRole
-        )} role assigned to ${walletAddress}`,
+        )} role assigned to ${normalizedAddress}${
+          blockchainSuccess ? " (on-chain + database)" : " (database only)"
+        }`,
       });
 
       // Refresh the assignments list
@@ -235,28 +327,86 @@ const OwnerBootstrap = () => {
     }
   };
 
-  const handleRevokeRole = async (walletAddress: string) => {
+  const [revoking, setRevoking] = useState<string | null>(null);
+
+  const handleRevokeRole = async (targetWalletAddress: string) => {
+    setRevoking(targetWalletAddress);
     try {
-      const success = await roleManagementService.revokeWalletAssignment(
-        walletAddress
+      const normalizedAddress = targetWalletAddress.toLowerCase();
+
+      // Step 1: Revoke role on blockchain FIRST using the dedicated revokeGlobalRole method
+      let blockchainSuccess = false;
+
+      if (web3Service.isContractConnected() && account) {
+        console.log(`Revoking role for ${normalizedAddress} on blockchain...`);
+
+        toast({
+          title: "Transaction Pending",
+          description:
+            "Please confirm the revocation transaction in your wallet...",
+        });
+
+        try {
+          blockchainSuccess = await web3Service.revokeGlobalRole(
+            normalizedAddress
+          );
+        } catch (blockchainError: unknown) {
+          console.warn("Blockchain revocation error:", blockchainError);
+          const errorMessage =
+            blockchainError instanceof Error
+              ? blockchainError.message
+              : String(blockchainError);
+
+          // Handle specific errors gracefully
+          if (
+            errorMessage.includes("User has no role to revoke") ||
+            errorMessage.includes("Cannot revoke owner's role")
+          ) {
+            console.log("Blockchain revocation not possible:", errorMessage);
+          } else {
+            // For other errors, still allow database revocation but log the warning
+            console.warn(
+              "Blockchain revocation failed, proceeding with database revocation only"
+            );
+          }
+        }
+
+        if (blockchainSuccess) {
+          console.log(
+            `Blockchain role revocation successful for ${normalizedAddress}`
+          );
+        }
+      }
+
+      // Step 2: Revoke in database
+      const dbSuccess = await roleManagementService.revokeWalletAssignment(
+        normalizedAddress
       );
 
-      if (success) {
-        toast({
-          title: "Role Revoked",
-          description: `Role revoked for ${walletAddress}`,
-        });
-        await loadRoleAssignments();
-      } else {
-        throw new Error("Failed to revoke role");
+      if (!dbSuccess) {
+        throw new Error("Failed to revoke role in database");
       }
+
+      toast({
+        title: "Role Revoked",
+        description: `Role revoked for ${normalizedAddress}${
+          blockchainSuccess ? " (on-chain + database)" : " (database only)"
+        }`,
+      });
+
+      await loadRoleAssignments();
     } catch (error) {
       console.error("Role revocation error:", error);
       toast({
         title: "Revocation Failed",
-        description: "Could not revoke role. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Could not revoke role. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setRevoking(null);
     }
   };
 
@@ -501,7 +651,8 @@ const OwnerBootstrap = () => {
         <CardHeader>
           <CardTitle>Current Role Assignments</CardTitle>
           <CardDescription>
-            Active wallet address assignments in the system
+            Active wallet address assignments in the system. Blockchain status
+            shows if the role is synced on-chain.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -516,7 +667,8 @@ const OwnerBootstrap = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Wallet Address</TableHead>
-                  <TableHead>Role</TableHead>
+                  <TableHead>Role (Database)</TableHead>
+                  <TableHead>Blockchain Status</TableHead>
                   <TableHead>Assigned By</TableHead>
                   <TableHead>Assigned At</TableHead>
                   <TableHead>Actions</TableHead>
@@ -532,6 +684,33 @@ const OwnerBootstrap = () => {
                       )}
                     </TableCell>
                     <TableCell>{assignment.role_name}</TableCell>
+                    <TableCell>
+                      {assignment.blockchainSynced ? (
+                        <span className="flex items-center gap-1 text-green-600">
+                          <Link className="h-4 w-4" />
+                          Synced
+                        </span>
+                      ) : assignment.blockchainRole !== undefined &&
+                        assignment.blockchainRole !== Role.None ? (
+                        <span
+                          className="flex items-center gap-1 text-yellow-600"
+                          title={`Blockchain has role: ${getRoleTitle(
+                            assignment.blockchainRole
+                          )}`}
+                        >
+                          <AlertCircle className="h-4 w-4" />
+                          Mismatch
+                        </span>
+                      ) : (
+                        <span
+                          className="flex items-center gap-1 text-gray-400"
+                          title="Not on blockchain"
+                        >
+                          <AlertCircle className="h-4 w-4" />
+                          Not synced
+                        </span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-sm text-gray-500">
                       {assignment.assigned_by}
                     </TableCell>
@@ -543,9 +722,14 @@ const OwnerBootstrap = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleRevokeRole(assignment.address)}
-                        className="text-red-600 hover:text-red-700"
+                        disabled={revoking === assignment.address}
+                        className="text-red-600 hover:text-red-700 disabled:opacity-50"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {revoking === assignment.address ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </Button>
                     </TableCell>
                   </TableRow>
