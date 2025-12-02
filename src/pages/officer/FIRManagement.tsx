@@ -174,7 +174,7 @@ const FIRManagement: React.FC<FIRManagementProps> = ({ mode = "create" }) => {
         },
         body: JSON.stringify({
           firId,
-          description: fullDescription,
+          description: description,
           location,
           // Incident details
           incident: {

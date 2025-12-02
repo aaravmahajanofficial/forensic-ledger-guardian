@@ -21,6 +21,7 @@ import MetaMaskHelp from '@/pages/help/MetaMaskHelp';
 import CaseDetail from '@/pages/cases/CaseDetail';
 import CreateCase from '@/pages/cases/CreateCase';
 import FIR from '@/pages/fir/Fir';
+import View from '@/pages/fir/View';
 
 /**
  * Routes accessible by all authenticated users
@@ -103,12 +104,23 @@ export const SharedRoutes = () => (
       }
     />
 
+    <Route
+      path="/fir/view/:id"
+      element={
+        <Layout>
+          <SecureRoute requireAuth={true}>
+            <View />
+          </SecureRoute>
+        </Layout>
+      }
+    />
+
     {/* Case Creation - Court and Officer can create cases */}
     <Route
       path="/cases/create"
       element={
         <Layout>
-          <SecureRoute allowedRoles={[Role.Court, Role.Officer]} requireAuth={true}>
+          <SecureRoute allowedRoles={[Role.Court]} requireAuth={true}>
             <CreateCase />
           </SecureRoute>
         </Layout>

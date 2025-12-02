@@ -479,9 +479,7 @@ const OwnerBootstrap = () => {
                 <SelectItem value={Role.Forensic.toString()}>
                   Forensic Expert
                 </SelectItem>
-                <SelectItem value={Role.Lawyer.toString()}>
-                  Lawyer
-                </SelectItem>
+                <SelectItem value={Role.Lawyer.toString()}>Lawyer</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -11,7 +11,7 @@ export interface AuthUser {
   role: Role;
   roleTitle: string;
   address?: string;
-  authType: 'email' | 'wallet';
+  authType: "email" | "wallet";
 }
 
 export interface AuthResult {
@@ -24,7 +24,9 @@ export interface AuthResult {
 class AuthService {
   private static instance: AuthService;
   private currentUser: AuthUser | null = null;
-  private listeners: ((user: AuthUser | null) => void)[] = [];
+  private listeners: Set<(user: AuthUser | null) => void> = new Set();
+  private isInitializing: boolean = false;
+  private initPromise: Promise<AuthUser | null> | null = null;
 
   private constructor() {}
 
@@ -36,15 +38,22 @@ class AuthService {
   }
 
   // Subscribe to auth state changes
-  public subscribe(listener: (user: AuthUser | null) => void) {
-    this.listeners.push(listener);
+  public subscribe(listener: (user: AuthUser | null) => void): () => void {
+    this.listeners.add(listener);
     return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
+      this.listeners.delete(listener);
     };
   }
 
-  private notifyListeners() {
-    this.listeners.forEach(listener => listener(this.currentUser));
+  private notifyListeners(): void {
+    const userSnapshot = this.currentUser;
+    this.listeners.forEach((listener) => {
+      try {
+        listener(userSnapshot);
+      } catch (error) {
+        console.error("Error in auth listener:", error);
+      }
+    });
   }
 
   // Get current authenticated user
@@ -53,12 +62,15 @@ class AuthService {
   }
 
   // Email/password authentication
-  public async loginWithEmail(email: string, password: string): Promise<AuthResult> {
+  public async loginWithEmail(
+    email: string,
+    password: string
+  ): Promise<AuthResult> {
     try {
       if (!supabase) {
         return {
           success: false,
-          error: "Authentication service not configured"
+          error: "Authentication service not configured",
         };
       }
 
@@ -73,20 +85,20 @@ class AuthService {
       if (error) {
         return {
           success: false,
-          error: error.message
+          error: error.message,
         };
       }
 
       if (!data.user) {
         return {
           success: false,
-          error: "Authentication failed"
+          error: "Authentication failed",
         };
       }
 
       // Load user profile
       const profileResult = await this.loadUserProfile(data.user.id, email);
-      
+
       if (!profileResult.success) {
         // Check if this is the first user and should be Court admin
         const isFirstUser = await this.checkIfFirstUser();
@@ -96,16 +108,16 @@ class AuthService {
             return {
               success: true,
               user: setupResult.user,
-              requiresSetup: true
+              requiresSetup: true,
             };
           }
         }
-        
+
         // Clean up failed authentication
         await supabase.auth.signOut();
         return {
           success: false,
-          error: "User profile not found. Contact administrator for access."
+          error: "User profile not found. Contact administrator for access.",
         };
       }
 
@@ -115,14 +127,13 @@ class AuthService {
 
       return {
         success: true,
-        user: this.currentUser
+        user: this.currentUser,
       };
-
     } catch (error) {
       console.error("Email login error:", error);
       return {
         success: false,
-        error: "An unexpected error occurred during login"
+        error: "An unexpected error occurred during login",
       };
     }
   }
@@ -134,8 +145,10 @@ class AuthService {
       await this.clearAuthState();
 
       // Get role from database (primary source of truth)
-      const dbRole = await roleManagementService.getRoleForWallet(walletAddress);
-      
+      const dbRole = await roleManagementService.getRoleForWallet(
+        walletAddress
+      );
+
       if (dbRole === Role.None) {
         // Check if this wallet is the contract owner
         const isOwner = await web3Service.isContractOwner();
@@ -144,41 +157,50 @@ class AuthService {
           const initSuccess = await web3Service.initializeAdminRole();
           if (initSuccess) {
             // Create database entry for court admin
-            const assignSuccess = await roleManagementService.assignWalletToRole(
-              walletAddress,
-              Role.Court,
-              walletAddress // Self-assigned as contract owner
-            );
-            
+            const assignSuccess =
+              await roleManagementService.assignWalletToRole(
+                walletAddress,
+                Role.Court,
+                walletAddress // Self-assigned as contract owner
+              );
+
             if (assignSuccess) {
-              const courtUser = this.createWalletUser(walletAddress, Role.Court);
+              const courtUser = this.createWalletUser(
+                walletAddress,
+                Role.Court
+              );
               this.currentUser = courtUser;
               this.saveAuthState();
               this.notifyListeners();
-              
+
               return {
                 success: true,
                 user: courtUser,
-                requiresSetup: true
+                requiresSetup: true,
               };
             }
           }
         }
-        
+
         return {
           success: false,
-          error: "Wallet address not authorized. Contact administrator for access."
+          error:
+            "Wallet address not authorized. Contact administrator for access.",
         };
       }
 
       // Verify blockchain role matches database role
       const blockchainRole = await web3Service.getUserRole();
-      
+
       if (blockchainRole !== dbRole && blockchainRole !== Role.None) {
-        console.warn(`Role mismatch: Database=${dbRole}, Blockchain=${blockchainRole}`);
+        console.warn(
+          `Role mismatch: Database=${dbRole}, Blockchain=${blockchainRole}`
+        );
         toast({
           title: "Role Mismatch Detected",
-          description: `Using database role: ${getRoleTitle(dbRole)}. Blockchain role may need updating.`,
+          description: `Using database role: ${getRoleTitle(
+            dbRole
+          )}. Blockchain role may need updating.`,
           variant: "default",
         });
       }
@@ -191,14 +213,13 @@ class AuthService {
 
       return {
         success: true,
-        user: walletUser
+        user: walletUser,
       };
-
     } catch (error) {
       console.error("Wallet login error:", error);
       return {
         success: false,
-        error: "Failed to authenticate with wallet"
+        error: "Failed to authenticate with wallet",
       };
     }
   }
@@ -213,7 +234,6 @@ class AuthService {
 
       await this.clearAuthState();
       this.notifyListeners();
-
     } catch (error) {
       console.error("Logout error:", error);
       // Still clear local state even if remote logout fails
@@ -233,11 +253,13 @@ class AuthService {
     // For now, simplified role-based access
     switch (this.currentUser.role) {
       case Role.Officer:
-        return resource === 'cases' || resource === 'evidence';
+        return resource === "cases" || resource === "evidence";
       case Role.Forensic:
-        return resource === 'evidence' || resource === 'analysis';
+        return resource === "evidence" || resource === "analysis";
       case Role.Lawyer:
-        return resource === 'cases' || (resource === 'evidence' && action === 'view');
+        return (
+          resource === "cases" || (resource === "evidence" && action === "view")
+        );
       default:
         return false;
     }
@@ -256,54 +278,99 @@ class AuthService {
 
   // Initialize auth state from storage
   public async initializeFromStorage(): Promise<AuthUser | null> {
-    try {
-      const storedUser = localStorage.getItem("forensicLedgerUser");
-      if (storedUser) {
-        const userData = JSON.parse(storedUser);
-        
-        // Validate stored user data
-        if (this.isValidUserData(userData)) {
-          // For email users, verify Supabase session
-          if (userData.authType === 'email' && supabase) {
-            const { data } = await supabase.auth.getSession();
-            if (!data.session) {
-              // Session expired, clear storage
-              this.clearAuthState();
-              return null;
-            }
-          }
-
-          // For wallet users, validate role assignment still exists
-          if (userData.authType === 'wallet' && userData.address) {
-            const currentRole = await roleManagementService.getRoleForWallet(userData.address);
-            if (currentRole === Role.None) {
-              // Role revoked, clear storage
-              this.clearAuthState();
-              return null;
-            }
-            
-            // Update role if changed
-            if (currentRole !== userData.role) {
-              userData.role = currentRole;
-              userData.roleTitle = getRoleTitle(currentRole);
-            }
-          }
-
-          this.currentUser = userData;
-          this.saveAuthState(); // Update any changes
-          return this.currentUser;
-        }
-      }
-    } catch (error) {
-      console.error("Error initializing auth from storage:", error);
+    // Prevent concurrent initialization
+    if (this.initPromise) {
+      return this.initPromise;
     }
 
-    this.clearAuthState();
-    return null;
+    if (this.isInitializing) {
+      return null;
+    }
+
+    this.isInitializing = true;
+    this.initPromise = this.performInitialization();
+
+    try {
+      return await this.initPromise;
+    } finally {
+      this.isInitializing = false;
+      this.initPromise = null;
+    }
+  }
+
+  private async performInitialization(): Promise<AuthUser | null> {
+    try {
+      const storedUser = localStorage.getItem("forensicLedgerUser");
+      if (!storedUser) {
+        return null;
+      }
+
+      let userData: unknown;
+      try {
+        userData = JSON.parse(storedUser);
+      } catch {
+        console.error("Invalid stored user data");
+        await this.clearAuthState();
+        return null;
+      }
+
+      // Validate stored user data
+      if (!this.isValidUserData(userData)) {
+        await this.clearAuthState();
+        return null;
+      }
+
+      // For email users, verify Supabase session
+      if (userData.authType === "email" && supabase) {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) {
+          // Session expired, clear storage
+          await this.clearAuthState();
+          return null;
+        }
+      }
+
+      // For wallet users, validate role assignment still exists
+      if (userData.authType === "wallet" && userData.address) {
+        try {
+          const currentRole = await roleManagementService.getRoleForWallet(
+            userData.address
+          );
+          if (currentRole === Role.None) {
+            // Role revoked, clear storage
+            await this.clearAuthState();
+            return null;
+          }
+
+          // Update role if changed
+          if (currentRole !== userData.role) {
+            userData.role = currentRole;
+            userData.roleTitle = getRoleTitle(currentRole);
+          }
+        } catch (error) {
+          // Network error - allow cached user but mark for re-validation
+          console.warn(
+            "Could not verify wallet role, using cached data:",
+            error
+          );
+        }
+      }
+
+      this.currentUser = userData;
+      this.saveAuthState(); // Update any changes
+      return this.currentUser;
+    } catch (error) {
+      console.error("Error initializing auth from storage:", error);
+      await this.clearAuthState();
+      return null;
+    }
   }
 
   // Private helper methods
-  private async loadUserProfile(userId: string, email: string): Promise<AuthResult> {
+  private async loadUserProfile(
+    userId: string,
+    email: string
+  ): Promise<AuthResult> {
     if (!supabase) {
       return { success: false, error: "Database not available" };
     }
@@ -327,11 +394,10 @@ class AuthService {
         role: this.mapRoleIntToEnum(data.role),
         roleTitle: data.role_title,
         address: data.address || undefined,
-        authType: 'email'
+        authType: "email",
       };
 
       return { success: true, user };
-
     } catch (error) {
       console.error("Error loading user profile:", error);
       return { success: false, error: "Failed to load profile" };
@@ -358,7 +424,10 @@ class AuthService {
     }
   }
 
-  private async createCourtAdmin(userId: string, email: string): Promise<AuthResult> {
+  private async createCourtAdmin(
+    userId: string,
+    email: string
+  ): Promise<AuthResult> {
     if (!roleManagementService.createCourtAdminProfile) {
       return { success: false, error: "Role management not available" };
     }
@@ -385,11 +454,14 @@ class AuthService {
     return {
       id: `wallet-${walletAddress}`,
       email: `${walletAddress}@wallet.local`,
-      name: `${getRoleTitle(role)} (${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)})`,
+      name: `${getRoleTitle(role)} (${walletAddress.substring(
+        0,
+        6
+      )}...${walletAddress.substring(walletAddress.length - 4)})`,
       role,
       roleTitle: getRoleTitle(role),
       address: walletAddress,
-      authType: 'wallet'
+      authType: "wallet",
     };
   }
 
@@ -399,30 +471,36 @@ class AuthService {
     }
 
     switch (roleInt) {
-      case 1: return Role.Court;
-      case 2: return Role.Officer;
-      case 3: return Role.Forensic;
-      case 4: return Role.Lawyer;
-      default: return Role.None;
+      case 1:
+        return Role.Court;
+      case 2:
+        return Role.Officer;
+      case 3:
+        return Role.Forensic;
+      case 4:
+        return Role.Lawyer;
+      default:
+        return Role.None;
     }
   }
 
   private isValidUserData(data: unknown): data is AuthUser {
     return (
       data !== null &&
-      typeof data === 'object' &&
-      'id' in data &&
-      'email' in data &&
-      'name' in data &&
-      'role' in data &&
-      'roleTitle' in data &&
-      'authType' in data &&
-      typeof (data as Record<string, unknown>).id === 'string' &&
-      typeof (data as Record<string, unknown>).email === 'string' &&
-      typeof (data as Record<string, unknown>).name === 'string' &&
-      typeof (data as Record<string, unknown>).role === 'number' &&
-      typeof (data as Record<string, unknown>).roleTitle === 'string' &&
-      ((data as Record<string, unknown>).authType === 'email' || (data as Record<string, unknown>).authType === 'wallet')
+      typeof data === "object" &&
+      "id" in data &&
+      "email" in data &&
+      "name" in data &&
+      "role" in data &&
+      "roleTitle" in data &&
+      "authType" in data &&
+      typeof (data as Record<string, unknown>).id === "string" &&
+      typeof (data as Record<string, unknown>).email === "string" &&
+      typeof (data as Record<string, unknown>).name === "string" &&
+      typeof (data as Record<string, unknown>).role === "number" &&
+      typeof (data as Record<string, unknown>).roleTitle === "string" &&
+      ((data as Record<string, unknown>).authType === "email" ||
+        (data as Record<string, unknown>).authType === "wallet")
     );
   }
 
@@ -434,7 +512,10 @@ class AuthService {
 
   private saveAuthState(): void {
     if (this.currentUser) {
-      localStorage.setItem("forensicLedgerUser", JSON.stringify(this.currentUser));
+      localStorage.setItem(
+        "forensicLedgerUser",
+        JSON.stringify(this.currentUser)
+      );
     }
   }
 }

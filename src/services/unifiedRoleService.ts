@@ -3,9 +3,18 @@
  * Consolidates all role-related functionality and acts as a facade
  */
 
-import { Role } from '@/services/web3Service';
-import { getRoleConfig, hasPermission, isValidRole, getRoleTitle } from '@/config/roles';
-import roleManagementService, { RoleAssignment, UserProfile } from '@/services/roleManagementService';
+import { Role } from "@/services/web3Service";
+import {
+  getRoleConfig,
+  hasPermission,
+  isValidRole,
+  getRoleTitle,
+} from "@/config/roles";
+import {
+  roleManagementService,
+  RoleAssignment,
+  UserProfile,
+} from "@/services/roleManagementService";
 
 export class UnifiedRoleService {
   private static instance: UnifiedRoleService;
@@ -38,23 +47,23 @@ export class UnifiedRoleService {
   }
 
   canManageUsers(role: Role): boolean {
-    return this.hasPermission(role, 'manage', 'users');
+    return this.hasPermission(role, "manage", "users");
   }
 
   canAssignRoles(role: Role): boolean {
-    return this.hasPermission(role, 'assign', 'roles');
+    return this.hasPermission(role, "assign", "roles");
   }
 
   canCreateCases(role: Role): boolean {
-    return this.hasPermission(role, 'create', 'cases');
+    return this.hasPermission(role, "create", "cases");
   }
 
   canUploadEvidence(role: Role): boolean {
-    return this.hasPermission(role, 'upload', 'evidence');
+    return this.hasPermission(role, "upload", "evidence");
   }
 
   canAnalyzeEvidence(role: Role): boolean {
-    return this.hasPermission(role, 'analyze', 'evidence');
+    return this.hasPermission(role, "analyze", "evidence");
   }
 
   // Database Operations (delegated to roleManagementService)
@@ -74,7 +83,11 @@ export class UnifiedRoleService {
     if (!this.isValidRole(role) || role === Role.None) {
       return false;
     }
-    return roleManagementService.assignWalletToRole(walletAddress, role, assignedBy);
+    return roleManagementService.assignWalletToRole(
+      walletAddress,
+      role,
+      assignedBy
+    );
   }
 
   async revokeWalletAssignment(walletAddress: string): Promise<boolean> {
@@ -87,13 +100,9 @@ export class UnifiedRoleService {
 
   async linkWalletToProfile(
     userId: string,
-    walletAddress: string,
-    role: Role
+    walletAddress: string
   ): Promise<boolean> {
-    if (!this.isValidRole(role)) {
-      return false;
-    }
-    return roleManagementService.linkWalletToProfile(userId, walletAddress, role);
+    return roleManagementService.linkWalletToProfile(userId, walletAddress);
   }
 
   // Role Validation
