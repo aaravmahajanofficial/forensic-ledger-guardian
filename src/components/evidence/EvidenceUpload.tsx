@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { appConfig } from "@/config/appConfig";
 import { 
   Upload, 
   FileCheck, 
@@ -21,7 +22,7 @@ import web3Service, { Case, EvidenceType } from '@/services/web3Service';
 import { useWeb3 } from '@/contexts/Web3Context';
 
 // Backend URL for IPFS + server-side on-chain submission. Override with Vite env `VITE_IPFS_BACKEND_URL` if present.
-const IPFS_BACKEND_URL = (import.meta.env && (import.meta.env.VITE_IPFS_BACKEND_URL as string)) || 'http://localhost:4000';
+const backendUrl = appConfig.backendUrl;
 
 
 const EvidenceUpload = () => {
@@ -34,51 +35,43 @@ const EvidenceUpload = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isLoadingCases, setIsLoadingCases] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
- 
 
   const { isConnected } = useWeb3();
 
   useEffect(() => {
     const fetchCases = async () => {
-      // Create a dummy default case for development or when web3 is not connected
-      const DEFAULT_CASE: Case = {
-        caseId: 'DEFAULT-CASE',
-        title: 'Default Case (Demo)',
-        description: 'Auto-generated default case for evidence upload during development',
-        createdBy: '0x0000000000000000000000000000000000000000',
-        seal: false,
-        open: true,
-        tags: ['default', 'demo'],
-        evidenceCount: 0,
-      };
-
       if (!isConnected) {
-        console.log('Web3 not connected, using default case');
-        setCases([DEFAULT_CASE]);
-        setSelectedCase(DEFAULT_CASE.caseId);
+        setCases([]);
         return;
       }
-
+      
+      setIsLoadingCases(true);
       try {
         const allCases = await web3Service.getAllCases();
         if (!allCases || allCases.length === 0) {
-          console.log('No cases found, using default case');
-          setCases([DEFAULT_CASE]);
-          setSelectedCase(DEFAULT_CASE.caseId);
-        } else {
-          setCases(allCases);
+          setCases([]);
+          return;
         }
+
+        setCases(allCases);
       } catch (error) {
-        console.error('Error fetching cases:', error);
-        // Fall back to default case on error
-        setCases([DEFAULT_CASE]);
-        setSelectedCase(DEFAULT_CASE.caseId);
+        console.error('Error loading cases:', error);
+        toast({
+          title: "Error loading cases",
+          description: "Could not fetch cases from blockchain.",
+          variant: "destructive",
+        });
+        setCases([]);
+      } finally {
+        setIsLoadingCases(false);
       }
     };
+
     fetchCases();
-  }, [isConnected]);
+  }, [isConnected, toast]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -95,14 +88,6 @@ const EvidenceUpload = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
-  };
-
-  const calculateHash = async (file: File): Promise<string> => {
-    const buffer = await file.arrayBuffer();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return hashHex;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -135,21 +120,21 @@ const EvidenceUpload = () => {
         const progress = Math.round(((i + 1) / files.length) * 100);
         setUploadProgress(progress);
 
-        const hash = await calculateHash(file);
-        const evidenceId = `${selectedCase}-${Date.now()}-${i}`;
-
         // Prepare form data for backend upload which handles encryption, pinning to Pinata,
         // off-chain storage (Supabase) and on-chain recording using a server wallet.
         const form = new FormData();
         form.append('file', file, file.name);
-        form.append('evidenceId', evidenceId);
         form.append('evidenceType', String(evidenceType));
         form.append('caseId', selectedCase);
+        if (description.trim()) form.append("description", description);
+        if (deviceSource.trim()) form.append("deviceSource", deviceSource);
+        if (location.trim()) form.append("location", location);
+
 
         // Use the simple backend upload route used by the local dev server
         // (server.js accepts POST /upload with form fields: file, caseId, evidenceId, evidenceType)
 
-        const resp = await fetch(`${IPFS_BACKEND_URL}/case/${selectedCase}/upload`, {
+        const resp = await fetch(`${backendUrl}/case/${selectedCase}/upload`, {
           method: 'POST',
           body: form,
         });
@@ -161,7 +146,9 @@ const EvidenceUpload = () => {
 
         const data = await resp.json();
         // data.cid contains the Pinata CID returned by backend
-        console.log('Uploaded to IPFS backend, cid:', data.cid);
+        console.log(
+          `Uploaded → CID: ${data.cid}, Evidence ID: ${data.evidenceId}`
+        );
       }
 
       toast({
@@ -173,9 +160,11 @@ const EvidenceUpload = () => {
       // Reset form
       setFiles([]);
       setDescription('');
+      setDeviceSource('');
+      setLocation('');
       setUploadProgress(0);
     } catch (error) {
-      console.error('Upload error:', error);
+      //console.error('Upload error:', error);
       toast({
         title: 'Upload failed',
         description: (error as Error).message || 'There was a problem uploading your evidence',
@@ -207,21 +196,36 @@ const EvidenceUpload = () => {
             {/* Case Selection */}
             <div className="space-y-2">
               <Label htmlFor="caseId">Select Case</Label>
-              <Select value={selectedCase} onValueChange={setSelectedCase}>
-                <SelectTrigger id="caseId" className="border-forensic-200">
-                  <SelectValue placeholder="Select a case" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cases.map((caseItem) => (
-                    <SelectItem key={caseItem.caseId} value={caseItem.caseId}>
-                      <div className="flex items-center">
-                        <FolderKanban className="mr-2 h-4 w-4 text-forensic-accent" />
-                        <span>{caseItem.caseId}: {caseItem.title}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {!isConnected ? (
+                <div className="p-3 bg-forensic-50 border border-forensic-200 rounded-md text-sm text-forensic-600">
+                  Please connect your wallet to view available cases
+                </div>
+              ) : isLoadingCases ? (
+                <div className="p-3 bg-forensic-50 border border-forensic-200 rounded-md text-sm text-forensic-600 flex items-center">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading cases from blockchain...
+                </div>
+              ) : cases.length === 0 ? (
+                <div className="p-3 bg-forensic-50 border border-forensic-200 rounded-md text-sm text-forensic-600">
+                  No cases found on-chain
+                </div>
+              ) : (
+                <Select value={selectedCase} onValueChange={setSelectedCase}>
+                  <SelectTrigger id="caseId" className="border-forensic-200">
+                    <SelectValue placeholder="Select a case" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cases.map((caseItem) => (
+                      <SelectItem key={caseItem.caseId} value={caseItem.caseId}>
+                        <div className="flex items-center">
+                          <FolderKanban className="mr-2 h-4 w-4 text-forensic-accent" />
+                          <span>{caseItem.caseId}: {caseItem.title}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             {/* Evidence Type */}
@@ -348,7 +352,7 @@ const EvidenceUpload = () => {
                         <Button
                           type="button"
                           variant="ghost"
-                          size="sm"
+                          size="sm" 
                           onClick={() => removeFile(index)}
                           className="h-8 w-8 p-0 text-forensic-500 hover:text-forensic-danger"
                         >

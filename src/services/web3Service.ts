@@ -1,18 +1,1161 @@
 import { ethers, toUtf8Bytes } from "ethers";
 import { toast } from "@/hooks/use-toast";
-import abi from '../../ipfs-backend/ForensicChainABI.json'
 
-const CONTRACT_ABI = abi;
+const CONTRACT_ABI = [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        },
+        {
+          "indexed": true,
+          "internalType": "string",
+          "name": "firId",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        }
+      ],
+      "name": "CaseCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "statusSealed",
+          "type": "bool"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "open",
+          "type": "bool"
+        }
+      ],
+      "name": "CaseStatusChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "index",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "accessor",
+          "type": "address"
+        }
+      ],
+      "name": "EvidenceAccessed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "index",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "confirmer",
+          "type": "address"
+        }
+      ],
+      "name": "EvidenceConfirmed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "evidenceId",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "cid",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "submitter",
+          "type": "address"
+        }
+      ],
+      "name": "EvidenceSubmitted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "string",
+          "name": "firId",
+          "type": "string"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "filedBy",
+          "type": "address"
+        }
+      ],
+      "name": "FIRFiled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "enum ForensicChain.Role",
+          "name": "role",
+          "type": "uint8"
+        }
+      ],
+      "name": "RoleAssigned",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "index",
+          "type": "uint256"
+        }
+      ],
+      "name": "accessEvidence",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "internalType": "enum ForensicChain.Role",
+          "name": "role",
+          "type": "uint8"
+        }
+      ],
+      "name": "assignCaseRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "caseAuditTrail",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "caseIds",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "caseRoles",
+      "outputs": [
+        {
+          "internalType": "enum ForensicChain.Role",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "name": "cases",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "createdBy",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "seal",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "open",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "evidenceCount",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        }
+      ],
+      "name": "closeCase",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "containerId",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "index",
+          "type": "uint256"
+        }
+      ],
+      "name": "confirmEvidence",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "firId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "string[]",
+          "name": "tags",
+          "type": "string[]"
+        }
+      ],
+      "name": "createCaseFromFIR",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "evidenceAccessed",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "evidenceConfirmed",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "name": "evidenceCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "evidenceMapping",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "evidenceId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "cid",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "hashOriginal",
+          "type": "string"
+        },
+        {
+          "internalType": "enum ForensicChain.EvidenceType",
+          "name": "evidenceType",
+          "type": "uint8"
+        },
+        {
+          "internalType": "address",
+          "name": "submittedBy",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "confirmed",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "submittedAt",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "firId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        }
+      ],
+      "name": "fileFIR",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "name": "firs",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "firId",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "filedBy",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "promotedToCase",
+          "type": "bool"
+        },
+        {
+          "internalType": "string",
+          "name": "associatedCaseId",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getAllCases",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "caseId",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "description",
+              "type": "string"
+            },
+            {
+              "internalType": "address",
+              "name": "createdBy",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "seal",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "open",
+              "type": "bool"
+            },
+            {
+              "internalType": "string[]",
+              "name": "tags",
+              "type": "string[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "evidenceCount",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct ForensicChain.Case[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        }
+      ],
+      "name": "getCase",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "caseId",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "description",
+              "type": "string"
+            },
+            {
+              "internalType": "address",
+              "name": "createdBy",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "seal",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "open",
+              "type": "bool"
+            },
+            {
+              "internalType": "string[]",
+              "name": "tags",
+              "type": "string[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "evidenceCount",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct ForensicChain.Case",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "containerId",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "index",
+          "type": "uint256"
+        }
+      ],
+      "name": "getEvidence",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "evidenceId",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "cid",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "hashOriginal",
+              "type": "string"
+            },
+            {
+              "internalType": "enum ForensicChain.EvidenceType",
+              "name": "evidenceType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "address",
+              "name": "submittedBy",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "confirmed",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "submittedAt",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address[]",
+              "name": "chainOfCustody",
+              "type": "address[]"
+            }
+          ],
+          "internalType": "struct ForensicChain.Evidence",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "containerId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "evidenceId",
+          "type": "string"
+        }
+      ],
+      "name": "getEvidenceById",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "evidenceId",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "cid",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "hashOriginal",
+              "type": "string"
+            },
+            {
+              "internalType": "enum ForensicChain.EvidenceType",
+              "name": "evidenceType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "address",
+              "name": "submittedBy",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "confirmed",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "submittedAt",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address[]",
+              "name": "chainOfCustody",
+              "type": "address[]"
+            }
+          ],
+          "internalType": "struct ForensicChain.Evidence",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "firId",
+          "type": "string"
+        }
+      ],
+      "name": "getFIR",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "firId",
+              "type": "string"
+            },
+            {
+              "internalType": "address",
+              "name": "filedBy",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "description",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "promotedToCase",
+              "type": "bool"
+            },
+            {
+              "internalType": "string",
+              "name": "associatedCaseId",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct ForensicChain.FIR",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "getGlobalRole",
+      "outputs": [
+        {
+          "internalType": "enum ForensicChain.Role",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        }
+      ],
+      "name": "getMyRoleInCase",
+      "outputs": [
+        {
+          "internalType": "enum ForensicChain.Role",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "globalRoles",
+      "outputs": [
+        {
+          "internalType": "enum ForensicChain.Role",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isSystemLocked",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        }
+      ],
+      "name": "reopenCase",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        }
+      ],
+      "name": "sealCase",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "internalType": "enum ForensicChain.Role",
+          "name": "role",
+          "type": "uint8"
+        }
+      ],
+      "name": "setGlobalRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "evidenceId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "cid",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "hashOriginal",
+          "type": "string"
+        },
+        {
+          "internalType": "enum ForensicChain.EvidenceType",
+          "name": "evidenceType",
+          "type": "uint8"
+        }
+      ],
+      "name": "submitCaseEvidence",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "firId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "evidenceId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "cid",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "hashOriginal",
+          "type": "string"
+        },
+        {
+          "internalType": "enum ForensicChain.EvidenceType",
+          "name": "evidenceType",
+          "type": "uint8"
+        }
+      ],
+      "name": "submitFIREvidence",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "toggleSystemLock",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "usedCIDHash",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "caseId",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "index",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "providedHash",
+          "type": "string"
+        }
+      ],
+      "name": "verifyEvidence",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+;
 
-// // Network-specific contract addresses
-// const CONTRACT_ADDRESSES: Record<string, string> = {
-//   "0xaa36a7": "0xf95af9ef3f9cdbd39cc3847707285dc90022104a", // Sepolia testnet
-//   "0x7a69": "0xf95af9ef3f9cdbd39cc3847707285dc90022104a", // Anvil local
-//   "0x1": "0x0000000000000000000000000000000000000000", // Mainnet (placeholder)
-// };
+// Network-specific contract addresses
+const CONTRACT_ADDRESSES: Record<string, string> = {
+  "0xaa36a7": "0xf95af9ef3f9cdbd39cc3847707285dc90022104a", // Sepolia testnet
+  "0x7a69": "0xf95af9ef3f9cdbd39cc3847707285dc90022104a", // Anvil local
+  "0x1": "0x0000000000000000000000000000000000000000", // Mainnet (placeholder)
+};
 
 // Default contract address (Sepolia)
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
+const CONTRACT_ADDRESS = "0xf95af9ef3f9cdbd39cc3847707285dc90022104a";
 
 export enum Role {
   None = 0,
@@ -658,18 +1801,13 @@ class Web3Service {
 
   public async accessEvidence(
     caseId: string,
-    index: number,
-    keyHash: string
+    index: number
   ): Promise<string | null> {
     if (!this.contract) return null;
 
     try {
-      const cidEncrypted = await this.contract.accessEvidence(
-        caseId,
-        index,
-        toUtf8Bytes(keyHash)
-      );
-      return cidEncrypted;
+      const cid = await this.contract.accessEvidence(caseId, index);
+      return cid;
     } catch (error) {
       console.error(`Error accessing evidence index ${index}:`, error);
       toast({

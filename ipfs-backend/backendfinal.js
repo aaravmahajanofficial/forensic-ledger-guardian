@@ -13,6 +13,7 @@ import { ethers } from "ethers";
 import fs from "fs";
 import path from "path";
 import url from "url";
+import e from "express";
 
 const pipeline = promisify(stream.pipeline);
 
@@ -273,7 +274,10 @@ app.post("/fir/:firId/upload", upload.single("file"), async (req, res) => {
       "UPLOAD: Raw FIR ID chars:",
       Array.from(firId).map((c) => c.charCodeAt(0))
     );
-    const { evidenceId, evidenceType, description } = req.body;
+    const { evidenceType } = req.body;
+    const evidenceId = crypto.randomUUID();
+
+    const { description = null, deviceSource = null, location = null } = req.body;
     const file = req.file;
     const evidenceTypeNum = EvidenceType[evidenceType];
     console.log(evidenceType);
@@ -281,10 +285,8 @@ app.post("/fir/:firId/upload", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "Invalid evidenceType" });
     }
 
-    if (!file || !evidenceId || !evidenceType)
-      return res.status(400).json({ error: "Missing required data" });
-    if (!ALLOWED_MIME.includes(file.mimetype))
-      return res.status(400).json({ error: "File type not allowed" });
+    if (!file || !evidenceId || evidenceType===undefined) return res.status(400).json({ error: "Missing required data" });
+    if (!ALLOWED_MIME.includes(file.mimetype)) return res.status(400).json({ error: "File type not allowed" });
 
     // Encrypt file with random AES key
     const key = crypto.randomBytes(32);
@@ -329,20 +331,19 @@ app.post("/fir/:firId/upload", upload.single("file"), async (req, res) => {
     const ivEncrypted = iv.toString("hex");
 
     // Store key/IV off-chain
-    const { error } = await supabase.from("evidence1").upsert([
-      {
-        container_id: firId,
-        evidence_id: evidenceId,
-        cid: cid,
-        hash_original: hashOriginal,
-        original_filename: file.originalname,
-        key_encrypted: keyEncrypted,
-        iv_encrypted: ivEncrypted,
-        description: description,
-        type: evidenceType,
-        submitted_by: wallet.address,
-      },
-    ]);
+    const { error } = await supabase.from("evidence1").insert([{
+      container_id: firId,
+      evidence_id: evidenceId,
+      cid: cid,
+      hash_original: hashOriginal,
+      original_filename: file.originalname,
+      key_encrypted: keyEncrypted,
+      iv_encrypted: ivEncrypted,
+      type: evidenceType,
+      description: description || null,
+      device_source: deviceSource || null,
+      collection_location: location || null
+    }] );
 
     if (error) return res.status(500).json({ error: error.message });
 
@@ -366,10 +367,7 @@ app.post("/fir/:firId/upload", upload.single("file"), async (req, res) => {
       return res.status(500).json({ error: err.reason || err.message });
     }
 
-    console.log(
-      "On-chain evidenceCount for this FIR:",
-      (await contract.evidenceCount(firId)).toString()
-    );
+    res.json({ message: "FIR evidence uploaded and recorded on-chain", cid, evidenceId, filename: file.originalname });
 
     res.json({
       message: "FIR evidence uploaded and recorded on-chain",
@@ -472,17 +470,18 @@ app.post("/fir/:firId/promote", async (req, res) => {
 app.post("/case/:caseId/upload", upload.single("file"), async (req, res) => {
   try {
     const { caseId } = req.params;
-    const { evidenceId, evidenceType } = req.body;
+    const {evidenceType } = req.body;
+    const evidenceId = crypto.randomUUID();
+
+    const { description = null, deviceSource = null, location = null } = req.body;
     const file = req.file;
     const evidenceTypeNum = EvidenceType[evidenceType];
     if (evidenceTypeNum === undefined) {
       return res.status(400).json({ error: "Invalid evidenceType" });
     }
 
-    if (!file || !evidenceId || !evidenceType)
-      return res.status(400).json({ error: "Missing required data" });
-    if (!ALLOWED_MIME.includes(file.mimetype))
-      return res.status(400).json({ error: "File type not allowed" });
+    if (!file || !evidenceId || evidenceType===undefined) return res.status(400).json({ error: "Missing required data" });
+    if (!ALLOWED_MIME.includes(file.mimetype)) return res.status(400).json({ error: "File type not allowed" });
 
     const key = crypto.randomBytes(32);
     const iv = crypto.randomBytes(16);
@@ -522,17 +521,18 @@ app.post("/case/:caseId/upload", upload.single("file"), async (req, res) => {
     ]).toString("hex");
     const ivEncrypted = iv.toString("hex");
 
-    const { error } = await supabase.from("evidence1").upsert([
-      {
-        container_id: caseId,
-        evidence_id: evidenceId,
-        cid: cid,
-        hash_original: hashOriginal,
-        original_filename: file.originalname,
-        key_encrypted: keyEncrypted,
-        iv_encrypted: ivEncrypted,
-      },
-    ]);
+    const { error } = await supabase.from("evidence1").insert([{
+      container_id: caseId,
+      evidence_id: evidenceId,
+      cid: cid,
+      hash_original: hashOriginal,
+      original_filename: file.originalname,
+      key_encrypted: keyEncrypted,
+      iv_encrypted: ivEncrypted,
+      description: description || null,
+      device_source: deviceSource || null,
+      collection_location: location || null
+    }] );
 
     if (error) return res.status(500).json({ error: error.message });
 
@@ -545,11 +545,8 @@ app.post("/case/:caseId/upload", upload.single("file"), async (req, res) => {
     );
     await tx.wait();
 
-    res.json({
-      message: "Case evidence uploaded and recorded on-chain",
-      cid,
-      filename: file.originalname,
-    });
+    res.json({ message: "Case evidence uploaded and recorded on-chain", cid,evidenceId, filename: file.originalname });
+
   } catch (err) {
     console.error(err);
     res
