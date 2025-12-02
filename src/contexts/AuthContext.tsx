@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import authService, { AuthUser } from "@/services/authService";
+import authService, { AuthUser, AuthErrorCode } from "@/services/authService";
 import { Role } from "@/services/web3Service";
 
 // Re-export for backward compatibility
@@ -64,10 +64,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setIsLoading(true);
     try {
       const result = await authService.loginWithEmail(email, password);
-      
+
       if (result.success && result.user) {
         setUser(result.user);
-        
+
         toast({
           title: "Login Successful",
           description: `Welcome back, ${result.user.name}`,
@@ -78,11 +78,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         } else {
           navigate("/dashboard");
         }
-        
+
         return true;
       } else {
+        // Use error code for better UX if available
+        const isNetworkError = result.errorCode === AuthErrorCode.NETWORK_ERROR;
         toast({
-          title: "Login Failed",
+          title: isNetworkError ? "Connection Error" : "Login Failed",
           description: result.error || "Invalid credentials",
           variant: "destructive",
         });
@@ -92,7 +94,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       console.error("Login error:", error);
       toast({
         title: "Login Failed",
-        description: "An unexpected error occurred",
+        description: authService.getErrorMessage(AuthErrorCode.UNKNOWN_ERROR),
         variant: "destructive",
       });
       return false;
@@ -105,10 +107,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setIsLoading(true);
     try {
       const result = await authService.loginWithWallet(walletAddress);
-      
+
       if (result.success && result.user) {
         setUser(result.user);
-        
+
         toast({
           title: "Authentication Successful",
           description: `Welcome, ${result.user.roleTitle}!`,
@@ -119,11 +121,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         } else {
           navigate("/dashboard");
         }
-        
+
         return true;
       } else {
+        // Use error code for better UX if available
+        const isNetworkError = result.errorCode === AuthErrorCode.NETWORK_ERROR;
+        const isNotAuthorized =
+          result.errorCode === AuthErrorCode.WALLET_NOT_AUTHORIZED;
+
         toast({
-          title: "Authentication Failed",
+          title: isNetworkError
+            ? "Connection Error"
+            : isNotAuthorized
+            ? "Access Denied"
+            : "Authentication Failed",
           description: result.error || "Wallet not authorized",
           variant: "destructive",
         });
@@ -133,7 +144,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       console.error("Wallet authentication error:", error);
       toast({
         title: "Authentication Failed",
-        description: "Could not authenticate with wallet",
+        description: authService.getErrorMessage(AuthErrorCode.UNKNOWN_ERROR),
         variant: "destructive",
       });
       return false;
@@ -146,12 +157,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     try {
       await authService.logout();
       setUser(null);
-      
+
       toast({
         title: "Logged Out",
         description: "You have been logged out successfully",
       });
-      
+
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);

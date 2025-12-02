@@ -18,8 +18,41 @@ export interface AuthResult {
   success: boolean;
   user?: AuthUser;
   error?: string;
+  errorCode?: AuthErrorCode;
   requiresSetup?: boolean;
 }
+
+// Standard error codes for better error handling
+export enum AuthErrorCode {
+  SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE",
+  INVALID_CREDENTIALS = "INVALID_CREDENTIALS",
+  PROFILE_NOT_FOUND = "PROFILE_NOT_FOUND",
+  WALLET_NOT_AUTHORIZED = "WALLET_NOT_AUTHORIZED",
+  NETWORK_ERROR = "NETWORK_ERROR",
+  SESSION_EXPIRED = "SESSION_EXPIRED",
+  ROLE_SYNC_FAILED = "ROLE_SYNC_FAILED",
+  UNKNOWN_ERROR = "UNKNOWN_ERROR",
+}
+
+// User-friendly error messages
+const ERROR_MESSAGES: Record<AuthErrorCode, string> = {
+  [AuthErrorCode.SERVICE_UNAVAILABLE]:
+    "Authentication service is currently unavailable. Please try again later.",
+  [AuthErrorCode.INVALID_CREDENTIALS]:
+    "Invalid email or password. Please check your credentials and try again.",
+  [AuthErrorCode.PROFILE_NOT_FOUND]:
+    "User profile not found. Please contact your administrator for access.",
+  [AuthErrorCode.WALLET_NOT_AUTHORIZED]:
+    "This wallet is not authorized. Please contact an administrator to request access.",
+  [AuthErrorCode.NETWORK_ERROR]:
+    "Network error. Please check your connection and try again.",
+  [AuthErrorCode.SESSION_EXPIRED]:
+    "Your session has expired. Please log in again.",
+  [AuthErrorCode.ROLE_SYNC_FAILED]:
+    "Failed to sync your role. Please try reconnecting or contact support.",
+  [AuthErrorCode.UNKNOWN_ERROR]:
+    "An unexpected error occurred. Please try again.",
+};
 
 class AuthService {
   private static instance: AuthService;
@@ -35,6 +68,11 @@ class AuthService {
       AuthService.instance = new AuthService();
     }
     return AuthService.instance;
+  }
+
+  // Get user-friendly error message
+  public getErrorMessage(code: AuthErrorCode): string {
+    return ERROR_MESSAGES[code] || ERROR_MESSAGES[AuthErrorCode.UNKNOWN_ERROR];
   }
 
   // Subscribe to auth state changes
@@ -61,6 +99,18 @@ class AuthService {
     return this.currentUser;
   }
 
+  // Helper to create standardized error result
+  private createErrorResult(
+    code: AuthErrorCode,
+    customMessage?: string
+  ): AuthResult {
+    return {
+      success: false,
+      error: customMessage || this.getErrorMessage(code),
+      errorCode: code,
+    };
+  }
+
   // Email/password authentication
   public async loginWithEmail(
     email: string,
@@ -68,10 +118,15 @@ class AuthService {
   ): Promise<AuthResult> {
     try {
       if (!supabase) {
-        return {
-          success: false,
-          error: "Authentication service not configured",
-        };
+        return this.createErrorResult(AuthErrorCode.SERVICE_UNAVAILABLE);
+      }
+
+      // Validate input
+      if (!email || !password) {
+        return this.createErrorResult(
+          AuthErrorCode.INVALID_CREDENTIALS,
+          "Email and password are required."
+        );
       }
 
       // Clear any existing authentication state
@@ -83,17 +138,24 @@ class AuthService {
       });
 
       if (error) {
-        return {
-          success: false,
-          error: error.message,
-        };
+        // Map Supabase errors to our error codes
+        if (error.message.includes("Invalid login credentials")) {
+          return this.createErrorResult(AuthErrorCode.INVALID_CREDENTIALS);
+        }
+        if (
+          error.message.includes("network") ||
+          error.message.includes("fetch")
+        ) {
+          return this.createErrorResult(AuthErrorCode.NETWORK_ERROR);
+        }
+        return this.createErrorResult(
+          AuthErrorCode.UNKNOWN_ERROR,
+          error.message
+        );
       }
 
       if (!data.user) {
-        return {
-          success: false,
-          error: "Authentication failed",
-        };
+        return this.createErrorResult(AuthErrorCode.INVALID_CREDENTIALS);
       }
 
       // Load user profile
@@ -115,10 +177,7 @@ class AuthService {
 
         // Clean up failed authentication
         await supabase.auth.signOut();
-        return {
-          success: false,
-          error: "User profile not found. Contact administrator for access.",
-        };
+        return this.createErrorResult(AuthErrorCode.PROFILE_NOT_FOUND);
       }
 
       this.currentUser = profileResult.user!;
@@ -131,40 +190,65 @@ class AuthService {
       };
     } catch (error) {
       console.error("Email login error:", error);
-      return {
-        success: false,
-        error: "An unexpected error occurred during login",
-      };
+      // Check for network-related errors
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        return this.createErrorResult(AuthErrorCode.NETWORK_ERROR);
+      }
+      return this.createErrorResult(AuthErrorCode.UNKNOWN_ERROR);
     }
   }
 
   // MetaMask wallet authentication
   public async loginWithWallet(walletAddress: string): Promise<AuthResult> {
     try {
+      // Validate wallet address format
+      if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+        return this.createErrorResult(
+          AuthErrorCode.WALLET_NOT_AUTHORIZED,
+          "Invalid wallet address format."
+        );
+      }
+
       // Clear any existing authentication state
       await this.clearAuthState();
 
       // Get role from database (primary source of truth)
-      const dbRole = await roleManagementService.getRoleForWallet(
-        walletAddress
-      );
+      let dbRole: Role;
+      try {
+        dbRole = await roleManagementService.getRoleForWallet(walletAddress);
+      } catch (error) {
+        console.error("Error fetching wallet role:", error);
+        return this.createErrorResult(
+          AuthErrorCode.NETWORK_ERROR,
+          "Could not verify wallet authorization. Please try again."
+        );
+      }
 
       if (dbRole === Role.None) {
         // Check if this wallet is the contract owner
-        const isOwner = await web3Service.isContractOwner();
+        let isOwner = false;
+        try {
+          isOwner = await web3Service.isContractOwner();
+        } catch (error) {
+          console.error("Error checking contract owner:", error);
+          return this.createErrorResult(
+            AuthErrorCode.NETWORK_ERROR,
+            "Could not verify contract ownership. Please try again."
+          );
+        }
+
         if (isOwner) {
           // Initialize admin role
           const initSuccess = await web3Service.initializeAdminRole();
           if (initSuccess) {
             // Create database entry for court admin
-            const assignSuccess =
-              await roleManagementService.assignWalletToRole(
-                walletAddress,
-                Role.Court,
-                walletAddress // Self-assigned as contract owner
-              );
+            const assignResult = await roleManagementService.assignWalletToRole(
+              walletAddress,
+              Role.Court,
+              walletAddress // Self-assigned as contract owner
+            );
 
-            if (assignSuccess) {
+            if (assignResult.success) {
               const courtUser = this.createWalletUser(
                 walletAddress,
                 Role.Court
@@ -182,27 +266,27 @@ class AuthService {
           }
         }
 
-        return {
-          success: false,
-          error:
-            "Wallet address not authorized. Contact administrator for access.",
-        };
+        return this.createErrorResult(AuthErrorCode.WALLET_NOT_AUTHORIZED);
       }
 
-      // Verify blockchain role matches database role
-      const blockchainRole = await web3Service.getUserRole();
-
-      if (blockchainRole !== dbRole && blockchainRole !== Role.None) {
-        console.warn(
-          `Role mismatch: Database=${dbRole}, Blockchain=${blockchainRole}`
-        );
-        toast({
-          title: "Role Mismatch Detected",
-          description: `Using database role: ${getRoleTitle(
-            dbRole
-          )}. Blockchain role may need updating.`,
-          variant: "default",
-        });
+      // Verify blockchain role matches database role (informational only)
+      try {
+        const blockchainRole = await web3Service.getUserRole();
+        if (blockchainRole !== dbRole && blockchainRole !== Role.None) {
+          console.warn(
+            `Role mismatch: Database=${dbRole}, Blockchain=${blockchainRole}`
+          );
+          toast({
+            title: "Role Mismatch Detected",
+            description: `Using database role: ${getRoleTitle(
+              dbRole
+            )}. Blockchain role may need updating.`,
+            variant: "default",
+          });
+        }
+      } catch (error) {
+        // Non-fatal: just log the error and continue with database role
+        console.warn("Could not verify blockchain role:", error);
       }
 
       // Use database role as authoritative
@@ -217,10 +301,14 @@ class AuthService {
       };
     } catch (error) {
       console.error("Wallet login error:", error);
-      return {
-        success: false,
-        error: "Failed to authenticate with wallet",
-      };
+      // Check for network-related errors
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        return this.createErrorResult(AuthErrorCode.NETWORK_ERROR);
+      }
+      return this.createErrorResult(
+        AuthErrorCode.UNKNOWN_ERROR,
+        "Failed to authenticate with wallet. Please try again."
+      );
     }
   }
 

@@ -25,9 +25,7 @@ import {
   FileCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/AuthContext";
-import { useWeb3 } from "@/contexts/Web3Context";
-import { Role } from "@/services/web3Service";
+import { useEffectiveAuth } from "@/hooks/useEffectiveAuth";
 
 // Case data type
 type CaseData = {
@@ -82,13 +80,8 @@ const mockCases: CaseData[] = [
 
 const CaseList: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { userRole } = useWeb3();
+  const { canCreateCases } = useEffectiveAuth();
   const [cases, setCases] = React.useState<CaseData[]>([]);
-
-  // Only Court can create cases (not Officer)
-  // Check both AuthContext (email auth) and Web3Context (wallet auth)
-  const canCreateCase = user?.role === Role.Court || userRole === Role.Court;
 
   React.useEffect(() => {
     try {
@@ -140,7 +133,7 @@ const CaseList: React.FC = () => {
         <h1 className="text-2xl font-bold text-forensic-800">
           Case Management
         </h1>
-        {canCreateCase && (
+        {canCreateCases && (
           <Button
             onClick={handleNewCase}
             className="bg-forensic-accent hover:bg-forensic-accent/90"

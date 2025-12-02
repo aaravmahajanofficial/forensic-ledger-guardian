@@ -221,109 +221,107 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({
     }
   }, [account]);
 
-  // Handle account changes
-  const handleAccountsChanged = useCallback((accounts: string[]) => {
-    if (accounts.length === 0) {
-      setAccount(null);
-      setIsConnected(false);
-      setUserRole(Role.None);
-      setBalance("0.0");
-      console.log("Web3Context: Account disconnected");
-    } else {
-      const newAccount = accounts[0];
-      console.log("Web3Context: Account changed to:", newAccount);
-      setAccount(newAccount);
-      setIsConnected(true);
+  // Fetch and update role for a given account
+  const fetchAndSetRole = useCallback(async (targetAccount: string) => {
+    try {
+      console.log("Web3Context: Fetching fresh role data for:", targetAccount);
 
-      // Reset role to None initially, then fetch the actual role
-      setUserRole(Role.None);
+      // Use blockchain role as the source of truth
+      const blockchainRole = await web3Service.getUserRole();
+      console.log(
+        "Web3Context: Blockchain role:",
+        web3Service.getRoleString(blockchainRole)
+      );
 
-      // Update role when account changes - use blockchain first approach
-      setTimeout(async () => {
-        try {
-          // Clear any cached role data first
-          console.log("Web3Context: Fetching fresh role data for:", newAccount);
-
-          // Use blockchain role as the source of truth
-          const blockchainRole = await web3Service.getUserRole();
+      if (blockchainRole === Role.None) {
+        // Check if user is contract owner
+        const isOwner = await web3Service.isContractOwner();
+        if (isOwner) {
           console.log(
-            "Web3Context: Blockchain role:",
-            web3Service.getRoleString(blockchainRole)
+            "Web3Context: Contract owner detected, initializing admin role..."
+          );
+          const initSuccess = await web3Service.initializeAdminRole();
+          if (initSuccess) {
+            const newRole = await web3Service.getUserRole();
+            setUserRole(newRole);
+            console.log(
+              "Web3Context: Admin role initialized, role:",
+              web3Service.getRoleString(newRole)
+            );
+            return;
+          }
+        }
+
+        // Check database for role and try to sync
+        try {
+          const { roleManagementService } = await import(
+            "@/services/roleManagementService"
+          );
+          const dbRole = await roleManagementService.getRoleForWallet(
+            targetAccount
           );
 
-          if (blockchainRole === Role.None) {
-            // Check if user is contract owner
-            const isOwner = await web3Service.isContractOwner();
-            if (isOwner) {
+          if (dbRole !== Role.None) {
+            console.log(
+              "Web3Context: Found database role:",
+              web3Service.getRoleString(dbRole),
+              "but blockchain role is None. Attempting to sync..."
+            );
+
+            // Try to sync role (this will only work if current user has permission)
+            const syncSuccess = await web3Service.syncUserRole(
+              targetAccount,
+              dbRole
+            );
+            if (syncSuccess) {
+              const updatedRole = await web3Service.getUserRole();
+              setUserRole(updatedRole);
               console.log(
-                "Web3Context: Contract owner detected, initializing admin role..."
+                "Web3Context: Role synced successfully:",
+                web3Service.getRoleString(updatedRole)
               );
-              const initSuccess = await web3Service.initializeAdminRole();
-              if (initSuccess) {
-                const newRole = await web3Service.getUserRole();
-                setUserRole(newRole);
-                console.log(
-                  "Web3Context: Admin role initialized, role:",
-                  web3Service.getRoleString(newRole)
-                );
-              } else {
-                setUserRole(Role.None);
-              }
-            } else {
-              // Check database for role and try to sync
-              try {
-                const { roleManagementService } = await import(
-                  "@/services/roleManagementService"
-                );
-                const dbRole = await roleManagementService.getRoleForWallet(
-                  newAccount
-                );
-
-                if (dbRole !== Role.None) {
-                  console.log(
-                    "Web3Context: Found database role:",
-                    web3Service.getRoleString(dbRole),
-                    "but blockchain role is None. Attempting to sync..."
-                  );
-
-                  // Try to sync role (this will only work if current user has permission)
-                  const syncSuccess = await web3Service.syncUserRole(
-                    newAccount,
-                    dbRole
-                  );
-                  if (syncSuccess) {
-                    const updatedRole = await web3Service.getUserRole();
-                    setUserRole(updatedRole);
-                    console.log(
-                      "Web3Context: Role synced successfully:",
-                      web3Service.getRoleString(updatedRole)
-                    );
-                  } else {
-                    console.log("Web3Context: Role sync failed, using None");
-                    setUserRole(Role.None);
-                  }
-                } else {
-                  setUserRole(Role.None);
-                }
-              } catch (error) {
-                console.error(
-                  "Web3Context: Error checking database role:",
-                  error
-                );
-                setUserRole(Role.None);
-              }
+              return;
             }
-          } else {
-            // Use blockchain role
-            setUserRole(blockchainRole);
           }
         } catch (error) {
-          console.error("Web3Context: Error fetching user role:", error);
-          setUserRole(Role.None);
+          console.error("Web3Context: Error checking database role:", error);
         }
-      }, 100); // Small delay to ensure state is properly set
+
+        setUserRole(Role.None);
+      } else {
+        // Use blockchain role
+        setUserRole(blockchainRole);
+      }
+    } catch (error) {
+      console.error("Web3Context: Error fetching user role:", error);
+      setUserRole(Role.None);
     }
   }, []);
+
+  // Handle account changes
+  const handleAccountsChanged = useCallback(
+    (accounts: string[]) => {
+      if (accounts.length === 0) {
+        setAccount(null);
+        setIsConnected(false);
+        setUserRole(Role.None);
+        setBalance("0.0");
+        console.log("Web3Context: Account disconnected");
+      } else {
+        const newAccount = accounts[0];
+        console.log("Web3Context: Account changed to:", newAccount);
+        setAccount(newAccount);
+        setIsConnected(true);
+
+        // Reset role to None initially, then fetch the actual role
+        setUserRole(Role.None);
+
+        // Fetch role asynchronously without setTimeout
+        fetchAndSetRole(newAccount);
+      }
+    },
+    [fetchAndSetRole]
+  );
 
   // Handle network changes
   const handleChainChanged = useCallback(

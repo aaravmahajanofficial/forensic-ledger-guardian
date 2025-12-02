@@ -15,7 +15,7 @@ import { Shield, Wallet, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWeb3 } from "@/contexts/Web3Context";
 import { useToast } from "@/hooks/use-toast";
-import { Role } from "@/services/web3Service";
+import web3Service from "@/services/web3Service";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 import AuthResetButton from "./AuthResetButton";
 
@@ -55,48 +55,40 @@ const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      // First connect to MetaMask
+      // Connect to MetaMask and get account directly
       await connectWallet();
 
-      // Wait for Web3Context to update state
-      setTimeout(async () => {
-        try {
-          if (isConnected && account) {
-            // Now authenticate with the wallet using simplified flow
-            const success = await loginWithWallet(account);
+      // Get the account directly from web3Service after connection
+      // This avoids race conditions with React state updates
+      const connectedAccount = await web3Service.getCurrentAccount();
 
-            if (!success) {
-              toast({
-                title: "Authentication failed",
-                description: "Could not authenticate with the connected wallet",
-                variant: "destructive",
-              });
-            }
-          } else {
-            toast({
-              title: "Connection incomplete",
-              description: "Please ensure MetaMask is installed and unlocked.",
-              variant: "destructive",
-            });
-          }
-        } catch (authError) {
-          console.error("Authentication error:", authError);
+      if (connectedAccount) {
+        // Authenticate with the wallet
+        const success = await loginWithWallet(connectedAccount);
+
+        if (!success) {
           toast({
             title: "Authentication failed",
             description: "Could not authenticate with the connected wallet",
             variant: "destructive",
           });
-        } finally {
-          setIsLoading(false);
         }
-      }, 1000); // Give time for Web3Context state to update
+      } else {
+        toast({
+          title: "Connection incomplete",
+          description: "Please ensure MetaMask is installed and unlocked.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error("MetaMask login error:", error);
       toast({
         title: "Connection failed",
-        description: "Could not connect to MetaMask. Please ensure MetaMask is installed and try again.",
+        description:
+          "Could not connect to MetaMask. Please ensure MetaMask is installed and try again.",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
   };
