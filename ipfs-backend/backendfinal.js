@@ -226,39 +226,149 @@ app.get("/", (req, res) => {
 // 1. File FIR
 app.post("/fir", async (req, res) => {
   try {
-    const { firId, description, complainant, suspect, location } = req.body;
-    if (!firId || !description || !complainant || !location)
+    const {
+      firId,
+      description,
+      location,
+      incident,
+      complainant,
+      suspect,
+      witnesses,
+    } = req.body;
+
+    // Validate required fields
+    if (!firId || !description || !location) {
       return res.status(400).json({
-        error: "firId, description, complainant and location are required",
+        error: "firId, description, and location are required",
       });
+    }
+
+    if (
+      !incident ||
+      !incident.title ||
+      !incident.type ||
+      !incident.description
+    ) {
+      return res.status(400).json({
+        error: "Incident details (title, type, description) are required",
+      });
+    }
+
+    if (!complainant || !complainant.name || !complainant.contactNumber) {
+      return res.status(400).json({
+        error: "Complainant name and contact number are required",
+      });
+    }
 
     // File FIR on blockchain
     const tx = await contract.fileFIR(firId, description);
     await tx.wait();
 
-    // Upsert FIR in Supabase
-    const { error } = await supabase.from("fir").upsert(
+    // 1. Upsert main FIR record in Supabase
+    const { error: firError } = await supabase.from("fir").upsert(
       [
         {
           fir_id: firId,
+          title: incident.title,
+          incident_type: incident.type,
+          incident_date: incident.date,
+          incident_time: incident.time,
+          incident_location: incident.location,
           description: description,
-          filed_by: wallet.address,
-          complainant: complainant,
-          suspect: suspect,
           location: location,
+          filed_by: wallet.address,
+          status: "pending",
         },
       ],
       { onConflict: ["fir_id"] }
     );
-    if (error) {
-      console.error("Supabase FIR upsert failed:", error.message);
+    if (firError) {
+      console.error("Supabase FIR upsert failed:", firError.message);
       return res.status(500).json({
         error: "Failed to store FIR in Supabase",
-        details: error.message,
+        details: firError.message,
       });
     }
 
-    res.json({ message: "FIR filed successfully", firId });
+    // 2. Upsert Complainant Info in Supabase
+    const { error: compError } = await supabase.from("complainant").insert([
+      {
+        fir_id: firId,
+        name: complainant.name,
+        organization: complainant.organization || null,
+        contact_number: complainant.contactNumber,
+        email: complainant.email || null,
+      },
+    ]);
+    if (compError) {
+      console.error("Supabase complainant upsert failed:", compError.message);
+      // Log but don't fail the request - FIR is already on blockchain
+    }
+
+    // 3. Upsert Suspect Info in Supabase (if provided)
+    if (suspect && (suspect.name || suspect.type || suspect.additionalInfo)) {
+      const { error: suspectError } = await supabase.from("suspect").insert(
+        [
+          {
+            fir_id: firId,
+            name: suspect.name || "Unknown",
+            type: suspect.type || null,
+            additional_info: suspect.additionalInfo || null,
+          },
+        ],
+        { onConflict: ["fir_id"] }
+      );
+      if (suspectError) {
+        console.error("Supabase suspect upsert failed:", suspectError.message);
+      }
+    }
+
+    // 4. Insert Witnesses in Supabase (if provided)
+    if (witnesses && Array.isArray(witnesses) && witnesses.length > 0) {
+      // Filter out empty witnesses
+      const validWitnesses = witnesses.filter(
+        (w) => w.name || w.contact_info || w.statement
+      );
+
+      if (validWitnesses.length > 0) {
+        const witnessRecords = validWitnesses.map((w, index) => ({
+          fir_id: firId,
+          witness_index: index,
+          name: w.name || null,
+          contact_info: w.contact_info || null,
+          statement: w.statement || null,
+        }));
+
+        const { error: witnessError } = await supabase
+          .from("witness")
+          .insert(witnessRecords);
+        if (witnessError) {
+          console.error(
+            "Supabase witness upsert failed:",
+            witnessError.message
+          );
+          // Log but don't fail the request
+        }
+      }
+    }
+
+    console.log(`FIR ${firId} filed successfully with all related data`);
+    res.json({
+      message: "FIR filed successfully",
+      firId,
+      storedData: {
+        fir: true,
+        complainant: true,
+        suspect: !!(
+          suspect &&
+          (suspect.name || suspect.type || suspect.additionalInfo)
+        ),
+        witnesses: witnesses
+          ? witnesses.filter((w) => w.name || w.contact_info || w.statement)
+              .length
+          : 0,
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.reason || err.message });
