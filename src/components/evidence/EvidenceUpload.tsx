@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import web3Service, { Case, EvidenceType } from '@/services/web3Service';
+import { supabase } from '@/lib/supabaseClient';
 import { useWeb3 } from '@/contexts/Web3Context';
 
 // Backend URL for IPFS + server-side on-chain submission. Override with Vite env `VITE_IPFS_BACKEND_URL` if present.
@@ -43,25 +44,74 @@ const EvidenceUpload = () => {
 
   useEffect(() => {
     const fetchCases = async () => {
-      if (!isConnected) {
-        setCases([]);
-        return;
-      }
-      
       setIsLoadingCases(true);
-      try {
-        const allCases = await web3Service.getAllCases();
-        if (!allCases || allCases.length === 0) {
+
+      // Helper to set cases from Supabase result
+      const setCasesFromSupabase = (data: any[] | null) => {
+        if (!data || data.length === 0) {
           setCases([]);
           return;
         }
 
-        setCases(allCases);
+        const mapped = data.map((c: any) => ({
+          caseId: c.caseId || String(c.id || c.case_id || ''),
+          title: c.title || c.name || 'Untitled Case',
+          description: c.description || '',
+          createdBy: c.createdBy || c.created_by || '',
+          seal: c.seal || false,
+          open: typeof c.open === 'boolean' ? c.open : c.open === 'true',
+          tags: Array.isArray(c.tags) ? c.tags : c.tags ? String(c.tags).split(',') : [],
+          evidenceCount: Number(c.evidenceCount || c.evidence_count || 0),
+        })) as Case[];
+
+        setCases(mapped);
+      };
+
+      try {
+        // If wallet connected, try blockchain first
+        if (isConnected) {
+          try {
+            const allCases = await web3Service.getAllCases();
+            if (allCases && allCases.length > 0) {
+              setCases(allCases);
+              setIsLoadingCases(false);
+              return;
+            }
+            // if empty, fallthrough to Supabase
+          } catch (err) {
+            console.warn('Blockchain case fetch failed, falling back to Supabase', err);
+          }
+        }
+
+        // Try Supabase (fallback or when wallet not connected)
+        if (supabase) {
+          const { data, error } = await supabase.from('cases').select('*');
+          if (error) {
+            console.error('Supabase error fetching cases:', error);
+            toast({
+              title: 'Error loading cases',
+              description: 'Could not fetch cases from database.',
+              variant: 'destructive',
+            });
+            setCases([]);
+            return;
+          }
+
+          setCasesFromSupabase(data as any[]);
+          toast({
+            title: 'Loaded cases from database',
+            description: 'Showing cases from Supabase as a fallback.',
+            variant: 'default',
+          });
+        } else {
+          // No supabase configured
+          setCases([]);
+        }
       } catch (error) {
         console.error('Error loading cases:', error);
         toast({
           title: "Error loading cases",
-          description: "Could not fetch cases from blockchain.",
+          description: "Could not fetch cases from blockchain or database.",
           variant: "destructive",
         });
         setCases([]);
