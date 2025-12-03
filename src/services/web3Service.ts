@@ -1166,11 +1166,12 @@ export enum Role {
 }
 
 export enum EvidenceType {
-  Image = 0,
-  Video = 1,
-  Document = 2,
-  Other = 3,
+  Image = "Image",
+  Video = "Video",
+  Document = "Document",
+  Other = "Other"
 }
+
 
 export interface Evidence {
   evidenceId: string;

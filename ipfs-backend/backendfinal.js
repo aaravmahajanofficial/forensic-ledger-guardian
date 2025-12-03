@@ -13,7 +13,6 @@ import { ethers } from "ethers";
 import fs from "fs";
 import path from "path";
 import url from "url";
-import e from "express";
 
 const pipeline = promisify(stream.pipeline);
 
@@ -144,6 +143,16 @@ const EvidenceType = {
   Video: 1,
   Document: 2,
   Other: 3,
+};
+
+const MIME_GROUPS = {
+  0: ["image/jpeg", "image/png", "image/jpg"], // Image
+  1: ["video/mp4", "video/mkv", "video/webm"], // Video
+  2: [
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  ], // Document
+  3: ALLOWED_MIME                                // Other
 };
 
 // In-memory cache for Pinata metadata
@@ -389,14 +398,18 @@ app.post("/fir/:firId/upload", upload.single("file"), async (req, res) => {
 
     const { description = null, deviceSource = null, location = null } = req.body;
     const file = req.file;
-    const evidenceTypeNum = EvidenceType[evidenceType];
+    const evidenceTypeNum = Number(evidenceType);
     console.log(evidenceType);
     if (evidenceTypeNum === undefined) {
       return res.status(400).json({ error: "Invalid evidenceType" });
     }
 
     if (!file || !evidenceId || evidenceType===undefined) return res.status(400).json({ error: "Missing required data" });
-    if (!ALLOWED_MIME.includes(file.mimetype)) return res.status(400).json({ error: "File type not allowed" });
+    const allowed = MIME_GROUPS[evidenceTypeNum];
+
+    if (!allowed.includes(file.mimetype)) {
+      return res.status(400).send(`Invalid file type. Only ${allowed.join(", ")} allowed.`);
+    }
 
     // Encrypt file with random AES key
     const key = crypto.randomBytes(32);
@@ -585,13 +598,20 @@ app.post("/case/:caseId/upload", upload.single("file"), async (req, res) => {
 
     const { description = null, deviceSource = null, location = null } = req.body;
     const file = req.file;
-    const evidenceTypeNum = EvidenceType[evidenceType];
+    const evidenceTypeNum = Number(evidenceType);
     if (evidenceTypeNum === undefined) {
       return res.status(400).json({ error: "Invalid evidenceType" });
     }
 
     if (!file || !evidenceId || evidenceType===undefined) return res.status(400).json({ error: "Missing required data" });
-    if (!ALLOWED_MIME.includes(file.mimetype)) return res.status(400).json({ error: "File type not allowed" });
+    const allowed = MIME_GROUPS[evidenceTypeNum];
+    if (!allowed.includes(file.mimetype)) {
+      return res.status(400).json({
+        error: `Invalid file type. Only ${allowed.join(", ")} allowed for this evidence type.`,
+      });
+    }
+    
+
 
     const key = crypto.randomBytes(32);
     const iv = crypto.randomBytes(16);

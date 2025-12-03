@@ -123,12 +123,53 @@ const EvidenceUpload = () => {
     fetchCases();
   }, [isConnected, toast]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const fileArray = Array.from(e.target.files);
-      setFiles((prevFiles) => [...prevFiles, ...fileArray]);
-    }
+
+  
+  const ALLOWED_MIME = [
+  "image/jpeg",
+  "image/png",
+  "image/jpg",
+  "video/mp4",
+  "video/mkv",
+  "video/webm",
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "audio/mpeg",
+  "audio/wav",
+  ];
+
+  const MIME_GROUPS = {
+    [EvidenceType.Image]: ALLOWED_MIME.filter(t => t.startsWith("image/")),
+    [EvidenceType.Video]: ALLOWED_MIME.filter(t => t.startsWith("video/")),
+    [EvidenceType.Document]: ALLOWED_MIME.filter(t =>
+      [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ].includes(t)
+    ),
+    [EvidenceType.Other]: ALLOWED_MIME // allow all
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+
+    const selected = Array.from(e.target.files);
+    const allowed = MIME_GROUPS[evidenceType];
+
+    const invalid = selected.filter(f => !allowed.includes(f.type));
+
+    if (invalid.length > 0) {
+      toast({
+        title: "Invalid file type",
+        description: `Only ${EvidenceType[evidenceType]} files are allowed.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setFiles(prev => [...prev, ...selected]);
+  };
+
 
   const removeFile = (index: number) => {
     setFiles(files.filter((_, i) => i !== index));
@@ -139,6 +180,10 @@ const EvidenceUpload = () => {
       fileInputRef.current.click();
     }
   };
+
+
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,7 +219,7 @@ const EvidenceUpload = () => {
         // off-chain storage (Supabase) and on-chain recording using a server wallet.
         const form = new FormData();
         form.append('file', file, file.name);
-        form.append('evidenceType', String(evidenceType));
+        form.append('evidenceType', evidenceType);
         form.append('caseId', selectedCase);
         if (description.trim()) form.append("description", description);
         if (deviceSource.trim()) form.append("deviceSource", deviceSource);
@@ -281,7 +326,7 @@ const EvidenceUpload = () => {
             {/* Evidence Type */}
             <div className="space-y-2">
               <Label htmlFor="evidenceType">Evidence Type</Label>
-              <Select onValueChange={(value) => setEvidenceType(Number(value) as EvidenceType)}>
+              <Select onValueChange={(value) => setEvidenceType(value as EvidenceType)}>
                 <SelectTrigger id="evidenceType" className="border-forensic-200">
                   <SelectValue placeholder="Select evidence type" />
                 </SelectTrigger>
@@ -340,8 +385,10 @@ const EvidenceUpload = () => {
                 id="fileUpload"
                 ref={fileInputRef}
                 onChange={handleFileChange}
-                multiple
+                multiple           
                 className="hidden"
+                accept={MIME_GROUPS[evidenceType].join(",")}
+
               />
               
               {/* Drop zone */}
@@ -360,7 +407,7 @@ const EvidenceUpload = () => {
                       Drag & drop files or click to browse
                     </p>
                     <p className="text-xs text-forensic-500">
-                      Supports any file type. Maximum 1GB per file.
+                      Supports any file type. Maximum 100MB per file.
                     </p>
                   </div>
                   <Button 
