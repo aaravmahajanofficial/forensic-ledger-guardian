@@ -505,89 +505,90 @@ app.post("/fir/:firId/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-// 3. Promote FIR to Case
-app.post("/fir/:firId/promote", async (req, res) => {
-  try {
-    const { firId } = req.params;
-    const { caseId, title, type, description, tags } = req.body;
+  // 3. Promote FIR to Case
+  app.post("/fir/:firId/promote", async (req, res) => {
+    try {
+      const { firId } = req.params;
+      const { caseId, title, type, description, tags } = req.body;
 
-    if (!firId || !caseId || !title || !description || !type)
-      return res.status(400).json({ error: "Missing required data" });
-    console.log("PROMOTE: FIR ID =", firId);
-    console.log(
-      "PROMOTE: Raw FIR ID chars:",
-      Array.from(firId).map((c) => c.charCodeAt(0))
-    );
-    console.log("PROMOTE: CASE ID =", caseId);
-    console.log(
-      "PROMOTE: Raw CASE ID chars:",
-      Array.from(caseId).map((c) => c.charCodeAt(0))
-    );
-    const tx = await contract.createCaseFromFIR(
-      caseId,
-      firId,
-      title,
-      description,
-      tags || []
-    );
-    await tx.wait();
-    const { error: supaError } = await supabase
-      .from("evidence1")
-      .update({ container_id: caseId })
-      .eq("container_id", firId);
+      if (!firId || !caseId || !title || !description || !type)
+        return res.status(400).json({ error: "Missing required data" });
+      console.log("PROMOTE: FIR ID =", firId);
+      console.log(
+        "PROMOTE: Raw FIR ID chars:",
+        Array.from(firId).map((c) => c.charCodeAt(0))
+      );
+      console.log("PROMOTE: CASE ID =", caseId);
+      console.log(
+        "PROMOTE: Raw CASE ID chars:",
+        Array.from(caseId).map((c) => c.charCodeAt(0))
+      );
+      const tx = await contract.createCaseFromFIR(
+        caseId,
+        firId,
+        title,
+        description,
+        tags || []
+      );
+      await tx.wait();
+      const { error: supaError } = await supabase
+        .from("evidence1")
+        .update({ container_id: caseId })
+        .eq("container_id", firId);
 
-    const { data, select_error } = await supabase
-      .from("fir")
-      .select("filed_by")
-      .eq("fir_id", firId)
-      .single();
+      const { data, select_error } = await supabase
+        .from("fir")
+        .select("filed_by")
+        .eq("fir_id", firId)
+        .single();
 
-    if (select_error) {
-      console.error(select_error);
-    } else {
-      console.log("Filed by:", data.filed_by); // ← access value here
+      if (select_error) {
+        console.error(select_error);
+      } else {
+        console.log("Filed by:", data.filed_by); // ← access value here
+      }
+
+      // Upsert FIR in Supabase
+      const { error } = await supabase.from("cases").upsert(
+        [
+          {
+            case_id: caseId,
+            title: title,
+            type: type,
+            description: description,
+            filed_by: data.filed_by,
+            tags: tags,
+            fir_id: firId,
+          },
+        ],
+        { onConflict: ["case_id"] }
+      );
+
+      if (error) {
+        console.error("Supabase Case upsert failed:", error.message);
+        return res.status(500).json({
+          error: "Failed to store Case in Supabase",
+          details: error.message,
+        });
+      }
+
+      if (supaError) {
+        console.error("Supabase update failed:", supaError);
+        return res.status(500).json({
+          error: "FIR promoted but database update failed",
+          details: supaError,
+        });
+      }
+
+      console.log("Checking FIR & CASE evidence count after promotion...");
+      console.log("FIR:", (await contract.evidenceCount(firId)).toString());
+      console.log("CASE:", (await contract.evidenceCount(caseId)).toString());
+      res.json({ message: "FIR promoted to case successfully", caseId });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: err.reason || err.message });
     }
-
-    // Upsert FIR in Supabase
-    const { error } = await supabase.from("cases").upsert(
-      [
-        {
-          case_id: firId,
-          title: title,
-          type: type,
-          description: description,
-          filed_by: data.filed_by,
-          tags: tags,
-        },
-      ],
-      { onConflict: ["case_id"] }
-    );
-
-    if (error) {
-      console.error("Supabase Case upsert failed:", error.message);
-      return res.status(500).json({
-        error: "Failed to store Case in Supabase",
-        details: error.message,
-      });
-    }
-
-    if (supaError) {
-      console.error("Supabase update failed:", supaError);
-      return res.status(500).json({
-        error: "FIR promoted but database update failed",
-        details: supaError,
-      });
-    }
-
-    console.log("Checking FIR & CASE evidence count after promotion...");
-    console.log("FIR:", (await contract.evidenceCount(firId)).toString());
-    console.log("CASE:", (await contract.evidenceCount(caseId)).toString());
-    res.json({ message: "FIR promoted to case successfully", caseId });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.reason || err.message });
-  }
-});
+  });
 
 // 4. Submit Case Evidence
 app.post("/case/:caseId/upload", upload.single("file"), async (req, res) => {
