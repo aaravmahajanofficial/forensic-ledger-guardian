@@ -183,9 +183,6 @@ const FIR = () => {
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="promoted">Promoted</SelectItem>
               <SelectItem value="pending">Pending Promotion</SelectItem>
-              <SelectItem value="assigned">Assigned</SelectItem>
-              <SelectItem value="verified">Verified</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
             </SelectContent>
           </Select>
         </div>
