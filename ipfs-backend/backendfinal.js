@@ -598,21 +598,29 @@ app.post("/case/:caseId/upload", upload.single("file"), async (req, res) => {
 
     const { description = null, deviceSource = null, location = null } = req.body;
     const file = req.file;
-    const evidenceTypeNum = Number(evidenceType);
-    if (evidenceTypeNum === undefined) {
-      return res.status(400).json({ error: "Invalid evidenceType" });
+    const evidenceTypeNum = EvidenceType[evidenceType];
+    // if (evidenceTypeNum === undefined) {
+    //   return res.status(400).json({ error: "Invalid evidenceType" });
+    // }
+
+    console.log(evidenceType);
+    console.log("evidenceTypeNum:", evidenceTypeNum);
+    if (!Number.isFinite(evidenceTypeNum) || ![0,1,2,3].includes(evidenceTypeNum)) {
+      return res.status(400).json({ error: "Invalid or missing evidenceType. Expected 0|1|2|3" });
     }
 
-    if (!file || !evidenceId || evidenceType===undefined) return res.status(400).json({ error: "Missing required data" });
+    if (!file || !evidenceId) {
+      return res.status(400).json({ error: "Missing required data (file or evidenceId)" });
+    }
+
+    //if (!file || !evidenceId || evidenceType===undefined) return res.status(400).json({ error: "Missing required data" });
     const allowed = MIME_GROUPS[evidenceTypeNum];
     if (!allowed.includes(file.mimetype)) {
       return res.status(400).json({
         error: `Invalid file type. Only ${allowed.join(", ")} allowed for this evidence type.`,
       });
     }
-    
-
-
+  
     const key = crypto.randomBytes(32);
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
@@ -681,7 +689,7 @@ app.post("/case/:caseId/upload", upload.single("file"), async (req, res) => {
     console.error(err);
     res
       .status(500)
-      .json({ error: "Case upload failed: " + (err.reason || err.message) });
+      .json({ error: "Case upload failed: " + (err)});
   }
 });
 

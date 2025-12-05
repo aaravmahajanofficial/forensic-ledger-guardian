@@ -23,7 +23,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useWeb3 } from '@/contexts/Web3Context';
 
 // Backend URL for IPFS + server-side on-chain submission. Override with Vite env `VITE_IPFS_BACKEND_URL` if present.
-const backendUrl = appConfig.backendUrl;
+const BASE_URL = 'http://localhost:4000';
 
 
 const EvidenceUpload = () => {
@@ -69,19 +69,19 @@ const EvidenceUpload = () => {
 
       try {
         // If wallet connected, try blockchain first
-        if (isConnected) {
-          try {
-            const allCases = await web3Service.getAllCases();
-            if (allCases && allCases.length > 0) {
-              setCases(allCases);
-              setIsLoadingCases(false);
-              return;
-            }
-            // if empty, fallthrough to Supabase
-          } catch (err) {
-            console.warn('Blockchain case fetch failed, falling back to Supabase', err);
-          }
-        }
+        // if (isConnected) {
+        //   try {
+        //     const allCases = await web3Service.getAllCases();
+        //     if (allCases && allCases.length > 0) {
+        //       setCases(allCases);
+        //       setIsLoadingCases(false);
+        //       return;
+        //     }
+        //     // if empty, fallthrough to Supabase
+        //   } catch (err) {
+        //     console.warn('Blockchain case fetch failed, falling back to Supabase', err);
+        //   }
+        // }
 
         // Try Supabase (fallback or when wallet not connected)
         if (supabase) {
@@ -183,8 +183,6 @@ const EvidenceUpload = () => {
 
 
 
-
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -229,7 +227,7 @@ const EvidenceUpload = () => {
         // Use the simple backend upload route used by the local dev server
         // (server.js accepts POST /upload with form fields: file, caseId, evidenceId, evidenceType)
 
-        const resp = await fetch(`${backendUrl}/case/${selectedCase}/upload`, {
+        const resp = await fetch(`${BASE_URL}/case/${selectedCase}/upload`, {
           method: 'POST',
           body: form,
         });
