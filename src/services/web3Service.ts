@@ -3,15 +3,6 @@ import { toast } from "@/hooks/use-toast";
 import abi from '../../ipfs-backend/ForensicChainABI.json'
 
 const CONTRACT_ABI = abi;
-
-// // Network-specific contract addresses
-// const CONTRACT_ADDRESSES: Record<string, string> = {
-//   "0xaa36a7": "0xf95af9ef3f9cdbd39cc3847707285dc90022104a", // Sepolia testnet
-//   "0x7a69": "0xf95af9ef3f9cdbd39cc3847707285dc90022104a", // Anvil local
-//   "0x1": "0x0000000000000000000000000000000000000000", // Mainnet (placeholder)
-// };
-
-// Default contract address (Sepolia)
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 export enum Role {

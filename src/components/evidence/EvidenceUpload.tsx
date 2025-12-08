@@ -84,17 +84,6 @@ const EvidenceUpload = () => {
 
   useEffect(() => {
     const fetchCases = async () => {
-      // // Create a dummy default case for development or when web3 is not connected
-      // const DEFAULT_CASE: Case = {
-      //   caseId: 'DEFAULT-CASE',
-      //   title: 'Default Case (Demo)',
-      //   description: 'Auto-generated default case for evidence upload during development',
-      //   createdBy: '0x0000000000000000000000000000000000000000',
-      //   seal: false,
-      //   open: true,
-      //   tags: ['default', 'demo'],
-      //   evidenceCount: 0,
-      // };
       setIsLoadingCases(true);
 
       interface SupabaseCase {

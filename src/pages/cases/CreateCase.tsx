@@ -270,15 +270,6 @@ const CreateCase = () => {
         tags: [caseType, priority, jurisdiction],
       });
 
-      // // UPDATED: Actually call the blockchain function instead of bypassing it
-      // const success = await web3Service.createCaseFromFIR(
-      //   caseId,
-      //   firIdToUse,
-      //   caseTitle,
-      //   description,
-      //   [caseType, priority, jurisdiction]
-      // );
-
       try {
         const response = await fetch(`${BACKEND_URL}/fir/${firIdToUse}/promote`, {
           method: "POST",
