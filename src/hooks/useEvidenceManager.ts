@@ -80,8 +80,20 @@ export const useEvidenceManager = (caseId?: string) => {
           throw error;
         }
 
+        interface SupabaseEvidenceRecord {
+          evidence_id: string;
+          original_filename?: string;
+          container_id: string;
+          created_at?: string;
+          confirmed?: boolean;
+          ipfs_hash?: string;
+          ipfs_cid?: string;
+          file_size?: number;
+          [key: string]: unknown;
+        }
+        
         // Transform Supabase data to EvidenceItem format
-        const evidenceList: EvidenceItem[] = (data || []).map((item: any) => ({
+        const evidenceList: EvidenceItem[] = (data || []).map((item: SupabaseEvidenceRecord) => ({
           id: item.evidence_id,
           name: item.original_filename || 'Unknown Evidence',
           type: 'application', // Default type - can be updated based on your data

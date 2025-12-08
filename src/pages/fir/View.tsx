@@ -27,7 +27,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
 
 /** Helper: safely extract a display name from various shapes */
-const extractName = (val: any): string => {
+const extractName = (val: unknown): string => {
   if (!val && val !== 0) return "";
   if (typeof val === "string") return val;
   if (Array.isArray(val) && val.length > 0) {
@@ -39,7 +39,7 @@ const extractName = (val: any): string => {
   return String(val);
 };
 
-const extractContact = (val: any): string => {
+const extractContact = (val: unknown): string => {
   if (!val && val !== 0) return "";
   if (typeof val === "string") return val;
   if (Array.isArray(val) && val.length > 0) {
@@ -72,10 +72,26 @@ const getFIRStatusBadge = (status: string) => {
   }
 };
 
+interface FIRData {
+  id: number;
+  title?: string;
+  description?: string;
+  incident_date?: string;
+  location?: string;
+  status?: string;
+  priority?: string;
+  suspect?: unknown;
+  complainant?: unknown;
+  investigating_officer?: unknown;
+  station?: unknown;
+  created_at?: string;
+  [key: string]: unknown;
+}
+
 const View = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [fir, setFir] = useState<any>(null);
+  const [fir, setFir] = useState<FIRData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

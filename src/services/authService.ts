@@ -249,8 +249,7 @@ class AuthService {
     // Court role has all permissions
     if (this.currentUser.role === Role.Court) return true;
 
-    // TODO: Implement granular permissions based on role
-    // For now, simplified role-based access
+    // Simplified role-based access
     switch (this.currentUser.role) {
       case Role.Officer:
         return resource === "cases" || resource === "evidence";

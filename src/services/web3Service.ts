@@ -178,11 +178,6 @@ class Web3Service {
             CONTRACT_ABI,
             signer as unknown as ethers.ContractRunner
           );
-          console.log(
-            "Web3 initialized successfully with account:",
-            this.account
-          );
-          console.log("Contract initialized at address:", contractAddress);
           return true;
         }
       } catch (error) {
@@ -241,8 +236,6 @@ class Web3Service {
     // Initialize Web3 connection
     const success = await this.initWeb3();
     if (success && this.account) {
-      console.log("Wallet connected successfully:", this.account);
-      console.log("Contract initialized:", this.contract ? "Yes" : "No");
       return this.account;
     }
 
@@ -261,26 +254,8 @@ class Web3Service {
     }
 
     try {
-      console.log(`getUserRole: Checking role for account ${this.account}`);
       const roleRaw = await this.contract.getGlobalRole(this.account);
       const role = this.toNumber(roleRaw) as Role;
-      console.log(
-        `getUserRole: Account ${
-          this.account
-        } has blockchain role ${this.getRoleString(
-          role
-        )} (raw value: ${roleRaw})`
-      );
-
-      // Additional debugging
-      const owner = await this.contract.owner();
-      console.log(`getUserRole: Contract owner is ${owner}`);
-      console.log(
-        `getUserRole: Current account is owner: ${
-          owner.toLowerCase() === this.account.toLowerCase()
-        }`
-      );
-
       return role;
     } catch (error) {
       console.error("getUserRole: Error getting user role:", error);
@@ -792,17 +767,11 @@ class Web3Service {
 
   // Helper Functions
   public async testContractConnection(): Promise<boolean> {
-    console.log("Testing contract connection...");
-    console.log("Contract exists:", this.contract ? "Yes" : "No");
-    console.log("Account connected:", this.account || "No");
-    console.log("Provider available:", this.provider ? "Yes" : "No");
-
     if (!this.contract) {
       console.error("Contract not initialized");
 
       // Try to connect wallet if not connected
       if (!this.account) {
-        console.log("Attempting to connect wallet...");
         const connected = await this.connectWallet();
         if (!connected) {
           console.error("Failed to connect wallet");
@@ -819,12 +788,7 @@ class Web3Service {
 
     try {
       // Try a simple read operation to test contract connection
-      console.log("Calling contract method isSystemLocked...");
-      const isLocked = await this.contract.isSystemLocked();
-      console.log(
-        "Contract connection test successful. System locked:",
-        isLocked
-      );
+      await this.contract.isSystemLocked();
       return true;
     } catch (error) {
       console.error("Contract connection test failed:", error);
@@ -852,7 +816,6 @@ class Web3Service {
 
       // Check if user has a valid role
       const currentRole = await this.getUserRole();
-      console.log("Current user role:", this.getRoleString(currentRole));
 
       // DO NOT automatically assign roles - this should be done by administrators only
       // Users should have their roles assigned through proper channels

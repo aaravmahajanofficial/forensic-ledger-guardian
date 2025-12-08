@@ -57,7 +57,15 @@ const EvidenceUpload = () => {
   const { toast } = useToast();
 
   const { isConnected } = useWeb3();
-  const [firData, setFirData] = useState<any[]>([]);
+  
+  interface FIRData {
+    id?: number;
+    title?: string;
+    description?: string;
+    [key: string]: unknown;
+  }
+  
+  const [firData, setFirData] = useState<FIRData[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -72,7 +80,7 @@ const EvidenceUpload = () => {
     };
 
     loadData();
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     const fetchCases = async () => {
@@ -89,14 +97,30 @@ const EvidenceUpload = () => {
       // };
       setIsLoadingCases(true);
 
+      interface SupabaseCase {
+        caseId?: string;
+        id?: number;
+        case_id?: string;
+        title?: string;
+        name?: string;
+        description?: string;
+        createdBy?: string;
+        created_by?: string;
+        seal?: boolean;
+        open?: boolean | string;
+        tags?: string[];
+        evidenceCount?: number;
+        [key: string]: unknown;
+      }
+      
       // Helper to set cases from Supabase result
-      const setCasesFromSupabase = (data: any[] | null) => {
+      const setCasesFromSupabase = (data: SupabaseCase[] | null) => {
         if (!data || data.length === 0) {
           setCases([]);
           return;
         }
 
-        const mapped = data.map((c: any) => ({
+        const mapped = data.map((c: SupabaseCase) => ({
           caseId: c.caseId || String(c.id || c.case_id || ""),
           title: c.title || c.name || "Untitled Case",
           description: c.description || "",
@@ -144,7 +168,7 @@ const EvidenceUpload = () => {
             return;
           }
 
-          setCasesFromSupabase(data as any[]);
+          setCasesFromSupabase(data as SupabaseCase[]);
           toast({
             title: "Loaded cases from database",
             description: "Showing cases from Supabase as a fallback.",

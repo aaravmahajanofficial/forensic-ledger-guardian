@@ -61,7 +61,7 @@ const getFIRStatusBadge = (status: string) => {
  * - [{ name: string }, ...]
  * - undefined/null
  */
-const extractName = (val: any): string => {
+const extractName = (val: unknown): string => {
   if (!val && val !== 0) return "";
   if (typeof val === "string") return val;
   if (Array.isArray(val) && val.length > 0) {
@@ -78,7 +78,21 @@ const FIR = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const navigate = useNavigate();
-  const [firData, setFirData] = useState<any[]>([]);
+  
+  interface FIRRecord {
+    id: number;
+    title?: string;
+    status?: string;
+    priority?: string;
+    incident_date?: string;
+    complainant?: unknown;
+    investigating_officer?: unknown;
+    station?: unknown;
+    created_at?: string;
+    [key: string]: unknown;
+  }
+  
+  const [firData, setFirData] = useState<FIRRecord[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
