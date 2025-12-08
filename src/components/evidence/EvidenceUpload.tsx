@@ -80,7 +80,8 @@ const EvidenceUpload = () => {
     };
 
     loadData();
-  }, [toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const fetchCases = async () => {
