@@ -18,6 +18,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import web3Service, { Role } from "@/services/web3Service";
@@ -25,20 +32,30 @@ import {
   Save,
   FileText,
   User,
-  UserCog,
   ShieldAlert,
   ChevronRight,
   FileCheck,
-  Settings,
+  UserPlus,
+  Plus,
 } from "lucide-react";
 import { error } from "console";
 import RoleManager from "@/components/admin/debug/RoleManager";
 import { useWeb3 } from "@/hooks/useWeb3";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
+import {
+  roleManagementService,
+  RoleAssignment,
+} from "@/services/roleManagementService";
+
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
 const CreateCase = () => {
-  const { userRole, account } = useWeb3();
+  const { userRole: web3Role, account } = useWeb3();
+  const { user } = useAuth();
+
+  // Use auth role (from Supabase login) if available, otherwise fall back to web3 role
+  const userRole = user?.role ?? web3Role;
 
   // State for form fields
   const [isLoading, setIsLoading] = useState(false);
@@ -58,6 +75,16 @@ const CreateCase = () => {
   const [firIds, setFirIds] = useState<string[]>([]);
   const [selectedFirId, setSelectedFirId] = useState<string>("");
 
+  // Case creation state
+  const [createdCaseId, setCreatedCaseId] = useState<string>("");
+  const [isCaseCreated, setIsCaseCreated] = useState(false);
+
+  // Officer assignment state
+  const [officers, setOfficers] = useState<RoleAssignment[]>([]);
+  const [selectedOfficer, setSelectedOfficer] = useState<string>("");
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
+
   useEffect(() => {
     async function loadFirIds() {
       try {
@@ -69,6 +96,21 @@ const CreateCase = () => {
       }
     }
     loadFirIds();
+  }, []);
+
+  // Load officers on component mount
+  useEffect(() => {
+    async function loadOfficers() {
+      try {
+        const officersList =
+          await roleManagementService.getRoleAssignmentsByRole(Role.Officer);
+        setOfficers(officersList);
+        console.log("Loaded officers:", officersList);
+      } catch (err) {
+        console.error("Failed to fetch officers", err);
+      }
+    }
+    loadOfficers();
   }, []);
 
   // Complainant information
@@ -125,6 +167,9 @@ const CreateCase = () => {
     setProsecutor("sarah.lee");
     setDefenseAttorney("");
     setJudge("michael.wong");
+    setCreatedCaseId("");
+    setIsCaseCreated(false);
+    setSelectedOfficer("");
 
     toast({
       title: "Form Reset",
@@ -137,9 +182,7 @@ const CreateCase = () => {
       case "basic":
         setActiveTab("parties");
         break;
-      case "parties":
-        setActiveTab("assignments");
-        break;
+
       default:
         break;
     }
@@ -150,11 +193,65 @@ const CreateCase = () => {
       case "parties":
         setActiveTab("basic");
         break;
-      case "assignments":
-        setActiveTab("parties");
-        break;
       default:
         break;
+    }
+  };
+
+  // Handle officer assignment
+  const handleAssignOfficer = async () => {
+    if (!selectedOfficer) {
+      toast({
+        title: "No Officer Selected",
+        description: "Please select an officer to assign to this case.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!createdCaseId) {
+      toast({
+        title: "No Case ID",
+        description: "Please create a case first before assigning officers.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAssigning(true);
+
+    try {
+      console.log(
+        `Assigning officer ${selectedOfficer} to case ${createdCaseId}`
+      );
+
+      const success = await web3Service.assignCaseRole(
+        createdCaseId,
+        selectedOfficer,
+        Role.Officer
+      );
+
+      if (success) {
+        toast({
+          title: "Officer Assigned",
+          description: `Officer ${selectedOfficer} has been assigned to case ${createdCaseId}`,
+        });
+        setSelectedOfficer("");
+      } else {
+        throw new Error("Assignment transaction failed");
+      }
+    } catch (error) {
+      console.error("Officer assignment error:", error);
+      toast({
+        title: "Assignment Failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to assign officer. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAssigning(false);
     }
   };
 
@@ -193,9 +290,6 @@ const CreateCase = () => {
     };
 
     const caseId = generateCaseId();
-    // const partialID = "CASE-2025-";
-    // const randomNumber = Math.floor(Math.random() * 100000);
-    // const firId = partialID + randomNumber;
 
     try {
       // Pre-checks before case creation
@@ -271,36 +365,44 @@ const CreateCase = () => {
       });
 
       try {
-        const response = await fetch(`${BACKEND_URL}/fir/${firIdToUse}/promote`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            caseId,
-            title: caseTitle,                    // ✅ backend expects `title`
-            type: caseType,                      // ✅ backend expects `type`
-            description,
-            tags: [caseType, priority, jurisdiction], // ✅ send tags array
-          }),
-        });
+        const response = await fetch(
+          `${BACKEND_URL}/fir/${firIdToUse}/promote`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              caseId,
+              title: caseTitle,
+              type: caseType,
+              description,
+              tags: [caseType, priority, jurisdiction],
+            }),
+          }
+        );
 
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || "Failed to file FIR");
+          throw new Error(data.error || "Failed to create case");
         }
 
+        // Mark case as created and store the case ID
+        setCreatedCaseId(data.caseId || caseId);
+        setIsCaseCreated(true);
+        setShowAssignDialog(true);
+
         toast({
-          title: "Case created on chain Successfully",
+          title: "Case Created Successfully",
           description: `Your case with ID ${
             data.caseId || caseId
-          } has been filed on the blockchain.`,
+          } has been filed on the blockchain. You can now assign officers.`,
         });
       } catch (error) {
         console.error("Case submission error:", error);
         toast({
-          title: "CASE Submission Failed",
+          title: "Case Submission Failed",
           description:
             error instanceof Error
               ? error.message
@@ -308,130 +410,6 @@ const CreateCase = () => {
           variant: "destructive",
         });
       }
-
-      // console.log("Step 1 successful:", success);
-
-      // if (success) {
-      //   // Upsert case directly to Supabase
-      //   try {
-      //     const { data, error: supabaseError } = await supabase
-      //       .from("cases")
-      //       .upsert({
-      //         case_id: caseId,
-      //         type: caseType,
-      //         title: caseTitle,
-      //         description: description,
-      //         filed_date: new Date().toISOString().slice(0, 10),
-      //         filed_by: account || null,
-      //         tags: [caseType, priority, jurisdiction],
-      //         fir_id: firIdToUse,
-      //       })
-      //       .select();
-
-      //     if (supabaseError) {
-      //       console.error("Supabase case upsert error:", supabaseError);
-      //       toast({
-      //         title: "Database Insert Failed",
-      //         description:
-      //           "Case was created on-chain but not saved in the database.",
-      //         variant: "destructive",
-      //       });
-      //     } else {
-      //       console.log("Case inserted into Supabase:", data);
-      //     }
-      //   } catch (dbErr) {
-      //     console.error("Error upserting case to Supabase:", dbErr);
-      //     toast({
-      //       title: "Database Error",
-      //       description: "An unexpected error occurred while saving to database.",
-      //       variant: "destructive",
-      //     });
-      //   }
-
-      //   // For now, we'll use placeholder addresses for role assignments
-      //   // const userAddresses = {
-      //   //   "john.smith": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
-      //   //   "emily.chen": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
-      //   //   "sarah.lee": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
-      //   //   lawyer2: "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
-      //   //   "michael.wong": "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc",
-      //   //   officer2: "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
-      //   //   forensic1: "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
-      //   // };
-
-      //   // // Assign roles
-      //   // console.log("Step 2: Assigning roles...");
-
-      //   // try {
-      //   //   if (userAddresses[leadOfficer]) {
-      //   //     console.log(
-      //   //       `Assigning Officer: ${leadOfficer} (${userAddresses[leadOfficer]})`
-      //   //     );
-      //   //     await web3Service.assignCaseRole(
-      //   //       caseId,
-      //   //       userAddresses[leadOfficer],
-      //   //       Role.Officer
-      //   //     );
-      //   //   }
-
-      //   //   if (userAddresses[leadForensic]) {
-      //   //     console.log(
-      //   //       `Assigning Forensic Expert: ${leadForensic} (${userAddresses[leadForensic]})`
-      //   //     );
-      //   //     await web3Service.assignCaseRole(
-      //   //       caseId,
-      //   //       userAddresses[leadForensic],
-      //   //       Role.Forensic
-      //   //     );
-      //   //   }
-
-      //   //   if (userAddresses[prosecutor]) {
-      //   //     console.log(
-      //   //       `Assigning Prosecutor: ${prosecutor} (${userAddresses[prosecutor]})`
-      //   //     );
-      //   //     await web3Service.assignCaseRole(
-      //   //       caseId,
-      //   //       userAddresses[prosecutor],
-      //   //       Role.Lawyer
-      //   //     );
-      //   //   }
-
-      //   //   if (defenseAttorney && userAddresses[defenseAttorney]) {
-      //   //     console.log(
-      //   //       `Assigning Defense Attorney: ${defenseAttorney} (${userAddresses[defenseAttorney]})`
-      //   //     );
-      //   //     await web3Service.assignCaseRole(
-      //   //       caseId,
-      //   //       userAddresses[defenseAttorney],
-      //   //       Role.Lawyer
-      //   //     );
-      //   //   }
-
-      //   //   if (userAddresses[judge]) {
-      //   //     console.log(`Assigning Judge: ${judge} (${userAddresses[judge]})`);
-      //   //     await web3Service.assignCaseRole(
-      //   //       caseId,
-      //   //       userAddresses[judge],
-      //   //       Role.Court
-      //   //     );
-      //   //   }
-
-      //   //   console.log("All roles assigned successfully.");
-      //   // } catch (roleError) {
-      //   //   console.warn("Some role assignments failed:", roleError);
-      //   //   // Don't fail the whole case creation if role assignments fail
-      //   // }
-
-      //   toast({
-      //     title: "Case Created",
-      //     description: `Case "${caseTitle}" has been successfully created.`,
-      //   });
-      //   navigate("/cases");
-      // } else {
-      //   throw new Error(
-      //     "Failed to create case on the blockchain. The transaction may have reverted."
-      //   );
-      // }
     } catch (error: unknown) {
       console.error("Case creation error:", error);
 
@@ -501,53 +479,49 @@ const CreateCase = () => {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-3 mb-6">
-              <TabsTrigger value="basic" className="flex items-center gap-2">
+            <TabsList className="grid grid-cols-2 mb-6">
+              <TabsTrigger
+                value="basic"
+                className="flex items-center gap-2"
+                disabled={isCaseCreated}
+              >
                 <FileText className="h-4 w-4" />
                 <span>Basic Details</span>
               </TabsTrigger>
-              <TabsTrigger value="parties" className="flex items-center gap-2">
+              <TabsTrigger
+                value="parties"
+                className="flex items-center gap-2"
+                disabled={isCaseCreated}
+              >
                 <User className="h-4 w-4" />
                 <span>Involved Parties</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="assignments"
-                className="flex items-center gap-2"
-              >
-                <UserCog className="h-4 w-4" />
-                <span>Role Assignments</span>
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="basic" className="space-y-4">
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firId">Select FIR</Label>
-                  <Select
-                    value={selectedFirId}
-                    onValueChange={setSelectedFirId}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select FIR ID" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {firIds.length === 0
-                        ? null
-                        : firIds
-                            .filter((fir_id) => fir_id && fir_id !== "")
-                            .map((fir_id) => (
-                              <SelectItem key={fir_id} value={fir_id}>
-                                {fir_id}
-                              </SelectItem>
-                            ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="caseNumber">Case Number</Label>
-                    <Input id="caseNumber" className="bg-forensic-50" />
+                    <Label htmlFor="firId">Select FIR</Label>
+                    <Select
+                      value={selectedFirId}
+                      onValueChange={setSelectedFirId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select FIR ID" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {firIds.length === 0
+                          ? null
+                          : firIds
+                              .filter((fir_id) => fir_id && fir_id !== "")
+                              .map((fir_id) => (
+                                <SelectItem key={fir_id} value={fir_id}>
+                                  {fir_id}
+                                </SelectItem>
+                              ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="caseType">Case Type</Label>
@@ -737,309 +711,81 @@ const CreateCase = () => {
                     variant="outline"
                     className="flex items-center gap-2"
                     onClick={() => handlePreviousTab("parties")}
+                    disabled={isCaseCreated}
                   >
                     <ChevronRight className="h-4 w-4 rotate-180" />
                     Back: Basic Details
                   </Button>
                   <Button
-                    className="bg-forensic-accent hover:bg-forensic-accent/90 flex items-center gap-2"
-                    onClick={() => handleNextTab("parties")}
-                    disabled={isLoading}
+                    className="bg-forensic-court hover:bg-forensic-court/90 flex items-center gap-2"
+                    onClick={handleSubmit}
+                    disabled={
+                      isLoading ||
+                      isCaseCreated ||
+                      (userRole !== Role.Court && userRole !== Role.Officer)
+                    }
                   >
-                    <ChevronRight className="h-4 w-4" />
-                    Next: Role Assignments
+                    <Save className="h-4 w-4 mr-1" />
+                    Create Case
                   </Button>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="assignments" className="space-y-4">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base flex items-center">
-                        <User className="h-4 w-4 mr-2 text-forensic-800" />
-                        Assigned Officers
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="leadOfficer">Lead Officer</Label>
-                        <Select
-                          value={leadOfficer}
-                          onValueChange={setLeadOfficer}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select officer" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="john.smith">
-                              John Smith
-                            </SelectItem>
-                            <SelectItem value="robert.johnson">
-                              Robert Johnson
-                            </SelectItem>
-                            <SelectItem value="officer3">
-                              James Wilson
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="assistingOfficers">
-                          Assisting Officers
-                        </Label>
-                        <Select
-                          value={assistingOfficers}
-                          onValueChange={setAssistingOfficers}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select officers" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="officer1">
-                              James Wilson
-                            </SelectItem>
-                            <SelectItem value="officer2">
-                              Maria Garcia
-                            </SelectItem>
-                            <SelectItem value="officer3">David Lee</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base flex items-center">
-                        <FileCheck className="h-4 w-4 mr-2 text-forensic-accent" />
-                        Assigned Forensic Experts
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="leadForensic">
-                          Lead Forensic Expert
-                        </Label>
-                        <Select
-                          value={leadForensic}
-                          onValueChange={setLeadForensic}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select forensic expert" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="emily.chen">
-                              Emily Chen
-                            </SelectItem>
-                            <SelectItem value="david.williams">
-                              David Williams
-                            </SelectItem>
-                            <SelectItem value="forensic3">
-                              Thomas Brown
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="assistingForensics">
-                          Assisting Forensic Experts
-                        </Label>
-                        <Select
-                          value={assistingForensics}
-                          onValueChange={setAssistingForensics}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select forensic experts" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="forensic1">
-                              Thomas Brown
-                            </SelectItem>
-                            <SelectItem value="forensic2">
-                              Lisa Anderson
-                            </SelectItem>
-                            <SelectItem value="forensic3">
-                              Mark Wilson
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="forensicSpecialities">
-                          Required Specialities
-                        </Label>
-                        <Select
-                          value={forensicSpecialities}
-                          onValueChange={setForensicSpecialities}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select specialities" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="digital">
-                              Digital Forensics
-                            </SelectItem>
-                            <SelectItem value="dna">DNA Analysis</SelectItem>
-                            <SelectItem value="chemical">
-                              Chemical Analysis
-                            </SelectItem>
-                            <SelectItem value="ballistic">
-                              Ballistic Examination
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center">
-                      <User className="h-4 w-4 mr-2 text-forensic-warning" />
-                      Assigned Legal Representatives
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="prosecutor">Prosecution Lead</Label>
-                        <Select
-                          value={prosecutor}
-                          onValueChange={setProsecutor}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select prosecutor" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="sarah.lee">Sarah Lee</SelectItem>
-                            <SelectItem value="jennifer.miller">
-                              Jennifer Miller
-                            </SelectItem>
-                            <SelectItem value="lawyer3">
-                              Daniel Martinez
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="defenseAttorney">
-                          Defense Attorney (if known)
-                        </Label>
-                        <Select
-                          value={defenseAttorney}
-                          onValueChange={setDefenseAttorney}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select defense attorney" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="lawyer1">
-                              Daniel Martinez
-                            </SelectItem>
-                            <SelectItem value="lawyer2">Susan Clark</SelectItem>
-                            <SelectItem value="lawyer3">
-                              Richard Wright
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center">
-                      <User className="h-4 w-4 mr-2 text-forensic-court" />
-                      Judicial Assignment
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <Label htmlFor="judge">Assigned Judge</Label>
-                      <Select value={judge} onValueChange={setJudge}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select judge" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="michael.wong">
-                            Michael Wong
-                          </SelectItem>
-                          <SelectItem value="judge2">
-                            Eleanor Rodriguez
-                          </SelectItem>
-                          <SelectItem value="judge3">William Taylor</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <div className="flex justify-between gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex items-center gap-2"
-                    onClick={() => handlePreviousTab("assignments")}
-                  >
-                    <ChevronRight className="h-4 w-4 rotate-180" />
-                    Back: Involved Parties
-                  </Button>
-
-                  <div className="flex gap-2">
-                    {/* Role Management Button */}
-                    {/* <Button
-                      variant="outline"
-                      className="flex items-center gap-2"
-                      onClick={() => setShowRoleManager(true)}
-                    >
-                      <Settings className="h-4 w-4" />
-                      Manage Role
-                    </Button> */}
-
-                    {/* Submit Button with Role Check */}
-                    <Button
-                      className="bg-forensic-court hover:bg-forensic-court/90 flex items-center gap-2"
-                      onClick={handleSubmit}
-                      disabled={
-                        isLoading ||
-                        (userRole !== Role.Court && userRole !== Role.Officer)
-                      }
-                    >
-                      <Save className="h-4 w-4 mr-1" />
-                      Create Case
-                    </Button>
-                  </div>
                 </div>
 
                 {/* Role Information */}
-                {userRole !== Role.Court && userRole !== Role.Officer && (
-                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <ShieldAlert className="h-5 w-5 text-yellow-600" />
-                      <p className="text-sm text-yellow-800">
-                        <strong>Role Required:</strong> You need Court or
-                        Officer role to create cases. Current role:{" "}
-                        {userRole === Role.None
-                          ? "None"
-                          : userRole === Role.Forensic
-                          ? "Forensic"
-                          : userRole === Role.Lawyer
-                          ? "Lawyer"
-                          : "Unknown"}
+                {userRole !== Role.Court &&
+                  userRole !== Role.Officer &&
+                  !isCaseCreated && (
+                    <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <ShieldAlert className="h-5 w-5 text-yellow-600" />
+                        <p className="text-sm text-yellow-800">
+                          <strong>Role Required:</strong> You need Court or
+                          Officer role to create cases. Current role:{" "}
+                          {userRole === Role.None
+                            ? "None"
+                            : userRole === Role.Forensic
+                            ? "Forensic"
+                            : userRole === Role.Lawyer
+                            ? "Lawyer"
+                            : "Unknown"}
+                        </p>
+                      </div>
+                      <p className="text-xs text-yellow-600 mt-1">
+                        Click "Manage Role" to set the appropriate role for
+                        testing.
                       </p>
                     </div>
-                    <p className="text-xs text-yellow-600 mt-1">
-                      Click "Manage Role" to set the appropriate role for
-                      testing.
+                  )}
+
+                {/* Success State */}
+                {isCaseCreated && (
+                  <div className="mt-4 p-6 bg-green-50 border border-green-200 rounded-lg text-center">
+                    <FileCheck className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-green-800 mb-2">
+                      Case Created Successfully!
+                    </h3>
+                    <p className="text-sm text-green-700 mb-4">
+                      Case ID:{" "}
+                      <span className="font-mono font-semibold">
+                        {createdCaseId}
+                      </span>
                     </p>
+                    <div className="flex justify-center gap-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowAssignDialog(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        Assign Officer
+                      </Button>
+                      <Button
+                        onClick={handleReset}
+                        className="bg-forensic-accent hover:bg-forensic-accent/90 flex items-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Create New Case
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1052,6 +798,82 @@ const CreateCase = () => {
       {showRoleManager && (
         <RoleManager onClose={() => setShowRoleManager(false)} />
       )}
+
+      {/* Officer Assignment Dialog */}
+      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-forensic-officer" />
+              Assign Officer to Case
+            </DialogTitle>
+            <DialogDescription>
+              Case ID:{" "}
+              <span className="font-mono font-semibold">{createdCaseId}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="officerSelectDialog">Select Officer</Label>
+              <Select
+                value={selectedOfficer}
+                onValueChange={setSelectedOfficer}
+                disabled={isAssigning}
+              >
+                <SelectTrigger id="officerSelectDialog">
+                  <SelectValue placeholder="Choose an officer to assign" />
+                </SelectTrigger>
+                <SelectContent>
+                  {officers.length === 0 ? (
+                    <div className="p-2 text-sm text-gray-500 text-center">
+                      No officers available
+                    </div>
+                  ) : (
+                    officers.map((officer) => (
+                      <SelectItem key={officer.id} value={officer.address}>
+                        <span className="font-mono text-sm">
+                          {officer.address}
+                        </span>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500">
+                {officers.length} officer{officers.length !== 1 ? "s" : ""}{" "}
+                available for assignment
+              </p>
+            </div>
+
+            <div className="flex flex-row gap-2 w-full">
+              <Button
+                variant="outline"
+                onClick={() => setShowAssignDialog(false)}
+                className="w-1/2"
+              >
+                Skip
+              </Button>
+              <Button
+                onClick={handleAssignOfficer}
+                disabled={isAssigning || !selectedOfficer}
+                className="bg-forensic-court text-white w-1/2 hover:bg-forensic-officer/90"
+              >
+                {isAssigning ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Assigning...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-5 w-5 mr-2" />
+                    Assign
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -18,16 +19,38 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   FolderPlus,
   Search,
   Filter,
   ArrowUpDown,
   FileCheck,
+  UserPlus,
+  User,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWeb3 } from "@/contexts/Web3Context";
 import { Role } from "@/services/web3Service";
+import web3Service from "@/services/web3Service";
+import { useToast } from "@/hooks/use-toast";
+import {
+  roleManagementService,
+  RoleAssignment,
+} from "@/services/roleManagementService";
 
 // ✅ Adjust this path to your actual Supabase client
 import { supabase } from "@/lib/supabaseClient";
@@ -41,6 +64,7 @@ type CaseData = {
   filedBy: string;
   evidenceCount: number;
   tags: string[];
+  assignedOfficer: string | null;
 };
 
 // Exact shape of a row from public.cases
@@ -53,20 +77,54 @@ type SupabaseCaseRow = {
   filed_by: string | null;
   tags;
   fir_id: string | null;
+  assigned_officer: string | null;
 };
 
 const CaseList: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { userRole } = useWeb3();
+  const { toast } = useToast();
 
   const [cases, setCases] = React.useState<CaseData[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
 
-  // Only Court can create cases (not Officer)
-  const canCreateCase = user?.role === Role.Court || userRole === Role.Court;
+  // Officer assignment state
+  const [officers, setOfficers] = React.useState<RoleAssignment[]>([]);
+  const [selectedOfficer, setSelectedOfficer] = React.useState<string>("");
+  const [isAssigning, setIsAssigning] = React.useState(false);
+  const [showAssignDialog, setShowAssignDialog] = React.useState(false);
+  const [selectedCaseId, setSelectedCaseId] = React.useState<string>("");
 
+  // Only Court can create cases and assign officers
+  const canCreateCase = user?.role === Role.Court || userRole === Role.Court;
+  const canAssignOfficer = user?.role === Role.Court || userRole === Role.Court;
+
+  // Shorten wallet address for display
+  const shortenAddress = (address: string): string => {
+    if (!address) return "";
+    return `${address.substring(0, 6)}...${address.substring(
+      address.length - 4
+    )}`;
+  };
+
+  // Load officers on component mount
+  React.useEffect(() => {
+    async function loadOfficers() {
+      try {
+        const officersList =
+          await roleManagementService.getRoleAssignmentsByRole(Role.Officer);
+        setOfficers(officersList);
+        console.log("Loaded officers:", officersList);
+      } catch (err) {
+        console.error("Failed to fetch officers", err);
+      }
+    }
+    loadOfficers();
+  }, []);
+
+  // Fetch cases
   React.useEffect(() => {
     const fetchCases = async () => {
       setLoading(true);
@@ -76,7 +134,7 @@ const CaseList: React.FC = () => {
         const { data, error } = await supabase
           .from("cases")
           .select(
-            "case_id, type, title, description, filed_date, filed_by, tags, fir_id"
+            "case_id, type, title, description, filed_date, filed_by, tags, fir_id, assigned_officer"
           )
           .order("filed_date", { ascending: false });
 
@@ -115,6 +173,7 @@ const CaseList: React.FC = () => {
             // evidenceCount not in DB yet => default 0 (or later from blockchain)
             evidenceCount: 0,
             tags,
+            assignedOfficer: row.assigned_officer || null,
           };
         });
 
@@ -130,6 +189,99 @@ const CaseList: React.FC = () => {
 
     fetchCases();
   }, []);
+
+  // Handle opening the assign dialog
+  const handleOpenAssignDialog = (caseId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click navigation
+    setSelectedCaseId(caseId);
+    setSelectedOfficer("");
+    setShowAssignDialog(true);
+  };
+
+  // Handle officer assignment
+  const handleAssignOfficer = async () => {
+    if (!selectedOfficer) {
+      toast({
+        title: "No Officer Selected",
+        description: "Please select an officer to assign to this case.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedCaseId) {
+      toast({
+        title: "No Case Selected",
+        description: "Please select a case to assign the officer to.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAssigning(true);
+
+    try {
+      console.log(
+        `Assigning officer ${selectedOfficer} to case ${selectedCaseId}`
+      );
+
+      // Call blockchain to assign role
+      const success = await web3Service.assignCaseRole(
+        selectedCaseId,
+        selectedOfficer,
+        Role.Officer
+      );
+
+      if (success) {
+        // Update Supabase with assigned officer
+        const { error: updateError } = await supabase
+          .from("cases")
+          .update({ assigned_officer: selectedOfficer })
+          .eq("case_id", selectedCaseId);
+
+        if (updateError) {
+          console.error(
+            "Error updating case assignment in Supabase:",
+            updateError
+          );
+        }
+
+        // Update local state
+        setCases((prevCases) =>
+          prevCases.map((c) =>
+            c.id === selectedCaseId
+              ? { ...c, assignedOfficer: selectedOfficer }
+              : c
+          )
+        );
+
+        toast({
+          title: "Officer Assigned",
+          description: `Officer ${shortenAddress(
+            selectedOfficer
+          )} has been assigned to case ${selectedCaseId}`,
+        });
+
+        setShowAssignDialog(false);
+        setSelectedOfficer("");
+        setSelectedCaseId("");
+      } else {
+        throw new Error("Assignment transaction failed");
+      }
+    } catch (error) {
+      console.error("Officer assignment error:", error);
+      toast({
+        title: "Assignment Failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to assign officer. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAssigning(false);
+    }
+  };
 
   const handleNewCase = () => {
     navigate("/cases/create");
@@ -200,9 +352,7 @@ const CaseList: React.FC = () => {
             <p className="text-sm text-forensic-500">Loading cases...</p>
           )}
 
-          {error && (
-            <p className="text-sm text-red-500 mb-2">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-500 mb-2">{error}</p>}
 
           {!loading && !error && (
             <div className="rounded-md border overflow-hidden">
@@ -214,6 +364,7 @@ const CaseList: React.FC = () => {
                     <TableHead>Status</TableHead>
                     <TableHead>Filed Date</TableHead>
                     <TableHead>Filed By</TableHead>
+                    <TableHead>Assigned Officer</TableHead>
                     <TableHead>Evidence</TableHead>
                     <TableHead>Tags</TableHead>
                   </TableRow>
@@ -234,6 +385,35 @@ const CaseList: React.FC = () => {
                         {new Date(caseItem.date).toLocaleDateString()}
                       </TableCell>
                       <TableCell>{caseItem.filedBy}</TableCell>
+                      <TableCell>
+                        {caseItem.assignedOfficer ? (
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-forensic-officer" />
+                            <span className="font-mono text-xs">
+                              {shortenAddress(caseItem.assignedOfficer)}
+                            </span>
+                          </div>
+                        ) : canAssignOfficer ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={(e) =>
+                              handleOpenAssignDialog(caseItem.id, e)
+                            }
+                          >
+                            <UserPlus className="h-3 w-3 mr-1" />
+                            Assign
+                          </Button>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className="text-xs text-gray-500"
+                          >
+                            Unassigned
+                          </Badge>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <FileCheck className="h-4 w-4 text-forensic-accent mr-1" />
@@ -258,7 +438,7 @@ const CaseList: React.FC = () => {
 
                   {cases.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-6">
+                      <TableCell colSpan={8} className="text-center py-6">
                         No cases found.
                       </TableCell>
                     </TableRow>
@@ -269,6 +449,82 @@ const CaseList: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Officer Assignment Dialog */}
+      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-forensic-officer" />
+              Assign Officer to Case
+            </DialogTitle>
+            <DialogDescription>
+              Case ID:{" "}
+              <span className="font-mono font-semibold">{selectedCaseId}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="officerSelectDialog">Select Officer</Label>
+              <Select
+                value={selectedOfficer}
+                onValueChange={setSelectedOfficer}
+                disabled={isAssigning}
+              >
+                <SelectTrigger id="officerSelectDialog">
+                  <SelectValue placeholder="Choose an officer to assign" />
+                </SelectTrigger>
+                <SelectContent>
+                  {officers.length === 0 ? (
+                    <div className="p-2 text-sm text-gray-500 text-center">
+                      No officers available
+                    </div>
+                  ) : (
+                    officers.map((officer) => (
+                      <SelectItem key={officer.id} value={officer.address}>
+                        <span className="font-mono text-sm">
+                          {officer.address}
+                        </span>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500">
+                {officers.length} officer{officers.length !== 1 ? "s" : ""}{" "}
+                available for assignment
+              </p>
+            </div>
+
+            <div className="flex flex-row gap-2 w-full">
+              <Button
+                variant="outline"
+                onClick={() => setShowAssignDialog(false)}
+                className="w-1/2"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAssignOfficer}
+                disabled={isAssigning || !selectedOfficer}
+                className="bg-forensic-court text-white w-1/2 hover:bg-forensic-court/90"
+              >
+                {isAssigning ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Assigning...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Assign
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
