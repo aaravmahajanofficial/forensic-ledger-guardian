@@ -1,4 +1,4 @@
-# 🔐 Forensic Ledger Guardian
+# Forensic Ledger Guardian
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![React](https://img.shields.io/badge/React-19.1.1-blue.svg)](https://reactjs.org/)
@@ -8,7 +8,7 @@
 
 > A blockchain-powered forensic evidence management system that ensures tamper-proof digital evidence handling with role-based access control and encrypted storage.
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
 - [Key Features](#key-features)
@@ -22,7 +22,7 @@
 - [Security](#security)
 - [License](#license)
 
-## 🌟 Overview
+## Overview
 
 Forensic Ledger Guardian is a comprehensive digital evidence management platform designed for law enforcement agencies, forensic experts, legal professionals, and court officials. The system leverages blockchain technology to create an immutable chain of custody for digital evidence while providing secure, encrypted storage through IPFS.
 
@@ -46,37 +46,37 @@ Our platform addresses these challenges by:
 - Creating transparent audit trails for all evidence interactions
 - Ensuring cryptographic integrity of all stored evidence
 
-## ✨ Key Features
+## Key Features
 
-### 🔒 Security & Integrity
+### Security & Integrity
 
 - **Blockchain-based immutability** - All evidence records stored on Ethereum
 - **End-to-end encryption** - AES-256 encryption for all stored files
 - **Cryptographic hashing** - SHA-256 verification for evidence integrity
 - **Tamper detection** - Automatic verification of evidence authenticity
 
-### 👥 Role-Based Access Control
+### Role-Based Access Control
 
 - **Court Officials** - Case creation, role assignment, evidence sealing
 - **Police Officers** - FIR filing, evidence submission
 - **Forensic Experts** - Evidence analysis and confirmation
 - **Legal Counsel** - Evidence access and review
 
-### 📁 Evidence Management
+### Evidence Management
 
 - **Multi-format support** - Images, videos, documents, audio files
 - **Chain of custody tracking** - Complete audit trail of evidence access
 - **Evidence confirmation system** - Multi-party verification process
 - **Case lifecycle management** - From FIR to case closure
 
-### 🌐 Modern Interface
+### Modern Interface
 
 - **Responsive design** - Works seamlessly across devices
 - **Real-time updates** - Live notifications and status updates
 - **Intuitive navigation** - Role-specific dashboards and workflows
 - **Dark/light theme support** - User preference customization
 
-## 🛠 Technology Stack
+## Technology Stack
 
 ### Frontend
 
@@ -115,7 +115,7 @@ Our platform addresses these challenges by:
 - **Foundry** - Smart contract testing
 - **Git** - Version control
 
-## 🏗 Architecture
+## Architecture
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
@@ -178,9 +178,9 @@ forensic-ledger-guardian/
 └── foundry.toml               # Foundry configuration
 ```
 
-## 🚀 Installation & Setup
+## Installation & Setup
 
-### 🐳 Option 1: Using Dev Containers (Recommended)
+### Option 1: Using Dev Containers (Recommended)
 
 The fastest way to get started! Everything is pre-configured in a containerized environment.
 
@@ -197,9 +197,9 @@ The fastest way to get started! Everything is pre-configured in a containerized 
 3. Wait for the container to build and dependencies to install
 4. Configure `.env` files and start coding!
 
-📚 See [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json) for detailed configuration.
+See [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json) for detailed configuration.
 
-### 💻 Option 2: Local Development Setup
+### Option 2: Local Development Setup
 
 ### Prerequisites
 
@@ -363,7 +363,7 @@ npm start
    - Check chain of custody
    - Validate cryptographic signatures
 
-## 📚 API Documentation
+## API Documentation
 
 ### REST Endpoints
 
@@ -422,7 +422,7 @@ getMyRoleInCase(caseId)
 getGlobalRole(user)
 ```
 
-## 🔐 Smart Contract
+## Smart Contract
 
 The `ForensicChain.sol` smart contract is the core of our evidence management system, deployed on Ethereum Sepolia testnet.
 
@@ -469,7 +469,7 @@ Sepolia Testnet: Update VITE_CONTRACT_ADDRESS after deployment
 
 **Note:** Role values are defined in both the smart contract and frontend (`src/config/roles.ts`).
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions from the community! Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting pull requests.
 
@@ -538,7 +538,7 @@ npm run build
 
 **Note:** Frontend test framework is not currently configured. Contributions to add testing infrastructure are welcome!
 
-## 🔒 Security
+## Security
 
 Security is paramount in forensic evidence management. Our implementation includes:
 
@@ -560,11 +560,11 @@ Please report security vulnerabilities privately through [GitHub Security Adviso
 - Regularly update dependencies and monitor for vulnerabilities
 - Follow the principle of least privilege for role assignments
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Foundry Team** for excellent smart contract development tools
 - **IPFS Protocol** for decentralized storage infrastructure
