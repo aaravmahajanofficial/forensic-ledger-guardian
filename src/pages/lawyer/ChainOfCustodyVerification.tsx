@@ -58,7 +58,7 @@ const ChainOfCustodyVerification = () => {
   const { evidence, verifyEvidence } = useEvidenceManager();
 
   // Generate mock block number once per component instance
-  // eslint-disable-next-line react-hooks/purity
+
   const mockBlockNumber = React.useMemo(
     () => Math.floor(Math.random() * 9000000) + 1000000,
     [],
