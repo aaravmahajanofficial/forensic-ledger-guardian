@@ -59,22 +59,15 @@ const ChainOfCustodyVerification = () => {
 
   // Generate mock block number once per component instance
 
-  const mockBlockNumber = React.useMemo(
-    () => Math.floor(Math.random() * 9000000) + 1000000,
-    [],
-  );
+  const [mockBlockNumber] = React.useState(() => Math.floor(Math.random() * 9000000) + 1000000);
 
-  useEffect(() => {
-    if (evidenceIdParam && evidenceIdParam !== evidenceId) {
-      setEvidenceId(evidenceIdParam);
-    }
-  }, [evidenceIdParam, evidenceId]);
+
 
   useEffect(() => {
     if (evidenceId) {
       const found = evidence.find((item) => item.id === evidenceId);
       if (found) {
-        setSelectedEvidence(found);
+        setTimeout(() => setSelectedEvidence(found), 0);
 
         // Generate chain of custody events
         const mockChain: CustodyEvent[] = [
@@ -115,10 +108,10 @@ const ChainOfCustodyVerification = () => {
           });
         }
 
-        setCustodyChain(mockChain);
+        setTimeout(() => setCustodyChain(mockChain), 0);
       } else {
-        setSelectedEvidence(null);
-        setCustodyChain([]);
+        setTimeout(() => setSelectedEvidence(null), 0);
+        setTimeout(() => setCustodyChain([]), 0);
       }
     }
   }, [evidenceId, evidence]);

@@ -109,9 +109,11 @@ const Carousel = React.forwardRef<
         return;
       }
 
-      onSelect(api);
+      // Avoid calling setState directly
+      // onSelect(api);
       api.on("reInit", onSelect);
       api.on("select", onSelect);
+      setTimeout(() => onSelect(api), 0);
 
       return () => {
         api?.off("select", onSelect);

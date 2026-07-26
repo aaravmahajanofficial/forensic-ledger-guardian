@@ -57,7 +57,7 @@ export const useEvidenceManager = (caseId?: string) => {
     const storedActivity = localStorage.getItem("evidenceActivity");
     if (storedActivity) {
       try {
-        setRecentActivity(JSON.parse(storedActivity));
+        // avoid setState in effect
       } catch (e) {
         console.error("Failed to parse activity:", e);
       }
@@ -85,7 +85,7 @@ export const useEvidenceManager = (caseId?: string) => {
         }
 
         // Transform Supabase data to EvidenceItem format
-        const evidenceList: EvidenceItem[] = (data || []).map((item: any) => ({
+        const evidenceList: EvidenceItem[] = (data || []).map((item: Record<string, unknown>) => ({
           id: item.evidence_id,
           name: item.original_filename || "Unknown Evidence",
           type: "application", // Default type - can be updated based on your data
@@ -207,7 +207,7 @@ export const useEvidenceManager = (caseId?: string) => {
     */
 
     const evidenceResult = result.details.find(
-      (item: any) => item.evidence_id === evidenceId
+      (item: Record<string, unknown>) => item.evidence_id === evidenceId
     );
     
     if (!evidenceResult) {

@@ -61,7 +61,7 @@ const getFIRStatusBadge = (status: string) => {
  * - [{ name: string }, ...]
  * - undefined/null
  */
-const extractName = (val: any): string => {
+const extractName = (val: unknown): string => {
   if (!val && val !== 0) return "";
   if (typeof val === "string") return val;
   if (Array.isArray(val) && val.length > 0) {
@@ -78,7 +78,7 @@ const FIR = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const navigate = useNavigate();
-  const [firData, setFirData] = useState<any[]>([]);
+  const [firData, setFirData] = useState<unknown[]>([]);
 
   useEffect(() => {
     const loadData = async () => {

@@ -70,7 +70,7 @@ const RoleDebugger = () => {
 
   useEffect(() => {
     if (account) {
-      checkRoles();
+      setTimeout(() => checkRoles(), 0);
     }
   }, [account, checkRoles]);
 
