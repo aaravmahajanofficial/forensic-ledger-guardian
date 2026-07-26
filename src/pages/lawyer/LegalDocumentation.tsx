@@ -221,10 +221,7 @@ const LegalDocumentation = () => {
     setLoading(false);
   }, [searchTerm, statusFilter, typeFilter, documents]);
 
-  // Update filters
-  React.useEffect(() => {
-    filterDocuments();
-  }, [filterDocuments]);
+
 
   // Reset form
   const resetForm = () => {

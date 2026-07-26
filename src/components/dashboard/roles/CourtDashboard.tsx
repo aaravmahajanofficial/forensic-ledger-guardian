@@ -146,7 +146,7 @@ const CourtDashboard = () => {
 
   // Fetch data on mount
   useEffect(() => {
-    fetchDashboardData();
+    setTimeout(() => fetchDashboardData(), 0);
   }, [fetchDashboardData]);
 
   // Handler for toggling system lock

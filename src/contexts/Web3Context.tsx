@@ -587,10 +587,10 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({
         if (networkInfo) {
           await addNetwork(networkInfo);
         } else {
-          throw new Error("Unsupported network");
+          throw new Error("Unsupported network", { cause: switchError });
         }
       } else {
-        throw switchError;
+        throw new Error("Failed to switch network", { cause: switchError });
       }
     }
   };
@@ -608,7 +608,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({
       });
     } catch (addError) {
       console.error("Failed to add network:", addError);
-      throw new Error("Failed to add network to MetaMask");
+      throw new Error("Failed to add network to MetaMask", { cause: addError });
     }
   };
 
@@ -649,7 +649,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({
 export { Web3Context };
 
 // Custom hook to use the Web3 context
-// eslint-disable-next-line react-refresh/only-export-components
+
 export const useWeb3 = () => {
   const context = useContext(Web3Context);
   if (context === undefined) {
