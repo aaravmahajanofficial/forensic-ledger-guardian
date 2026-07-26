@@ -56,12 +56,23 @@ const WalletManagement: React.FC = () => {
   const [isLoadingTx, setIsLoadingTx] = useState(false);
 
   useEffect(() => {
+    const loadRecentTransactions = async () => {
+      setIsLoadingTx(true);
+      try {
+        const txs = await getRecentTransactions(account || "");
+        setTransactions(txs);
+      } catch (error) {
+        console.error("Failed to load transactions:", error);
+      } finally {
+        setIsLoadingTx(false);
+      }
+    };
     if (isConnected && account) {
-      loadRecentTransactions();
+      setTimeout(() => loadRecentTransactions(), 0);
     }
   }, [isConnected, account]);
 
-  const loadRecentTransactions = async () => {
+  const loadRecentTransactions_old = async () => {
     setIsLoadingTx(true);
     try {
       // This would typically fetch from a blockchain explorer API

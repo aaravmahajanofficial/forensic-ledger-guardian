@@ -33,12 +33,12 @@ const RoleManager: React.FC<RoleManagerProps> = ({ onClose }) => {
   }, []);
 
   useEffect(() => {
-    loadCurrentInfo();
+    setTimeout(() => loadCurrentInfo(), 0);
   }, [loadCurrentInfo]);
 
   // Update local state when context changes
   useEffect(() => {
-    setCurrentRole(userRole);
+    setTimeout(() => setCurrentRole(userRole), 0);
   }, [userRole]);
 
   const setRole = async (newRole: Role) => {
