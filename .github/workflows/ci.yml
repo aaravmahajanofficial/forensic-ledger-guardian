@@ -7,7 +7,9 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   frontend:
@@ -59,7 +61,7 @@ jobs:
           submodules: recursive
 
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@b00af27efadbc7b4ca8b82abbd903b17cc874d2a # v1
         with:
           version: nightly
           github-token: ${{ secrets.GITHUB_TOKEN }}
