@@ -36,5 +36,6 @@ export const formatBlockchainDate = (timestamp: number): string => {
 // Shorten blockchain address for display
 export const shortenAddress = (address: string): string => {
   if (!address) return "";
+  if (address.length <= 10) return address;
   return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 };
