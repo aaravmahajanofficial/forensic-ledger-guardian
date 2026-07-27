@@ -227,6 +227,30 @@ async function getPinnedFilenameFromPinata(cid) {
   return null;
 }
 
+// Authentication Middleware
+const requireAuth = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Unauthorized: Missing or invalid token" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+
+    if (error || !user) {
+      return res.status(401).json({ error: "Unauthorized: Invalid token" });
+    }
+
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error("Auth error:", err);
+    return res.status(500).json({ error: "Internal Server Error during authentication" });
+  }
+};
+
 // Root endpoint
 app.get("/", (req, res) => {
   res.json({
@@ -246,7 +270,7 @@ app.get("/", (req, res) => {
 });
 
 // 1. File FIR
-app.post("/fir", async (req, res) => {
+app.post("/fir", requireAuth, async (req, res) => {
   try {
     const {
       firId,
@@ -398,7 +422,7 @@ app.post("/fir", async (req, res) => {
 });
 
 // 2. Submit FIR Evidence
-app.post("/fir/:firId/upload", upload.single("file"), async (req, res) => {
+app.post("/fir/:firId/upload", requireAuth, upload.single("file"), async (req, res) => {
   try {
     const { firId } = req.params;
     console.log("UPLOAD: FIR ID =", firId);
@@ -532,7 +556,7 @@ app.post("/fir/:firId/upload", upload.single("file"), async (req, res) => {
 });
 
 // 3. Promote FIR to Case
-app.post("/fir/:firId/promote", async (req, res) => {
+app.post("/fir/:firId/promote", requireAuth, async (req, res) => {
   try {
     const { firId } = req.params;
     const { caseId, title, type, description, tags } = req.body;
@@ -624,7 +648,7 @@ app.post("/fir/:firId/promote", async (req, res) => {
 });
 
 // 4. Submit Case Evidence
-app.post("/case/:caseId/upload", upload.single("file"), async (req, res) => {
+app.post("/case/:caseId/upload", requireAuth, upload.single("file"), async (req, res) => {
   try {
     const { caseId } = req.params;
     const { evidenceType } = req.body;
@@ -741,7 +765,7 @@ app.post("/case/:caseId/upload", upload.single("file"), async (req, res) => {
 });
 
 // 5. Confirm Evidence
-app.post("/case/:containerId/confirm", async (req, res) => {
+app.post("/case/:containerId/confirm", requireAuth, async (req, res) => {
   try {
     // const countFIR = await contract.evidenceCount("FIR-001");
     // const countCase = await contract.evidenceCount("CASE-001");
@@ -763,7 +787,7 @@ app.post("/case/:containerId/confirm", async (req, res) => {
 });
 
 // 6. Retrieve Evidence (with blockchain verification)
-app.get("/retrieve/:containerId/:evidenceId", async (req, res) => {
+app.get("/retrieve/:containerId/:evidenceId", requireAuth, async (req, res) => {
   try {
     let { containerId, evidenceId } = req.params;
     containerId = containerId.trim();
@@ -859,7 +883,7 @@ app.get("/retrieve/:containerId/:evidenceId", async (req, res) => {
 });
 
 // 7. Sync endpoint - Verify off-chain vs on-chain evidence integrity
-app.get("/sync", async (req, res) => {
+app.get("/sync", requireAuth, async (req, res) => {
   try {
     const { data: records, error } = await supabase
       .from("evidence1")
@@ -951,7 +975,7 @@ app.get("/sync", async (req, res) => {
 });
 
 // 8. Verify single evidence
-app.get("/verify/:containerId/:evidenceId", async (req, res) => {
+app.get("/verify/:containerId/:evidenceId", requireAuth, async (req, res) => {
   try {
     let { containerId, evidenceId } = req.params;
     containerId = containerId.trim();

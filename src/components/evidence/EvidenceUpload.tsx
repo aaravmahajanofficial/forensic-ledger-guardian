@@ -280,10 +280,15 @@ const EvidenceUpload = () => {
 
         // choose appropriate backend route based on what you use on server
         const referenceId = selectedCase || selectedFir;
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token || "";
         const resp = await fetch(
           `${BASE_URL}/${selectedCase ? "case" : "fir"}/${referenceId}/upload`,
           {
             method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
             body: form,
           },
         );
