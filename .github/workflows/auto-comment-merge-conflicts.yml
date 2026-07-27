@@ -16,15 +16,10 @@ jobs:
   auto-comment-merge-conflicts:
     runs-on: ubuntu-latest
     steps:
-      - name: Auto Comment Merge Conflict
-        uses: CodyTseng/auto-comment-merge-conflicts@v1.6.0
+      - name: Check if PRs are dirty
+        uses: eps1lon/actions-label-merge-conflict@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          comment-body: |
-            @jules Merge conflict detected with the base branch.
-
-            Please rebase or merge the latest base into this branch, resolve conflicts, and push so the PR is mergeable again.
-          wait-ms: 3000
-          max-retries: 5
-          label-name: merge-conflict
-          ignore-authors: dependabot[bot],renovate[bot]
+          dirtyLabel: "merge-conflict"
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          commentOnDirty: "Merge conflict detected with the base branch. Please rebase or merge the latest base into this branch, resolve conflicts, and push so the PR is mergeable again."
+          commentOnClean: "Merge conflicts have been resolved."
