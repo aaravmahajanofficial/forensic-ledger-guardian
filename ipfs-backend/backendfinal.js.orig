@@ -175,7 +175,8 @@ function sanitizeFilename(name) {
 
 function getMasterKeyOrThrow() {
   const pw =
-    process.env.MASTER_PASSWORD;
+    process.env.MASTER_PASSWORD ||
+    "1e7548fd1b170145c49cf8dbb88d7a1a02faa914f842a1e61fc25525fd76b744";
   if (!pw)
     throw new Error("MASTER_PASSWORD not set; cannot encrypt/decrypt keys");
   // Use PBKDF2 for computational difficulty (slow hash)
@@ -471,7 +472,7 @@ app.post("/fir/:firId/upload", upload.single("file"), async (req, res) => {
     ]).toString("hex");
     const ivEncrypted = iv.toString("hex");
 
-    
+
 
     // console.log("FIR ID used in submit:", firId);
     // console.log(

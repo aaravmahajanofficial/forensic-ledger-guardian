@@ -1,0 +1,12 @@
+--- ipfs-backend/backendfinal.js
++++ ipfs-backend/backendfinal.js
+@@ -176,8 +176,7 @@
+
+ function getMasterKeyOrThrow() {
+   const pw =
+-    process.env.MASTER_PASSWORD ||
+-    "1e7548fd1b170145c49cf8dbb88d7a1a02faa914f842a1e61fc25525fd76b744";
++    process.env.MASTER_PASSWORD;
+   if (!pw)
+     throw new Error("MASTER_PASSWORD not set; cannot encrypt/decrypt keys");
+   // Use PBKDF2 for computational difficulty (slow hash)
