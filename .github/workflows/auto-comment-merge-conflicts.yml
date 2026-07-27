@@ -16,8 +16,8 @@ jobs:
   auto-comment-merge-conflicts:
     runs-on: ubuntu-latest
     steps:
-      - name: Comment on merge conflicts
-        uses: codytseng/auto-comment-merge-conflicts@v1
+      - name: Auto Comment Merge Conflict
+        uses: CodyTseng/auto-comment-merge-conflicts@v1.6.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           comment-body: |
