@@ -120,9 +120,11 @@ if (!PJWT) {
 const SRPC =
   process.env.SEPOLIA_RPC_URL ||
   "https://eth-sepolia.g.alchemy.com/v2/fg6YcFNolf21MTb_naEvF";
-const SPVT =
-  process.env.SEPOLIA_PRIVATE_KEY ||
-  "d87f8c49f3b3733f112a4565158abf591385b464679fc6c5f58c853e695cbfb7";
+const SPVT = process.env.SEPOLIA_PRIVATE_KEY;
+if (!SPVT) {
+  console.error("Critical: SEPOLIA_PRIVATE_KEY is not set.");
+  process.exit(1);
+}
 const CONTADD =
   process.env.CONTRACT_ADDRESS || "0x1e0e98b2bb9b4fabe7f497f8b609a319472a5758";
 const provider = new ethers.JsonRpcProvider(SRPC);
