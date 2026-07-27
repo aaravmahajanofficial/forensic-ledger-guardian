@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabaseClient";
 import { toast } from "@/hooks/use-toast";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
@@ -167,10 +168,13 @@ const FIRManagement: React.FC<FIRManagementProps> = ({ mode = "create" }) => {
     `.trim();
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || "";
       const response = await fetch(`${BACKEND_URL}/fir`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           firId,

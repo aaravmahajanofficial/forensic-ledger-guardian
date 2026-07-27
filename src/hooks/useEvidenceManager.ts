@@ -181,8 +181,13 @@ export const useEvidenceManager = (caseId?: string) => {
   const verifyEvidence = async (evidenceId: string) => {
   setLoading(true);
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token || "";
     const response = await fetch("http://localhost:4000/sync", {
       method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       credentials: "include",
     });
 
@@ -265,10 +270,15 @@ export const useEvidenceManager = (caseId?: string) => {
       throw new Error("Invalid evidence identifiers");
     }
 
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token || "";
     const response = await fetch(
       `http://localhost:4000/retrieve/${evidence.caseId}/${evidence.id}`,
       {
         method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         credentials: "include",
       }
     );
