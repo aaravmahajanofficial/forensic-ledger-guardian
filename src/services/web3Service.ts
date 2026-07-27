@@ -236,13 +236,9 @@ class Web3Service {
   }
 
   public async connectWallet(): Promise<string | null> {
-    console.log("Attempting to connect wallet...");
-
     // Initialize Web3 connection
     const success = await this.initWeb3();
     if (success && this.account) {
-      console.log("Wallet connected successfully:", this.account);
-      console.log("Contract initialized:", this.contract ? "Yes" : "No");
       return this.account;
     }
 
