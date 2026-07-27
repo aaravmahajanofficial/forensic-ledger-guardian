@@ -33,3 +33,10 @@ export const shortenAddress = (address: string): string => {
   if (!address) return "";
   return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 };
+
+// Format blockchain timestamp for display
+export const formatBlockchainDate = (timestamp: number | string | bigint): string => {
+  if (timestamp === undefined || timestamp === null) return "Unknown date";
+  const numStamp = Number(timestamp);
+  return new Date(numStamp * 1000).toLocaleString();
+};
