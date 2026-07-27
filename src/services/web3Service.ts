@@ -404,13 +404,6 @@ class Web3Service {
     }
 
     try {
-      console.log("Calling createCaseFromFIR with params:", {
-        caseId,
-        firId,
-        title,
-        description,
-        tags,
-      });
       const tx = await this.contract.createCaseFromFIR(
         caseId,
         firId,
