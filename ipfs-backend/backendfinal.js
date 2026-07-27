@@ -868,8 +868,7 @@ app.get("/sync", async (req, res) => {
     if (!records || records.length === 0)
       return res.json({ message: "No evidence records found" });
 
-    const results = [];
-    for (const record of records) {
+    const promises = records.map(async (record) => {
       const { container_id, evidence_id, key_encrypted, iv_encrypted } = record;
       try {
         const evidenceOnChain = await contract.getEvidenceById(
@@ -877,12 +876,11 @@ app.get("/sync", async (req, res) => {
           evidence_id,
         );
         if (!evidenceOnChain) {
-          results.push({
+          return {
             container_id,
             evidence_id,
             status: "missing_on_chain",
-          });
-          continue;
+          };
         }
 
         const cid = evidenceOnChain.cid;
@@ -919,20 +917,22 @@ app.get("/sync", async (req, res) => {
         const status =
           computedHash === hashOriginal ? "valid" : "hash_mismatch";
 
-        results.push({ container_id, evidence_id, cid, status });
+        return { container_id, evidence_id, cid, status };
       } catch (innerErr) {
         console.error(
           `Sync error for ${record.evidence_id}:`,
           innerErr.message,
         );
-        results.push({
+        return {
           container_id: record.container_id,
           evidence_id: record.evidence_id,
           status: "error",
           error: innerErr.message,
-        });
+        };
       }
-    }
+    });
+
+    const results = await Promise.all(promises);
 
     const summary = {
       total: results.length,
