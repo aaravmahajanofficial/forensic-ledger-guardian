@@ -95,31 +95,25 @@ app.use((err, req, res, next) => {
 });
 
 // Initialize Supabase client
-const _supabaseUrl =
-  process.env.SUPABASE_URL || "https://yjoysfvxmjpbylbtmlwc.supabase.co";
+const _supabaseUrl = process.env.SUPABASE_URL;
 const _supabaseKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_SERVICE_KEY ||
-  process.env.SUPABASE_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlqb3lzZnZ4bWpwYnlsYnRtbHdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNDMzNDMsImV4cCI6MjA3MDcxOTM0M30.9TlzNEzOIQcHk1TlWNyccQq5tEHWV5sFODDnWwnIRJk";
+  process.env.SUPABASE_KEY;
 if (!_supabaseUrl || !_supabaseKey) {
   console.warn(
     "Supabase URL or Key missing. Supabase writes will likely fail. Make sure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_KEY) are set.",
   );
 }
 const supabase = createClient(_supabaseUrl, _supabaseKey);
-const PJWT =
-  process.env.PINATA_JWT ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI5MGEwMWU3MS01MGE0LTRmODEtODkzYy01ZDNkMmFjM2U3ZjIiLCJlbWFpbCI6Im1hbmRoYW5haGVtYW5zaHVAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjNmM2ZhNjM4ZmFjOTI0Y2FlYmFkIiwic2NvcGVkS2V5U2VjcmV0IjoiYmRjYjA5OTllNzA3OTFlZjExNTZiYmM3OTc0NWVkN2QwNWQ3MWU3MjQ1ZTExZTc1NjQ4Yzg4OGVlMTRiOWMyNiIsImV4cCI6MTc5NDUwNDg0NX0.IAyn4idO0RZFcq9rgeWctlqPOVpdIcd3dHGKSfkBZZo";
+const PJWT = process.env.PINATA_JWT;
 // Pinata JWT required
 if (!PJWT) {
   console.warn("PINATA_JWT is not set. Pinata metadata lookups will fail.");
 }
 
 // Web3 initialization
-const SRPC =
-  process.env.SEPOLIA_RPC_URL ||
-  "https://eth-sepolia.g.alchemy.com/v2/fg6YcFNolf21MTb_naEvF";
+const SRPC = process.env.SEPOLIA_RPC_URL;
 const SPVT = process.env.SEPOLIA_PRIVATE_KEY;
 if (!SPVT) {
   console.error("Critical: SEPOLIA_PRIVATE_KEY is not set.");
