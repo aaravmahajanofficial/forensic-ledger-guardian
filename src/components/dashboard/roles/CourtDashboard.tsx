@@ -65,30 +65,31 @@ const CourtDashboard = () => {
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch total cases from Supabase
-      const { count: casesCount, error: casesError } = await supabase
-        .from("cases")
-        .select("*", { count: "exact", head: true });
+      // Execute independent queries concurrently
+      const [
+        { count: casesCount, error: casesError },
+        { count: pendingCount, error: pendingError },
+        { count: usersCount, error: usersError },
+        { count: activeUsersCount, error: activeError },
+        isLocked
+      ] = await Promise.all([
+        supabase
+          .from("cases")
+          .select("*", { count: "exact", head: true }),
+        supabase
+          .from("fir")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending"),
+        supabase
+          .from("role_assignments")
+          .select("*", { count: "exact", head: true }),
+        supabase
+          .from("role_assignments")
+          .select("*", { count: "exact", head: true })
+          .eq("is_active", true),
+        web3Service.getSystemLockStatus()
+      ]);
 
-      // Fetch pending FIRs (pending approval)
-      const { count: pendingCount, error: pendingError } = await supabase
-        .from("fir")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "pending");
-
-      // Fetch total users from role_assignments
-      const { count: usersCount, error: usersError } = await supabase
-        .from("role_assignments")
-        .select("*", { count: "exact", head: true });
-
-      // Fetch active users (is_active = true)
-      const { count: activeUsersCount, error: activeError } = await supabase
-        .from("role_assignments")
-        .select("*", { count: "exact", head: true })
-        .eq("is_active", true);
-
-      // Get system lock status from blockchain
-      const isLocked = await web3Service.getSystemLockStatus();
       setSystemLocked(isLocked);
 
       setStats({
