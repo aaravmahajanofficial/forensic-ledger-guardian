@@ -74,36 +74,41 @@ app.use((err, req, res, next) => {
 });
 
 // Initialize Supabase client
-const _supabaseUrl =
-  process.env.SUPABASE_URL || "https://yjoysfvxmjpbylbtmlwc.supabase.co";
+const _supabaseUrl = process.env.SUPABASE_URL;
 const _supabaseKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_SERVICE_KEY ||
-  process.env.SUPABASE_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlqb3lzZnZ4bWpwYnlsYnRtbHdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNDMzNDMsImV4cCI6MjA3MDcxOTM0M30.9TlzNEzOIQcHk1TlWNyccQq5tEHWV5sFODDnWwnIRJk";
+  process.env.SUPABASE_KEY;
 if (!_supabaseUrl || !_supabaseKey) {
   console.warn(
     "Supabase URL or Key missing. Supabase writes will likely fail. Make sure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_KEY) are set.",
   );
+  process.exit(1);
 }
+// Initialize supabase client if both URL and Key exist
 const supabase = createClient(_supabaseUrl, _supabaseKey);
-const PJWT =
-  process.env.PINATA_JWT ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI5MGEwMWU3MS01MGE0LTRmODEtODkzYy01ZDNkMmFjM2U3ZjIiLCJlbWFpbCI6Im1hbmRoYW5haGVtYW5zaHVAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjNmM2ZhNjM4ZmFjOTI0Y2FlYmFkIiwic2NvcGVkS2V5U2VjcmV0IjoiYmRjYjA5OTllNzA3OTFlZjExNTZiYmM3OTc0NWVkN2QwNWQ3MWU3MjQ1ZTExZTc1NjQ4Yzg4OGVlMTRiOWMyNiIsImV4cCI6MTc5NDUwNDg0NX0.IAyn4idO0RZFcq9rgeWctlqPOVpdIcd3dHGKSfkBZZo";
+const PJWT = process.env.PINATA_JWT;
 // Pinata JWT required
 if (!PJWT) {
   console.warn("PINATA_JWT is not set. Pinata metadata lookups will fail.");
 }
 
 // Web3 initialization
-const SRPC =
-  process.env.SEPOLIA_RPC_URL ||
-  "https://eth-sepolia.g.alchemy.com/v2/fg6YcFNolf21MTb_naEvF";
-const SPVT =
-  process.env.SEPOLIA_PRIVATE_KEY ||
-  "d87f8c49f3b3733f112a4565158abf591385b464679fc6c5f58c853e695cbfb7";
-const CONTADD =
-  process.env.CONTRACT_ADDRESS || "0x1e0e98b2bb9b4fabe7f497f8b609a319472a5758";
+const SRPC = process.env.SEPOLIA_RPC_URL;
+const SPVT = process.env.SEPOLIA_PRIVATE_KEY;
+if (!SPVT) {
+  console.error("Critical: SEPOLIA_PRIVATE_KEY is not set.");
+  process.exit(1);
+}
+if (!SRPC) {
+  console.error("Critical: SEPOLIA_RPC_URL is not set.");
+  process.exit(1);
+}
+const CONTADD = process.env.CONTRACT_ADDRESS;
+if (!CONTADD) {
+  console.error("Critical: CONTRACT_ADDRESS is not set.");
+  process.exit(1);
+}
 const provider = new ethers.JsonRpcProvider(SRPC);
 const wallet = new ethers.Wallet(SPVT, provider);
 console.log(wallet.address);
@@ -153,9 +158,7 @@ function sanitizeFilename(name) {
 }
 
 function getMasterKeyOrThrow() {
-  const pw =
-    process.env.MASTER_PASSWORD ||
-    "1e7548fd1b170145c49cf8dbb88d7a1a02faa914f842a1e61fc25525fd76b744";
+  const pw = process.env.MASTER_PASSWORD;
   if (!pw)
     throw new Error("MASTER_PASSWORD not set; cannot encrypt/decrypt keys");
   // Use PBKDF2 for computational difficulty (slow hash)
