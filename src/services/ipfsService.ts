@@ -1,7 +1,7 @@
 import { create, IPFSHTTPClient } from "ipfs-http-client";
 import { toast } from "@/hooks/use-toast";
 
-class IPFSService {
+export class IPFSService {
   private client: IPFSHTTPClient | null = null;
 
   constructor() {
