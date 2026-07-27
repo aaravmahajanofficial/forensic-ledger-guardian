@@ -781,15 +781,6 @@ class Web3Service {
         )}`
       );
 
-      // Verify the role was set correctly
-      const verifyRole = await this.contract.getGlobalRole(user);
-      const verifiedRole = this.toNumber(verifyRole) as Role;
-      console.log(
-        `setGlobalRole: Verified role for ${user}: ${this.getRoleString(
-          verifiedRole
-        )}`
-      );
-
       return true;
     } catch (error) {
       console.error("setGlobalRole: Error setting global role:", error);
