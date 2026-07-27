@@ -755,33 +755,16 @@ class Web3Service {
 
   public async setGlobalRole(user: string, role: Role): Promise<boolean> {
     if (!this.contract) {
-      console.log("setGlobalRole: No contract available");
       return false;
     }
 
     try {
-      console.log(
-        `setGlobalRole: Setting role ${this.getRoleString(
-          role
-        )} for user ${user}`
-      );
       const tx = await this.contract.setGlobalRole(user, role);
-      console.log(`setGlobalRole: Transaction sent, hash: ${tx.hash}`);
       await tx.wait();
-      console.log(
-        `setGlobalRole: Transaction confirmed for ${user} -> ${this.getRoleString(
-          role
-        )}`
-      );
 
       // Verify the role was set correctly
       const verifyRole = await this.contract.getGlobalRole(user);
       const verifiedRole = this.toNumber(verifyRole) as Role;
-      console.log(
-        `setGlobalRole: Verified role for ${user}: ${this.getRoleString(
-          verifiedRole
-        )}`
-      );
 
       return true;
     } catch (error) {
