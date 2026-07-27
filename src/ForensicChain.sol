@@ -348,6 +348,7 @@ contract ForensicChain {
     }
 
     function getCase(string memory caseId) external view returns (Case memory) {
+        require(cases[caseId].createdBy != address(0), "Case does not exist");
         return cases[caseId];
     }
 
