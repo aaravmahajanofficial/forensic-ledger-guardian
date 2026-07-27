@@ -804,11 +804,6 @@ class Web3Service {
 
   // Helper Functions
   public async testContractConnection(): Promise<boolean> {
-    console.log("Testing contract connection...");
-    console.log("Contract exists:", this.contract ? "Yes" : "No");
-    console.log("Account connected:", this.account || "No");
-    console.log("Provider available:", this.provider ? "Yes" : "No");
-
     if (!this.contract) {
       console.error("Contract not initialized");
 
