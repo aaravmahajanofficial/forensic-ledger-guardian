@@ -20,7 +20,6 @@ jobs:
         uses: codytseng/auto-comment-merge-conflicts@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          # Exact text used both to post and to find/remove later — keep stable
           comment-body: |
             @Jules Merge conflict detected with the base branch.
 
