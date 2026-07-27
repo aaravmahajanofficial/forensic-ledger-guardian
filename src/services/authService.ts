@@ -21,7 +21,7 @@ export interface AuthResult {
   requiresSetup?: boolean;
 }
 
-class AuthService {
+export class AuthService {
   private static instance: AuthService;
   private currentUser: AuthUser | null = null;
   private listeners: Set<(user: AuthUser | null) => void> = new Set();
