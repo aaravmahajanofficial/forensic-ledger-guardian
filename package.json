@@ -9,7 +9,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "fast": "node scripts/fast.cjs"
+    "fast": "node scripts/fast.cjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.5.1",
@@ -86,6 +87,7 @@
     "tailwindcss": "^4.3.3",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.65.0",
-    "vite": "^8.1.5"
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
   }
 }
