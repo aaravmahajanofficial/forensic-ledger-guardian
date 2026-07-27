@@ -104,7 +104,9 @@ if (!_supabaseUrl || !_supabaseKey) {
   console.warn(
     "Supabase URL or Key missing. Supabase writes will likely fail. Make sure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_KEY) are set.",
   );
+  process.exit(1);
 }
+// Initialize supabase client if both URL and Key exist
 const supabase = createClient(_supabaseUrl, _supabaseKey);
 const PJWT = process.env.PINATA_JWT;
 // Pinata JWT required
@@ -119,8 +121,15 @@ if (!SPVT) {
   console.error("Critical: SEPOLIA_PRIVATE_KEY is not set.");
   process.exit(1);
 }
-const CONTADD =
-  process.env.CONTRACT_ADDRESS || "0x1e0e98b2bb9b4fabe7f497f8b609a319472a5758";
+if (!SRPC) {
+  console.error("Critical: SEPOLIA_RPC_URL is not set.");
+  process.exit(1);
+}
+const CONTADD = process.env.CONTRACT_ADDRESS;
+if (!CONTADD) {
+  console.error("Critical: CONTRACT_ADDRESS is not set.");
+  process.exit(1);
+}
 const provider = new ethers.JsonRpcProvider(SRPC);
 const wallet = new ethers.Wallet(SPVT, provider);
 console.log(wallet.address);
@@ -170,9 +179,7 @@ function sanitizeFilename(name) {
 }
 
 function getMasterKeyOrThrow() {
-  const pw =
-    process.env.MASTER_PASSWORD ||
-    "1e7548fd1b170145c49cf8dbb88d7a1a02faa914f842a1e61fc25525fd76b744";
+  const pw = process.env.MASTER_PASSWORD;
   if (!pw)
     throw new Error("MASTER_PASSWORD not set; cannot encrypt/decrypt keys");
   // Use PBKDF2 for computational difficulty (slow hash)
