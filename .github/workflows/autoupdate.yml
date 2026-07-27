@@ -1,0 +1,16 @@
+name: autoupdate
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  autoupdate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Automatically update PRs
+        uses: docker://chinthakagodawita/autoupdate-action:v1
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          MERGE_CONFLICT_ACTION: "ignore"
