@@ -21,7 +21,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           comment-body: |
-            @Jules Merge conflict detected with the base branch.
+            @jules Merge conflict detected with the base branch.
 
             Please rebase or merge the latest base into this branch, resolve conflicts, and push so the PR is mergeable again.
           wait-ms: 3000
