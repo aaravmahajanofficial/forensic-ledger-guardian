@@ -16,21 +16,24 @@ import url from "url";
 
 const pipeline = promisify(stream.pipeline);
 
-// --- Secure password hash configuration ---
-// These should be kept constant for your deployment
-const PBKDF2_SALT = "ipfs-backend-v1-salt"; // Random, application-unique
-const PBKDF2_ITERATIONS = 100_000;
-const PBKDF2_KEYLEN = 32; // 256 bits
-const PBKDF2_DIGEST = "sha256";
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config();
 
+// --- Secure password hash configuration ---
+// These should be kept constant for your deployment
+const PBKDF2_SALT = process.env.PBKDF2_SALT || "ipfs-backend-v1-salt"; // Random, application-unique
+const PBKDF2_ITERATIONS = 100_000;
+const PBKDF2_KEYLEN = 32; // 256 bits
+const PBKDF2_DIGEST = "sha256";
+
 // Validate critical env early to avoid runtime surprises
-// if (!process.env.MASTER_PASSWORD) {
-//   console.error("Critical: MASTER_PASSWORD is not set. Encryption/decryption will fail.");
-//   console.error("Set MASTER_PASSWORD in your environment and restart the server.");
-// }
+if (!process.env.MASTER_PASSWORD) {
+  console.error("Critical: MASTER_PASSWORD is not set. Encryption/decryption will fail.");
+  console.error("Set MASTER_PASSWORD in your environment and restart the server.");
+  process.exit(1);
+}
+
 const abiPath = path.join(__dirname, "ForensicChainABI.json");
 const ForensicChainABI = JSON.parse(fs.readFileSync(abiPath, "utf-8"));
 
@@ -113,6 +116,28 @@ const PJWT = process.env.PINATA_JWT;
 if (!PJWT) {
   console.warn("PINATA_JWT is not set. Pinata metadata lookups will fail.");
 }
+
+// Authentication middleware
+app.use(async (req, res, next) => {
+  if (req.method === "OPTIONS" || req.path === "/" || req.path.startsWith("/retrieve/") || req.path.startsWith("/verify/") || req.path === "/sync") {
+    return next();
+  }
+
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Missing or invalid authorization header" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  const { data, error } = await supabase.auth.getUser(token);
+
+  if (error || !data.user) {
+    return res.status(401).json({ error: "Unauthorized access" });
+  }
+
+  req.user = data.user;
+  next();
+});
 
 // Web3 initialization
 const SRPC = process.env.SEPOLIA_RPC_URL;
