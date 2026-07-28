@@ -236,13 +236,9 @@ class Web3Service {
   }
 
   public async connectWallet(): Promise<string | null> {
-    console.log("Attempting to connect wallet...");
-
     // Initialize Web3 connection
     const success = await this.initWeb3();
     if (success && this.account) {
-      console.log("Wallet connected successfully:", this.account);
-      console.log("Contract initialized:", this.contract ? "Yes" : "No");
       return this.account;
     }
 
@@ -762,33 +758,16 @@ class Web3Service {
 
   public async setGlobalRole(user: string, role: Role): Promise<boolean> {
     if (!this.contract) {
-      console.log("setGlobalRole: No contract available");
       return false;
     }
 
     try {
-      console.log(
-        `setGlobalRole: Setting role ${this.getRoleString(
-          role
-        )} for user ${user}`
-      );
       const tx = await this.contract.setGlobalRole(user, role);
-      console.log(`setGlobalRole: Transaction sent, hash: ${tx.hash}`);
       await tx.wait();
-      console.log(
-        `setGlobalRole: Transaction confirmed for ${user} -> ${this.getRoleString(
-          role
-        )}`
-      );
 
       // Verify the role was set correctly
       const verifyRole = await this.contract.getGlobalRole(user);
       const verifiedRole = this.toNumber(verifyRole) as Role;
-      console.log(
-        `setGlobalRole: Verified role for ${user}: ${this.getRoleString(
-          verifiedRole
-        )}`
-      );
 
       return true;
     } catch (error) {
