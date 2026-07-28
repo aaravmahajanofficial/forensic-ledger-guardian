@@ -355,12 +355,19 @@ const CreateCase = () => {
       });
 
       try {
+        let token = "";
+        if (supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          token = session?.access_token || "";
+        }
+
         const response = await fetch(
           `${BACKEND_URL}/fir/${firIdToUse}/promote`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
             body: JSON.stringify({
               caseId,
