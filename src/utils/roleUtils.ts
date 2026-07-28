@@ -18,12 +18,3 @@ export const forceRoleRefresh = async (): Promise<void> => {
   window.dispatchEvent(new CustomEvent("forceRoleRefresh"));
 };
 
-/**
- * Clear all authentication state for clean logout
- */
-export const clearAuthenticationState = (): void => {
-  localStorage.removeItem("forensicLedgerUser");
-  sessionStorage.removeItem("forensicLedgerUser");
-  localStorage.removeItem("walletconnect");
-  localStorage.removeItem("WALLETCONNECT_DEEPLINK_CHOICE");
-};
