@@ -33,10 +33,10 @@ import { cn } from "@/lib/utils";
 import web3Service, { Case, EvidenceType, FIR } from "@/services/web3Service";
 import { supabase } from "@/lib/supabaseClient";
 import { useWeb3 } from "@/contexts/Web3Context";
+import { appConfig } from "@/config/appConfig";
 
 // Backend URL for IPFS + server-side on-chain submission. Override with Vite env `VITE_IPFS_BACKEND_URL` if present.
-// const BASE_URL = (import.meta.env && (import.meta.env.VITE_IPFS_BACKEND_URL as string)) || 'http://localhost:4000';
-const BASE_URL = "http://localhost:4000";
+const BASE_URL = appConfig.backendUrl;
 
 const EvidenceUpload = () => {
   const [cases, setCases] = useState<Case[]>([]);
