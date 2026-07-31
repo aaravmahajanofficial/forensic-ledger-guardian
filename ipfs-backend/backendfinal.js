@@ -91,6 +91,13 @@ app.use((req, res, next) => {
   next();
 });
 
+// Test Error handler specifically to trigger 500
+if (process.env.NODE_ENV === "test") {
+  app.get("/test-error", (req, res, next) => {
+    next(new Error("Test error triggered!"));
+  });
+}
+
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -1055,11 +1062,15 @@ app.get("/verify/:containerId/:evidenceId", async (req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 4000;
-const server = app
-  .listen(PORT, () => {
-    console.log(`Backend running at http://localhost:${PORT}`);
-    console.log("Environment:", process.env.NODE_ENV || "development");
-  })
-  .on("error", (err) => {
-    console.error("Failed to start server:", err);
-  });
+if (process.env.NODE_ENV !== "test") {
+  app
+    .listen(PORT, () => {
+      console.log(`Backend running at http://localhost:${PORT}`);
+      console.log("Environment:", process.env.NODE_ENV || "development");
+    })
+    .on("error", (err) => {
+      console.error("Failed to start server:", err);
+    });
+}
+
+export default app;
