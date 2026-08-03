@@ -209,13 +209,18 @@ const CaseAccessControl = () => {
     // Create new access matrix items based on selections
     const updatedMatrix = [...accessMatrix];
 
+    // O(1) lookup map to prevent O(N*M*U*C) complexity
+    const matrixMap = new Map<string, number>();
+    for (let i = 0; i < updatedMatrix.length; i++) {
+      matrixMap.set(`${updatedMatrix[i].userId}-${updatedMatrix[i].caseId}`, i);
+    }
+
     selectedUsers.forEach((user) => {
       selectedCases.forEach((caseItem) => {
-        const existingItemIndex = updatedMatrix.findIndex(
-          (item) => item.userId === user.id && item.caseId === caseItem.id,
-        );
+        const key = `${user.id}-${caseItem.id}`;
+        const existingItemIndex = matrixMap.get(key);
 
-        if (existingItemIndex >= 0) {
+        if (existingItemIndex !== undefined) {
           updatedMatrix[existingItemIndex].hasAccess = grantAccess;
         } else {
           updatedMatrix.push({
@@ -223,6 +228,7 @@ const CaseAccessControl = () => {
             caseId: caseItem.id,
             hasAccess: grantAccess,
           });
+          matrixMap.set(key, updatedMatrix.length - 1);
         }
       });
     });
