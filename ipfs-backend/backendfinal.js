@@ -546,11 +546,6 @@ app.post("/fir/:firId/upload", upload.single("file"), async (req, res) => {
       filename: file.originalname,
     });
 
-    res.json({
-      message: "FIR evidence uploaded and recorded on-chain",
-      cid,
-      filename: file.originalname,
-    });
   } catch (err) {
     console.error(err);
     res
@@ -1055,11 +1050,14 @@ app.get("/verify/:containerId/:evidenceId", async (req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 4000;
-const server = app
-  .listen(PORT, () => {
-    console.log(`Backend running at http://localhost:${PORT}`);
-    console.log("Environment:", process.env.NODE_ENV || "development");
-  })
-  .on("error", (err) => {
-    console.error("Failed to start server:", err);
-  });
+if (process.env.NODE_ENV !== "test") {
+  const server = app
+    .listen(PORT, () => {
+      console.log(`Backend running at http://localhost:${PORT}`);
+      console.log("Environment:", process.env.NODE_ENV || "development");
+    })
+    .on("error", (err) => {
+      console.error("Failed to start server:", err);
+    });
+}
+export default app;
