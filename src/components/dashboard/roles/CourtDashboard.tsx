@@ -106,30 +106,35 @@ const CourtDashboard = () => {
         .limit(20);
 
       if (casesData && !casesDataError) {
-        // Get blockchain status for each case
-        const casesWithStatus: ManagedCase[] = await Promise.all(
-          casesData.map(async (c) => {
-            let status: "active" | "sealed" | "closed" = "active";
-            try {
-              const blockchainCase = await web3Service.getCase(c.case_id);
-              if (blockchainCase) {
-                if (blockchainCase.seal) {
-                  status = "sealed";
-                } else if (!blockchainCase.open) {
-                  status = "closed";
-                }
-              }
-            } catch {
-              // Default to active if blockchain fetch fails
-            }
-            return {
-              id: c.case_id,
-              title: c.title || "Untitled Case",
-              status,
-              description: c.description || "",
-            };
-          })
+        // Get blockchain status for each case efficiently
+        const caseIds = casesData.map(c => c.case_id);
+        const blockchainCases = await web3Service.getCases(caseIds);
+
+        // Map fetched data to dictionary for O(1) lookup
+        const blockchainCaseMap = new Map(
+          blockchainCases.map(bc => [bc.caseId, bc])
         );
+
+        const casesWithStatus: ManagedCase[] = casesData.map((c) => {
+          let status: "active" | "sealed" | "closed" = "active";
+
+          const blockchainCase = blockchainCaseMap.get(c.case_id);
+          if (blockchainCase) {
+            if (blockchainCase.seal) {
+              status = "sealed";
+            } else if (!blockchainCase.open) {
+              status = "closed";
+            }
+          }
+
+          return {
+            id: c.case_id,
+            title: c.title || "Untitled Case",
+            status,
+            description: c.description || "",
+          };
+        });
+
         setCasesForManagement(casesWithStatus);
       }
     } catch (error) {
