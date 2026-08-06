@@ -27,7 +27,17 @@ export const useEvidenceManager = (caseId?: string) => {
       evidenceId: string;
       timestamp: string;
     }[]
-  >([]);
+  >(() => {
+    const storedActivity = localStorage.getItem("evidenceActivity");
+    if (storedActivity) {
+      try {
+        return JSON.parse(storedActivity);
+      } catch (e) {
+        console.error("Failed to parse activity:", e);
+      }
+    }
+    return [];
+  });
 
   // Function to refresh evidence
   const refreshEvidence = () => {
@@ -51,18 +61,6 @@ export const useEvidenceManager = (caseId?: string) => {
       return updated;
     });
   };
-
-  // Load recent activity from localStorage
-  useEffect(() => {
-    const storedActivity = localStorage.getItem("evidenceActivity");
-    if (storedActivity) {
-      try {
-        // avoid setState in effect
-      } catch (e) {
-        console.error("Failed to parse activity:", e);
-      }
-    }
-  }, []);
 
   useEffect(() => {
     const fetchEvidence = async () => {
