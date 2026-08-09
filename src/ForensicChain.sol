@@ -351,6 +351,14 @@ contract ForensicChain {
         return cases[caseId];
     }
 
+    function getCases(string[] memory _caseIds) external view returns (Case[] memory) {
+        Case[] memory result = new Case[](_caseIds.length);
+        for (uint i = 0; i < _caseIds.length; i++) {
+            result[i] = cases[_caseIds[i]];
+        }
+        return result;
+    }
+
     function getFIR(string memory firId) external view returns (FIR memory) {
         return firs[firId];
     }
