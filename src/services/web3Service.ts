@@ -320,6 +320,27 @@ class Web3Service {
     }
   }
 
+  public async getCases(caseIds: string[]): Promise<Case[]> {
+    if (!this.contract || caseIds.length === 0) return [];
+
+    try {
+      const casesData = await this.contract.getCases(caseIds);
+      return casesData.map((caseData: Case & { evidenceCount: ethers.BigNumberish }) => ({
+        caseId: caseData.caseId,
+        title: caseData.title,
+        description: caseData.description,
+        createdBy: caseData.createdBy,
+        seal: caseData.seal,
+        open: caseData.open,
+        tags: caseData.tags,
+        evidenceCount: this.toNumber(caseData.evidenceCount),
+      }));
+    } catch (error) {
+      console.error(`Error getting cases:`, error);
+      return [];
+    }
+  }
+
   // FIR Management
   public async fileFIR(firId: string, description: string): Promise<boolean> {
     if (!this.contract) return false;
