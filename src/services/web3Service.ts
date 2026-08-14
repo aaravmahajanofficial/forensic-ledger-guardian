@@ -804,17 +804,11 @@ class Web3Service {
 
   // Helper Functions
   public async testContractConnection(): Promise<boolean> {
-    console.log("Testing contract connection...");
-    console.log("Contract exists:", this.contract ? "Yes" : "No");
-    console.log("Account connected:", this.account || "No");
-    console.log("Provider available:", this.provider ? "Yes" : "No");
-
     if (!this.contract) {
       console.error("Contract not initialized");
 
       // Try to connect wallet if not connected
       if (!this.account) {
-        console.log("Attempting to connect wallet...");
         const connected = await this.connectWallet();
         if (!connected) {
           console.error("Failed to connect wallet");
@@ -831,12 +825,7 @@ class Web3Service {
 
     try {
       // Try a simple read operation to test contract connection
-      console.log("Calling contract method isSystemLocked...");
-      const isLocked = await this.contract.isSystemLocked();
-      console.log(
-        "Contract connection test successful. System locked:",
-        isLocked
-      );
+      await this.contract.isSystemLocked();
       return true;
     } catch (error) {
       console.error("Contract connection test failed:", error);
