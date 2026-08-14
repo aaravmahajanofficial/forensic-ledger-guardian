@@ -718,6 +718,35 @@ class Web3Service {
     }
   }
 
+  public async getEvidenceBatch(
+    caseId: string,
+    startIndex: number,
+    count: number
+  ): Promise<Evidence[]> {
+    if (!this.contract) return [];
+
+    try {
+      const evidenceBatch = await this.contract.getEvidenceBatch(caseId, startIndex, count);
+      return evidenceBatch.map((evidence: { evidenceId: string; cidEncrypted: string; hashEncrypted: string; hashOriginal: string; encryptionKeyHash: string; evidenceType: string | number; submittedBy: string; confirmed: boolean; submittedAt: string | number; chainOfCustody: unknown[] }) => ({
+        evidenceId: evidence.evidenceId,
+        cidEncrypted: evidence.cidEncrypted,
+        hashEncrypted: evidence.hashEncrypted,
+        hashOriginal: evidence.hashOriginal,
+        encryptionKeyHash: evidence.encryptionKeyHash,
+        evidenceType: Number(evidence.evidenceType) as EvidenceType,
+        submittedBy: evidence.submittedBy,
+        confirmed: evidence.confirmed,
+        submittedAt: evidence.submittedAt ? Number(evidence.submittedAt) : 0,
+        chainOfCustody: Array.isArray(evidence.chainOfCustody)
+          ? evidence.chainOfCustody.map((c: unknown) => String(c))
+          : [],
+      }));
+    } catch (error) {
+      console.error(`Error getting evidence batch for case ${caseId}:`, error);
+      return [];
+    }
+  }
+
   public async getEvidence(
     caseId: string,
     index: number
