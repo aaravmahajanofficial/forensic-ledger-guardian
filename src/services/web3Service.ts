@@ -718,6 +718,23 @@ class Web3Service {
     }
   }
 
+  private mapEvidenceResponse(evidence: { evidenceId: string; cidEncrypted: string; hashEncrypted: string; hashOriginal: string; encryptionKeyHash: string; evidenceType: string | number; submittedBy: string; confirmed: boolean; submittedAt: string | number; chainOfCustody: unknown[] }): Evidence {
+    return {
+      evidenceId: evidence.evidenceId,
+      cidEncrypted: evidence.cidEncrypted,
+      hashEncrypted: evidence.hashEncrypted,
+      hashOriginal: evidence.hashOriginal,
+      encryptionKeyHash: evidence.encryptionKeyHash,
+      evidenceType: Number(evidence.evidenceType) as EvidenceType,
+      submittedBy: evidence.submittedBy,
+      confirmed: evidence.confirmed,
+      submittedAt: evidence.submittedAt ? Number(evidence.submittedAt) : 0,
+      chainOfCustody: Array.isArray(evidence.chainOfCustody)
+        ? evidence.chainOfCustody.map((c: unknown) => String(c))
+        : [],
+    };
+  }
+
   public async getEvidenceBatch(
     caseId: string,
     startIndex: number,
@@ -727,22 +744,9 @@ class Web3Service {
 
     try {
       const evidenceBatch = await this.contract.getEvidenceBatch(caseId, startIndex, count);
-      return evidenceBatch.map((evidence: { evidenceId: string; cidEncrypted: string; hashEncrypted: string; hashOriginal: string; encryptionKeyHash: string; evidenceType: string | number; submittedBy: string; confirmed: boolean; submittedAt: string | number; chainOfCustody: unknown[] }) => ({
-        evidenceId: evidence.evidenceId,
-        cidEncrypted: evidence.cidEncrypted,
-        hashEncrypted: evidence.hashEncrypted,
-        hashOriginal: evidence.hashOriginal,
-        encryptionKeyHash: evidence.encryptionKeyHash,
-        evidenceType: Number(evidence.evidenceType) as EvidenceType,
-        submittedBy: evidence.submittedBy,
-        confirmed: evidence.confirmed,
-        submittedAt: evidence.submittedAt ? Number(evidence.submittedAt) : 0,
-        chainOfCustody: Array.isArray(evidence.chainOfCustody)
-          ? evidence.chainOfCustody.map((c: unknown) => String(c))
-          : [],
-      }));
+      return evidenceBatch.map(this.mapEvidenceResponse);
     } catch (error) {
-      console.error(`Error getting evidence batch for case ${caseId}:`, error);
+      console.error("Error getting evidence batch for case:", caseId, error);
       return [];
     }
   }
@@ -755,22 +759,9 @@ class Web3Service {
 
     try {
       const evidence = await this.contract.getEvidence(caseId, index);
-      return {
-        evidenceId: evidence.evidenceId,
-        cidEncrypted: evidence.cidEncrypted,
-        hashEncrypted: evidence.hashEncrypted,
-        hashOriginal: evidence.hashOriginal,
-        encryptionKeyHash: evidence.encryptionKeyHash,
-        evidenceType: Number(evidence.evidenceType) as EvidenceType,
-        submittedBy: evidence.submittedBy,
-        confirmed: evidence.confirmed,
-        submittedAt: evidence.submittedAt ? Number(evidence.submittedAt) : 0,
-        chainOfCustody: Array.isArray(evidence.chainOfCustody)
-          ? evidence.chainOfCustody.map((c: unknown) => String(c))
-          : [],
-      };
+      return this.mapEvidenceResponse(evidence);
     } catch (error) {
-      console.error(`Error getting evidence index ${index}:`, error);
+      console.error("Error getting evidence index:", index, error);
       return null;
     }
   }
