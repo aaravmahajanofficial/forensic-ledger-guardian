@@ -3,55 +3,14 @@ import { handleAuthError } from '../utils';
 
 describe('handleAuthError', () => {
   describe('when error contains token/session keywords', () => {
-    it('handles "Refresh Token" in Error object', () => {
-      const error = new Error('Invalid Refresh Token provided');
-      const result = handleAuthError(error);
-
-      expect(result).toEqual({
-        isTokenError: true,
-        shouldClearSession: true,
-        message: 'Your session has expired. Please sign in again.',
-      });
-    });
-
-    it('handles "refresh_token" in string error', () => {
-      const error = 'error: refresh_token expired';
-      const result = handleAuthError(error);
-
-      expect(result).toEqual({
-        isTokenError: true,
-        shouldClearSession: true,
-        message: 'Your session has expired. Please sign in again.',
-      });
-    });
-
-    it('handles "session" keyword', () => {
-      const error = new Error('User session not found');
-      const result = handleAuthError(error);
-
-      expect(result).toEqual({
-        isTokenError: true,
-        shouldClearSession: true,
-        message: 'Your session has expired. Please sign in again.',
-      });
-    });
-
-    it('handles "expired" keyword', () => {
-      const error = 'The token is expired';
-      const result = handleAuthError(error);
-
-      expect(result).toEqual({
-        isTokenError: true,
-        shouldClearSession: true,
-        message: 'Your session has expired. Please sign in again.',
-      });
-    });
-
-    it('handles "invalid_jwt" keyword', () => {
-      const error = new Error('Auth failed: invalid_jwt');
-      const result = handleAuthError(error);
-
-      expect(result).toEqual({
+    it.each([
+      ['"Refresh Token" in Error object', new Error('Invalid Refresh Token provided')],
+      ['"refresh_token" in string error', 'error: refresh_token expired'],
+      ['"session" keyword', new Error('User session not found')],
+      ['"expired" keyword', 'The token is expired'],
+      ['"invalid_jwt" keyword', new Error('Auth failed: invalid_jwt')],
+    ])('handles %s', (_, error) => {
+      expect(handleAuthError(error)).toEqual({
         isTokenError: true,
         shouldClearSession: true,
         message: 'Your session has expired. Please sign in again.',
@@ -60,57 +19,25 @@ describe('handleAuthError', () => {
   });
 
   describe('when error is a general error', () => {
-    it('handles standard Error object', () => {
-      const error = new Error('Network timeout');
-      const result = handleAuthError(error);
-
-      expect(result).toEqual({
+    it.each([
+      ['standard Error object', new Error('Network timeout'), 'Network timeout'],
+      ['standard string error', 'Internal server error', 'Internal server error'],
+    ])('handles %s', (_, error, expectedMessage) => {
+      expect(handleAuthError(error)).toEqual({
         isTokenError: false,
         shouldClearSession: false,
-        message: 'Network timeout',
-      });
-    });
-
-    it('handles standard string error', () => {
-      const error = 'Internal server error';
-      const result = handleAuthError(error);
-
-      expect(result).toEqual({
-        isTokenError: false,
-        shouldClearSession: false,
-        message: 'Internal server error',
+        message: expectedMessage,
       });
     });
   });
 
   describe('when error is of unknown type', () => {
-    it('handles arbitrary objects', () => {
-      const error = { code: 500, details: 'Server crashed' };
-      const result = handleAuthError(error);
-
-      expect(result).toEqual({
-        isTokenError: false,
-        shouldClearSession: false,
-        message: 'Unknown error',
-      });
-    });
-
-    it('handles null', () => {
-      const error = null;
-      const result = handleAuthError(error);
-
-      expect(result).toEqual({
-        isTokenError: false,
-        shouldClearSession: false,
-        message: 'Unknown error',
-      });
-    });
-
-    it('handles undefined', () => {
-      const error = undefined;
-      const result = handleAuthError(error);
-
-      expect(result).toEqual({
+    it.each([
+      ['arbitrary objects', { code: 500, details: 'Server crashed' }],
+      ['null', null],
+      ['undefined', undefined],
+    ])('handles %s', (_, error) => {
+      expect(handleAuthError(error)).toEqual({
         isTokenError: false,
         shouldClearSession: false,
         message: 'Unknown error',
