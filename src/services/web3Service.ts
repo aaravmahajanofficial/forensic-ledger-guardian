@@ -70,7 +70,7 @@ interface EthereumProvider {
   removeAllListeners?: (event?: string) => void;
 }
 
-class Web3Service {
+export class Web3Service {
   private provider: ethers.BrowserProvider | null = null;
   private contract: ethers.Contract | null = null;
   private account: string | null = null;
