@@ -363,14 +363,6 @@ contract ForensicChain {
         return firs[firId];
     }
 
-    function getEvidenceBatch(string memory containerId, uint256 startIndex, uint256 count) external view returns (Evidence[] memory) {
-        Evidence[] memory batch = new Evidence[](count);
-        for (uint256 i = 0; i < count; i++) {
-            batch[i] = evidenceMapping[containerId][startIndex + i];
-        }
-        return batch;
-    }
-
     function getEvidence(string memory containerId, uint256 index) external view returns (Evidence memory) {
         return evidenceMapping[containerId][index];
     }
