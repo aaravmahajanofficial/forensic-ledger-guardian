@@ -26,7 +26,6 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 import web3Service, {
   Case as BlockchainCase,
-  Evidence,
 } from "@/services/web3Service";
 import { useToast } from "@/hooks/use-toast";
 
@@ -207,10 +206,7 @@ const CaseDetail = () => {
                   caseId,
                   0
                 );
-                if (
-                  blockchainEvidence &&
-                  blockchainEvidence.evidenceId === ev.evidence_id
-                ) {
+                if (blockchainEvidence?.evidenceId === ev.evidence_id) {
                   confirmed = blockchainEvidence.confirmed;
                 }
               } catch {
