@@ -25,8 +25,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import web3Service, {
-  Case as BlockchainCase,
-  Evidence,
+  Case as BlockchainCase
 } from "@/services/web3Service";
 import { useToast } from "@/hooks/use-toast";
 

@@ -155,5 +155,5 @@ export class UnifiedRoleService {
 export const unifiedRoleService = UnifiedRoleService.getInstance();
 
 // Export types for convenience
-export type { RoleAssignment, UserProfile };
+export type { RoleAssignment };
 export { Role };
