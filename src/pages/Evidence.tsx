@@ -155,18 +155,9 @@ const Evidence = () => {
   const handleVerify = async (evidence: EvidenceItem) => {
   setLoading(true);
   try {
-    let token = "";
-    if (supabase) {
-      const { data: { session } } = await supabase.auth.getSession();
-      token = session?.access_token || "";
-    }
     const response = await fetch(
       `http://localhost:4000/verify/${evidence.caseId}/${evidence.id}`,
-      {
-        method: "GET",
-        credentials: "include",
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      }
+      { method: "GET", credentials: "include" }
     );
     console.log(response)
     if (!response.ok) {
