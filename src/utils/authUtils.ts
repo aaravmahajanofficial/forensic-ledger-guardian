@@ -14,6 +14,16 @@ export const clearAllAuthData = (): void => {
 };
 
 /**
+ * Checks if the current user is a development user - DISABLED FOR PRODUCTION
+ */
+export const isDevUser = (
+  user: { id?: string; email?: string } | null,
+): boolean => {
+  // Always return false for production - no dev users allowed
+  return false;
+};
+
+/**
  * Forces a complete authentication reset
  */
 export const forceAuthReset = (): void => {

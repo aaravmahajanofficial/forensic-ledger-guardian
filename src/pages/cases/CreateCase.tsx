@@ -42,7 +42,6 @@ import { error } from "console";
 import RoleManager from "@/components/admin/debug/RoleManager";
 import { useWeb3 } from "@/hooks/useWeb3";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabaseClient";
 import {
   roleManagementService,
   RoleAssignment,
@@ -355,19 +354,12 @@ const CreateCase = () => {
       });
 
       try {
-        let token = "";
-        if (supabase) {
-          const { data: { session } } = await supabase.auth.getSession();
-          token = session?.access_token || "";
-        }
-
         const response = await fetch(
           `${BACKEND_URL}/fir/${firIdToUse}/promote`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
             body: JSON.stringify({
               caseId,
