@@ -67,10 +67,10 @@ const CourtDashboard = () => {
     try {
       // Execute independent queries concurrently
       const [
-        { count: casesCount, error: casesError },
-        { count: pendingCount, error: pendingError },
-        { count: usersCount, error: usersError },
-        { count: activeUsersCount, error: activeError },
+        { count: casesCount },
+        { count: pendingCount },
+        { count: usersCount },
+        { count: activeUsersCount },
         isLocked
       ] = await Promise.all([
         supabase
