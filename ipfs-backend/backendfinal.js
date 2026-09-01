@@ -108,9 +108,7 @@ if (!_supabaseUrl || !_supabaseKey) {
   );
 }
 const supabase = createClient(_supabaseUrl, _supabaseKey);
-const PJWT =
-  process.env.PINATA_JWT ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI5MGEwMWU3MS01MGE0LTRmODEtODkzYy01ZDNkMmFjM2U3ZjIiLCJlbWFpbCI6Im1hbmRoYW5haGVtYW5zaHVAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjNmM2ZhNjM4ZmFjOTI0Y2FlYmFkIiwic2NvcGVkS2V5U2VjcmV0IjoiYmRjYjA5OTllNzA3OTFlZjExNTZiYmM3OTc0NWVkN2QwNWQ3MWU3MjQ1ZTExZTc1NjQ4Yzg4OGVlMTRiOWMyNiIsImV4cCI6MTc5NDUwNDg0NX0.IAyn4idO0RZFcq9rgeWctlqPOVpdIcd3dHGKSfkBZZo";
+const PJWT = process.env.PINATA_JWT;
 // Pinata JWT required
 if (!PJWT) {
   console.warn("PINATA_JWT is not set. Pinata metadata lookups will fail.");
