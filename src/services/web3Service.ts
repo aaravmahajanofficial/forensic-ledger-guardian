@@ -236,9 +236,13 @@ class Web3Service {
   }
 
   public async connectWallet(): Promise<string | null> {
+    console.log("Attempting to connect wallet...");
+
     // Initialize Web3 connection
     const success = await this.initWeb3();
     if (success && this.account) {
+      console.log("Wallet connected successfully:", this.account);
+      console.log("Contract initialized:", this.contract ? "Yes" : "No");
       return this.account;
     }
 
@@ -315,27 +319,6 @@ class Web3Service {
     } catch (error) {
       console.error("Error getting contract owner:", error);
       return null;
-    }
-  }
-
-  public async getCases(caseIds: string[]): Promise<Case[]> {
-    if (!this.contract || caseIds.length === 0) return [];
-
-    try {
-      const casesData = await this.contract.getCases(caseIds);
-      return casesData.map((caseData: Case & { evidenceCount: ethers.BigNumberish }) => ({
-        caseId: caseData.caseId,
-        title: caseData.title,
-        description: caseData.description,
-        createdBy: caseData.createdBy,
-        seal: caseData.seal,
-        open: caseData.open,
-        tags: caseData.tags,
-        evidenceCount: this.toNumber(caseData.evidenceCount),
-      }));
-    } catch (error) {
-      console.error(`Error getting cases:`, error);
-      return [];
     }
   }
 
@@ -709,39 +692,6 @@ class Web3Service {
     }
   }
 
-  private mapEvidenceResponse(evidence: { evidenceId: string; cidEncrypted: string; hashEncrypted: string; hashOriginal: string; encryptionKeyHash: string; evidenceType: string | number; submittedBy: string; confirmed: boolean; submittedAt: string | number; chainOfCustody: unknown[] }): Evidence {
-    return {
-      evidenceId: evidence.evidenceId,
-      cidEncrypted: evidence.cidEncrypted,
-      hashEncrypted: evidence.hashEncrypted,
-      hashOriginal: evidence.hashOriginal,
-      encryptionKeyHash: evidence.encryptionKeyHash,
-      evidenceType: Number(evidence.evidenceType) as EvidenceType,
-      submittedBy: evidence.submittedBy,
-      confirmed: evidence.confirmed,
-      submittedAt: evidence.submittedAt ? Number(evidence.submittedAt) : 0,
-      chainOfCustody: Array.isArray(evidence.chainOfCustody)
-        ? evidence.chainOfCustody.map((c: unknown) => String(c))
-        : [],
-    };
-  }
-
-  public async getEvidenceBatch(
-    caseId: string,
-    startIndex: number,
-    count: number
-  ): Promise<Evidence[]> {
-    if (!this.contract) return [];
-
-    try {
-      const evidenceBatch = await this.contract.getEvidenceBatch(caseId, startIndex, count);
-      return evidenceBatch.map(this.mapEvidenceResponse);
-    } catch (error) {
-      console.error("Error getting evidence batch for case:", caseId, error);
-      return [];
-    }
-  }
-
   public async getEvidence(
     caseId: string,
     index: number
@@ -750,9 +700,22 @@ class Web3Service {
 
     try {
       const evidence = await this.contract.getEvidence(caseId, index);
-      return this.mapEvidenceResponse(evidence);
+      return {
+        evidenceId: evidence.evidenceId,
+        cidEncrypted: evidence.cidEncrypted,
+        hashEncrypted: evidence.hashEncrypted,
+        hashOriginal: evidence.hashOriginal,
+        encryptionKeyHash: evidence.encryptionKeyHash,
+        evidenceType: Number(evidence.evidenceType) as EvidenceType,
+        submittedBy: evidence.submittedBy,
+        confirmed: evidence.confirmed,
+        submittedAt: evidence.submittedAt ? Number(evidence.submittedAt) : 0,
+        chainOfCustody: Array.isArray(evidence.chainOfCustody)
+          ? evidence.chainOfCustody.map((c: unknown) => String(c))
+          : [],
+      };
     } catch (error) {
-      console.error("Error getting evidence index:", index, error);
+      console.error(`Error getting evidence index ${index}:`, error);
       return null;
     }
   }
@@ -790,16 +753,33 @@ class Web3Service {
 
   public async setGlobalRole(user: string, role: Role): Promise<boolean> {
     if (!this.contract) {
+      console.log("setGlobalRole: No contract available");
       return false;
     }
 
     try {
+      console.log(
+        `setGlobalRole: Setting role ${this.getRoleString(
+          role
+        )} for user ${user}`
+      );
       const tx = await this.contract.setGlobalRole(user, role);
+      console.log(`setGlobalRole: Transaction sent, hash: ${tx.hash}`);
       await tx.wait();
+      console.log(
+        `setGlobalRole: Transaction confirmed for ${user} -> ${this.getRoleString(
+          role
+        )}`
+      );
 
       // Verify the role was set correctly
       const verifyRole = await this.contract.getGlobalRole(user);
       const verifiedRole = this.toNumber(verifyRole) as Role;
+      console.log(
+        `setGlobalRole: Verified role for ${user}: ${this.getRoleString(
+          verifiedRole
+        )}`
+      );
 
       return true;
     } catch (error) {
