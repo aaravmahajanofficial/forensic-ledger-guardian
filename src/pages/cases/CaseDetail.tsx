@@ -26,7 +26,6 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 import web3Service, {
   Case as BlockchainCase,
-  Evidence,
 } from "@/services/web3Service";
 import { useToast } from "@/hooks/use-toast";
 
@@ -197,45 +196,35 @@ const CaseDetail = () => {
         } else if (evidenceData) {
           const evidenceRows = evidenceData as SupabaseEvidenceRow[];
 
-          // Try to get all evidence for this case in one batch call to prevent N+1 issue
-          let blockchainEvidenceList: Evidence[] = [];
-          try {
-            blockchainEvidenceList = await web3Service.getEvidenceBatch(
-              caseId,
-              0,
-              evidenceRows.length
-            );
-          } catch (error) {
-            console.error("Error fetching evidence batch from blockchain:", error);
-          }
+          // For each evidence, try to get blockchain verification status
+          const evidenceItemsWithStatus: EvidenceItem[] = await Promise.all(
+            evidenceRows.map(async (ev) => {
+              let confirmed = false;
+              try {
+                // Try to get evidence from blockchain to check confirmed status
+                const blockchainEvidence = await web3Service.getEvidence(
+                  caseId,
+                  0
+                );
+                if (blockchainEvidence?.evidenceId === ev.evidence_id) {
+                  confirmed = blockchainEvidence.confirmed;
+                }
+              } catch {
+                // Evidence may not be on blockchain yet
+              }
 
-          // Create a map for O(1) lookups
-          const blockchainEvidenceMap = new Map();
-          blockchainEvidenceList.forEach((ev) => {
-            if (ev && ev.evidenceId) {
-              blockchainEvidenceMap.set(ev.evidenceId, ev);
-            }
-          });
-
-          const evidenceItemsWithStatus: EvidenceItem[] = evidenceRows.map((ev) => {
-            let confirmed = false;
-
-            const blockchainEvidence = blockchainEvidenceMap.get(ev.evidence_id);
-            if (blockchainEvidence) {
-               confirmed = blockchainEvidence.confirmed;
-            }
-
-            return {
-              id: ev.evidence_id,
-              name: ev.original_filename || ev.evidence_id,
-              type: ev.type || "document",
-              status: confirmed ? "verified" : "pending",
-              hash: ev.hash_original,
-              cid: ev.cid,
-              submittedAt: ev.created_at,
-              description: ev.description,
-            };
-          });
+              return {
+                id: ev.evidence_id,
+                name: ev.original_filename || ev.evidence_id,
+                type: ev.type || "document",
+                status: confirmed ? "verified" : "pending",
+                hash: ev.hash_original,
+                cid: ev.cid,
+                submittedAt: ev.created_at,
+                description: ev.description,
+              };
+            })
+          );
 
           setEvidenceItems(evidenceItemsWithStatus);
         }
