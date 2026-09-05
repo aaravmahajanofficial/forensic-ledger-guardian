@@ -252,30 +252,12 @@ class Web3Service {
 
   public async getUserRole(): Promise<Role> {
     if (!this.contract || !this.account) {
-      console.log("getUserRole: No contract or account available");
       return Role.None;
     }
 
     try {
-      console.log(`getUserRole: Checking role for account ${this.account}`);
       const roleRaw = await this.contract.getGlobalRole(this.account);
       const role = this.toNumber(roleRaw) as Role;
-      console.log(
-        `getUserRole: Account ${
-          this.account
-        } has blockchain role ${this.getRoleString(
-          role
-        )} (raw value: ${roleRaw})`
-      );
-
-      // Additional debugging
-      const owner = await this.contract.owner();
-      console.log(`getUserRole: Contract owner is ${owner}`);
-      console.log(
-        `getUserRole: Current account is owner: ${
-          owner.toLowerCase() === this.account.toLowerCase()
-        }`
-      );
 
       return role;
     } catch (error) {
