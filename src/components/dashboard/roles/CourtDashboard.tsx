@@ -65,30 +65,31 @@ const CourtDashboard = () => {
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch total cases from Supabase
-      const { count: casesCount, error: casesError } = await supabase
-        .from("cases")
-        .select("*", { count: "exact", head: true });
+      // Execute independent queries concurrently
+      const [
+        { count: casesCount },
+        { count: pendingCount },
+        { count: usersCount },
+        { count: activeUsersCount },
+        isLocked
+      ] = await Promise.all([
+        supabase
+          .from("cases")
+          .select("*", { count: "exact", head: true }),
+        supabase
+          .from("fir")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending"),
+        supabase
+          .from("role_assignments")
+          .select("*", { count: "exact", head: true }),
+        supabase
+          .from("role_assignments")
+          .select("*", { count: "exact", head: true })
+          .eq("is_active", true),
+        web3Service.getSystemLockStatus()
+      ]);
 
-      // Fetch pending FIRs (pending approval)
-      const { count: pendingCount, error: pendingError } = await supabase
-        .from("fir")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "pending");
-
-      // Fetch total users from role_assignments
-      const { count: usersCount, error: usersError } = await supabase
-        .from("role_assignments")
-        .select("*", { count: "exact", head: true });
-
-      // Fetch active users (is_active = true)
-      const { count: activeUsersCount, error: activeError } = await supabase
-        .from("role_assignments")
-        .select("*", { count: "exact", head: true })
-        .eq("is_active", true);
-
-      // Get system lock status from blockchain
-      const isLocked = await web3Service.getSystemLockStatus();
       setSystemLocked(isLocked);
 
       setStats({
@@ -106,35 +107,30 @@ const CourtDashboard = () => {
         .limit(20);
 
       if (casesData && !casesDataError) {
-        // Get blockchain status for each case efficiently
-        const caseIds = casesData.map(c => c.case_id);
-        const blockchainCases = await web3Service.getCases(caseIds);
-
-        // Map fetched data to dictionary for O(1) lookup
-        const blockchainCaseMap = new Map(
-          blockchainCases.map(bc => [bc.caseId, bc])
-        );
-
-        const casesWithStatus: ManagedCase[] = casesData.map((c) => {
-          let status: "active" | "sealed" | "closed" = "active";
-
-          const blockchainCase = blockchainCaseMap.get(c.case_id);
-          if (blockchainCase) {
-            if (blockchainCase.seal) {
-              status = "sealed";
-            } else if (!blockchainCase.open) {
-              status = "closed";
+        // Get blockchain status for each case
+        const casesWithStatus: ManagedCase[] = await Promise.all(
+          casesData.map(async (c) => {
+            let status: "active" | "sealed" | "closed" = "active";
+            try {
+              const blockchainCase = await web3Service.getCase(c.case_id);
+              if (blockchainCase) {
+                if (blockchainCase.seal) {
+                  status = "sealed";
+                } else if (!blockchainCase.open) {
+                  status = "closed";
+                }
+              }
+            } catch {
+              // Default to active if blockchain fetch fails
             }
-          }
-
-          return {
-            id: c.case_id,
-            title: c.title || "Untitled Case",
-            status,
-            description: c.description || "",
-          };
-        });
-
+            return {
+              id: c.case_id,
+              title: c.title || "Untitled Case",
+              status,
+              description: c.description || "",
+            };
+          })
+        );
         setCasesForManagement(casesWithStatus);
       }
     } catch (error) {
