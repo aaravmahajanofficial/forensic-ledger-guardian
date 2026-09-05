@@ -327,27 +327,6 @@ class Web3Service {
     }
   }
 
-  public async getCases(caseIds: string[]): Promise<Case[]> {
-    if (!this.contract || caseIds.length === 0) return [];
-
-    try {
-      const casesData = await this.contract.getCases(caseIds);
-      return casesData.map((caseData: Case & { evidenceCount: ethers.BigNumberish }) => ({
-        caseId: caseData.caseId,
-        title: caseData.title,
-        description: caseData.description,
-        createdBy: caseData.createdBy,
-        seal: caseData.seal,
-        open: caseData.open,
-        tags: caseData.tags,
-        evidenceCount: this.toNumber(caseData.evidenceCount),
-      }));
-    } catch (error) {
-      console.error(`Error getting cases:`, error);
-      return [];
-    }
-  }
-
   // FIR Management
   public async fileFIR(firId: string, description: string): Promise<boolean> {
     if (!this.contract) return false;
@@ -718,39 +697,6 @@ class Web3Service {
     }
   }
 
-  private mapEvidenceResponse(evidence: { evidenceId: string; cidEncrypted: string; hashEncrypted: string; hashOriginal: string; encryptionKeyHash: string; evidenceType: string | number; submittedBy: string; confirmed: boolean; submittedAt: string | number; chainOfCustody: unknown[] }): Evidence {
-    return {
-      evidenceId: evidence.evidenceId,
-      cidEncrypted: evidence.cidEncrypted,
-      hashEncrypted: evidence.hashEncrypted,
-      hashOriginal: evidence.hashOriginal,
-      encryptionKeyHash: evidence.encryptionKeyHash,
-      evidenceType: Number(evidence.evidenceType) as EvidenceType,
-      submittedBy: evidence.submittedBy,
-      confirmed: evidence.confirmed,
-      submittedAt: evidence.submittedAt ? Number(evidence.submittedAt) : 0,
-      chainOfCustody: Array.isArray(evidence.chainOfCustody)
-        ? evidence.chainOfCustody.map((c: unknown) => String(c))
-        : [],
-    };
-  }
-
-  public async getEvidenceBatch(
-    caseId: string,
-    startIndex: number,
-    count: number
-  ): Promise<Evidence[]> {
-    if (!this.contract) return [];
-
-    try {
-      const evidenceBatch = await this.contract.getEvidenceBatch(caseId, startIndex, count);
-      return evidenceBatch.map(this.mapEvidenceResponse);
-    } catch (error) {
-      console.error("Error getting evidence batch for case:", caseId, error);
-      return [];
-    }
-  }
-
   public async getEvidence(
     caseId: string,
     index: number
@@ -759,9 +705,22 @@ class Web3Service {
 
     try {
       const evidence = await this.contract.getEvidence(caseId, index);
-      return this.mapEvidenceResponse(evidence);
+      return {
+        evidenceId: evidence.evidenceId,
+        cidEncrypted: evidence.cidEncrypted,
+        hashEncrypted: evidence.hashEncrypted,
+        hashOriginal: evidence.hashOriginal,
+        encryptionKeyHash: evidence.encryptionKeyHash,
+        evidenceType: Number(evidence.evidenceType) as EvidenceType,
+        submittedBy: evidence.submittedBy,
+        confirmed: evidence.confirmed,
+        submittedAt: evidence.submittedAt ? Number(evidence.submittedAt) : 0,
+        chainOfCustody: Array.isArray(evidence.chainOfCustody)
+          ? evidence.chainOfCustody.map((c: unknown) => String(c))
+          : [],
+      };
     } catch (error) {
-      console.error("Error getting evidence index:", index, error);
+      console.error(`Error getting evidence index ${index}:`, error);
       return null;
     }
   }
