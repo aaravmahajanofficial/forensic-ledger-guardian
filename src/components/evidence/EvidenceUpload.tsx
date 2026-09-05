@@ -278,19 +278,12 @@ const EvidenceUpload = () => {
         if (deviceSource.trim()) form.append("deviceSource", deviceSource);
         if (location.trim()) form.append("location", location);
 
-        let token = "";
-        if (supabase) {
-          const { data: { session } } = await supabase.auth.getSession();
-          token = session?.access_token || "";
-        }
-
         // choose appropriate backend route based on what you use on server
         const referenceId = selectedCase || selectedFir;
         const resp = await fetch(
           `${BASE_URL}/${selectedCase ? "case" : "fir"}/${referenceId}/upload`,
           {
             method: "POST",
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
             body: form,
           },
         );

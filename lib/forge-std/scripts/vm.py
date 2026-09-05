@@ -59,7 +59,7 @@ def main():
 
     pp = CheatcodesPrinter(
         spdx_identifier="MIT OR Apache-2.0",
-        solidity_requirement=">=0.8.4 <0.9.0" if len(contract.errors) > 0 else ">=0.6.2 <0.9.0",
+        solidity_requirement=">=0.6.2 <0.9.0",
         abicoder_pragma=True,
     )
     pp.p_prelude()
@@ -69,7 +69,7 @@ def main():
     out += "\n\n"
     out += VM_SAFE_DOC
     vm_safe = Cheatcodes(
-        errors=contract.errors,
+        errors=[],  # contract.errors
         events=contract.events,
         enums=contract.enums,
         structs=contract.structs,
