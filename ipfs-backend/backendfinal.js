@@ -896,71 +896,71 @@ app.get("/sync", async (req, res) => {
     if (!records || records.length === 0)
       return res.json({ message: "No evidence records found" });
 
-    const results = [];
-    for (const record of records) {
-      const { container_id, evidence_id, key_encrypted, iv_encrypted } = record;
-      try {
-        const evidenceOnChain = await contract.getEvidenceById(
-          container_id,
-          evidence_id,
-        );
-        if (!evidenceOnChain) {
-          results.push({
+    const results = await Promise.all(
+      records.map(async (record) => {
+        const { container_id, evidence_id, key_encrypted, iv_encrypted } = record;
+        try {
+          const evidenceOnChain = await contract.getEvidenceById(
             container_id,
             evidence_id,
-            status: "missing_on_chain",
-          });
-          continue;
+          );
+          if (!evidenceOnChain) {
+            return {
+              container_id,
+              evidence_id,
+              status: "missing_on_chain",
+            };
+          }
+
+          const cid = evidenceOnChain.cid;
+          const hashOriginal = evidenceOnChain.hashOriginal;
+
+          const fileResp = await axios.get(
+            `https://gateway.pinata.cloud/ipfs/${cid}`,
+            { responseType: "arraybuffer" },
+          );
+          const encryptedFile = Buffer.from(fileResp.data);
+
+          const iv = Buffer.from(iv_encrypted, "hex");
+          const masterKey = getMasterKeyOrThrow();
+          const decipher = crypto.createDecipheriv("aes-256-cbc", masterKey, iv);
+          const keyBuffer = Buffer.concat([
+            decipher.update(Buffer.from(key_encrypted, "hex")),
+            decipher.final(),
+          ]);
+
+          const fileDecipher = crypto.createDecipheriv(
+            "aes-256-cbc",
+            keyBuffer,
+            iv,
+          );
+          const decrypted = Buffer.concat([
+            fileDecipher.update(encryptedFile),
+            fileDecipher.final(),
+          ]);
+
+          const computedHash = crypto
+            .createHash("sha256")
+            .update(decrypted)
+            .digest("hex");
+          const status =
+            computedHash === hashOriginal ? "valid" : "hash_mismatch";
+
+          return { container_id, evidence_id, cid, status };
+        } catch (innerErr) {
+          console.error(
+            `Sync error for ${record.evidence_id}:`,
+            innerErr.message,
+          );
+          return {
+            container_id: record.container_id,
+            evidence_id: record.evidence_id,
+            status: "error",
+            error: innerErr.message,
+          };
         }
-
-        const cid = evidenceOnChain.cid;
-        const hashOriginal = evidenceOnChain.hashOriginal;
-
-        const fileResp = await axios.get(
-          `https://gateway.pinata.cloud/ipfs/${cid}`,
-          { responseType: "arraybuffer" },
-        );
-        const encryptedFile = Buffer.from(fileResp.data);
-
-        const iv = Buffer.from(iv_encrypted, "hex");
-        const masterKey = getMasterKeyOrThrow();
-        const decipher = crypto.createDecipheriv("aes-256-cbc", masterKey, iv);
-        const keyBuffer = Buffer.concat([
-          decipher.update(Buffer.from(key_encrypted, "hex")),
-          decipher.final(),
-        ]);
-
-        const fileDecipher = crypto.createDecipheriv(
-          "aes-256-cbc",
-          keyBuffer,
-          iv,
-        );
-        const decrypted = Buffer.concat([
-          fileDecipher.update(encryptedFile),
-          fileDecipher.final(),
-        ]);
-
-        const computedHash = crypto
-          .createHash("sha256")
-          .update(decrypted)
-          .digest("hex");
-        const status =
-          computedHash === hashOriginal ? "valid" : "hash_mismatch";
-
-        results.push({ container_id, evidence_id, cid, status });
-      } catch (innerErr) {
-        console.error(
-          `Sync error for ${record.evidence_id}:`,
-          innerErr.message,
-        );
-        results.push({
-          container_id: record.container_id,
-          evidence_id: record.evidence_id,
-          status: "error",
-          error: innerErr.message,
-        });
-      }
-    }
+      }),
+    );
 
     const summary = {
       total: results.length,
