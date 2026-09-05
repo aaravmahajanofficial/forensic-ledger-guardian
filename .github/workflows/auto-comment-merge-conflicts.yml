@@ -2,9 +2,11 @@ name: Auto Comment Merge Conflicts
 
 on:
   push:
-    branches:
-      - main
-      
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  schedule:
+    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 permissions:
