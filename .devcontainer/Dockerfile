@@ -1,5 +1,5 @@
 # Base image: Node.js 24 LTS Devcontainer
-FROM mcr.microsoft.com/devcontainers/javascript-node:4-24-bookworm
+FROM mcr.microsoft.com/devcontainers/javascript-node:5-24-bookworm
 
 # Install system dependencies
 USER root
