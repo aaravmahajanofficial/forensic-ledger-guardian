@@ -22,10 +22,7 @@ import {
   Filter,
   ArrowUpDown,
   FileCheck,
-  FileX,
-  Eye,
   Download,
-  FileLock2,
   RefreshCcw,
   Briefcase,
 } from "lucide-react";
@@ -33,17 +30,6 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEvidenceManager, EvidenceItem } from "@/hooks/useEvidenceManager";
-
-// // Format bytes to human-readable size
-// const formatBytes = (bytes: number) => {
-//   if (bytes === 0) return '0 Bytes';
-
-//   const k = 1024;
-//   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-//   const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-//   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-// };
 
 // Format evidence type for display
 const formatType = (type: string) => {
@@ -129,12 +115,6 @@ const Evidence = () => {
     }
   };
 
-  const handleView = (evidence: EvidenceItem) => {
-    toast({
-      title: "Viewing Evidence",
-      description: `Viewing ${evidence.name}`,
-    });
-  };
 // Add a function to track activity
   const trackActivity = (
     action: "upload" | "verify" | "view",
@@ -210,14 +190,6 @@ const Evidence = () => {
 
   const handleDownload = (evidence: EvidenceItem) => {
     downloadEvidence(evidence);
-  };
-
-  const viewChainOfCustody = (evidence: EvidenceItem) => {
-    toast({
-      title: "Chain of Custody",
-      description: `Viewing chain of custody for ${evidence.id}`,
-    });
-    navigate(`/verify/custody?evidenceId=${evidence.id}`);
   };
 
   return (
@@ -329,17 +301,6 @@ const Evidence = () => {
                       <h3 className="font-bold text-forensic-800">
                         {evidence.name}
                       </h3>
-                      {/* {evidence.verified ? (
-                        <Badge className="bg-forensic-success/20 text-forensic-success">
-                          <FileCheck className="h-3 w-3 mr-1" />
-                          Verified
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-forensic-warning/20 text-forensic-warning">
-                          <FileX className="h-3 w-3 mr-1" />
-                          Unverified
-                        </Badge>
-                      )} */}
                     </div>
 
                     <div className="flex items-center space-x-4 text-sm text-forensic-600">
@@ -357,20 +318,6 @@ const Evidence = () => {
                   </div>
 
                   <div className="mt-3 md:mt-0 flex items-center space-x-3">
-                    {/* <div className="text-sm text-forensic-500">
-                      {formatBytes(evidence.size)}
-                    </div> */}
-
-                    {/* <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8"
-                      onClick={() => viewChainOfCustody(evidence)}
-                    >
-                      <FileLock2 className="h-4 w-4 mr-1" />
-                      Chain
-                    </Button> */}
-
                     <Button
                       size="sm"
                       variant="outline"
@@ -380,16 +327,6 @@ const Evidence = () => {
                       <Download className="h-4 w-4 mr-1" />
                       Download
                     </Button>
-
-                    {/* <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="h-8"
-                      onClick={() => handleView(evidence)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button> */}
 
                     {!evidence.verified && (
                       <Button
