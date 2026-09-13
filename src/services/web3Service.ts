@@ -268,15 +268,6 @@ class Web3Service {
         )} (raw value: ${roleRaw})`
       );
 
-      // Additional debugging
-      const owner = await this.contract.owner();
-      console.log(`getUserRole: Contract owner is ${owner}`);
-      console.log(
-        `getUserRole: Current account is owner: ${
-          owner.toLowerCase() === this.account.toLowerCase()
-        }`
-      );
-
       return role;
     } catch (error) {
       console.error("getUserRole: Error getting user role:", error);
