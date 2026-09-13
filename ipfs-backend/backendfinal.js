@@ -22,7 +22,7 @@ dotenv.config();
 
 // --- Secure password hash configuration ---
 // These should be kept constant for your deployment
-const PBKDF2_SALT = process.env.PBKDF2_SALT || "ipfs-backend-v1-salt"; // Random, application-unique
+const PBKDF2_SALT = process.env.PBKDF2_SALT; // Random, application-unique
 const PBKDF2_ITERATIONS = 100_000;
 const PBKDF2_KEYLEN = 32; // 256 bits
 const PBKDF2_DIGEST = "sha256";
@@ -31,6 +31,12 @@ const PBKDF2_DIGEST = "sha256";
 if (!process.env.MASTER_PASSWORD) {
   console.error("Critical: MASTER_PASSWORD is not set. Encryption/decryption will fail.");
   console.error("Set MASTER_PASSWORD in your environment and restart the server.");
+  process.exit(1);
+}
+
+if (!process.env.PBKDF2_SALT) {
+  console.error("Critical: PBKDF2_SALT is not set. Encryption/decryption will fail.");
+  console.error("Set PBKDF2_SALT in your environment and restart the server.");
   process.exit(1);
 }
 
