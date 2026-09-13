@@ -166,6 +166,8 @@ const Activity = () => {
   });
   const { toast } = useToast();
 
+  const now = new Date();
+
   // Filter logs based on search and filters
   const filteredActivities = activityData
     .filter((activity) => {
@@ -197,7 +199,6 @@ const Activity = () => {
       // Time filter (last X days)
       if (timeFilter === "all") return true;
 
-      const now = new Date();
       const activityTime = new Date(activity.timestamp);
       const diffTime = Math.abs(now.getTime() - activityTime.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
