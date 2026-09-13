@@ -260,13 +260,6 @@ class Web3Service {
       console.log(`getUserRole: Checking role for account ${this.account}`);
       const roleRaw = await this.contract.getGlobalRole(this.account);
       const role = this.toNumber(roleRaw) as Role;
-      console.log(
-        `getUserRole: Account ${
-          this.account
-        } has blockchain role ${this.getRoleString(
-          role
-        )} (raw value: ${roleRaw})`
-      );
 
       // Additional debugging
       const owner = await this.contract.owner();
