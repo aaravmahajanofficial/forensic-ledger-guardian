@@ -429,11 +429,6 @@ app.post("/fir", async (req, res) => {
 app.post("/fir/:firId/upload", upload.single("file"), async (req, res) => {
   try {
     const { firId } = req.params;
-    console.log("UPLOAD: FIR ID =", firId);
-    console.log(
-      "UPLOAD: Raw FIR ID chars:",
-      Array.from(firId).map((c) => c.charCodeAt(0)),
-    );
     const { evidenceType } = req.body;
     const evidenceId = crypto.randomUUID();
     const {
@@ -443,7 +438,6 @@ app.post("/fir/:firId/upload", upload.single("file"), async (req, res) => {
     } = req.body;
     const file = req.file;
     const evidenceTypeNum = EvidenceType[evidenceType];
-    console.log(evidenceType);
     if (evidenceTypeNum === undefined) {
       return res.status(400).json({ error: "Invalid evidenceType" });
     }
@@ -567,16 +561,6 @@ app.post("/fir/:firId/promote", async (req, res) => {
 
     if (!firId || !caseId || !title || !description || !type)
       return res.status(400).json({ error: "Missing required data" });
-    console.log("PROMOTE: FIR ID =", firId);
-    console.log(
-      "PROMOTE: Raw FIR ID chars:",
-      Array.from(firId).map((c) => c.charCodeAt(0)),
-    );
-    console.log("PROMOTE: CASE ID =", caseId);
-    console.log(
-      "PROMOTE: Raw CASE ID chars:",
-      Array.from(caseId).map((c) => c.charCodeAt(0)),
-    );
     const tx = await contract.createCaseFromFIR(
       caseId,
       firId,
@@ -598,8 +582,6 @@ app.post("/fir/:firId/promote", async (req, res) => {
 
     if (select_error) {
       console.error(select_error);
-    } else {
-      console.log("Filed by:", data.filed_by); // ← access value here
     }
 
     // Upsert FIR in Supabase
@@ -641,9 +623,6 @@ app.post("/fir/:firId/promote", async (req, res) => {
       });
     }
 
-    console.log("Checking FIR & CASE evidence count after promotion...");
-    console.log("FIR:", (await contract.evidenceCount(firId)).toString());
-    console.log("CASE:", (await contract.evidenceCount(caseId)).toString());
     res.json({ message: "FIR promoted to case successfully", caseId });
   } catch (err) {
     console.error(err);
@@ -668,8 +647,6 @@ app.post("/case/:caseId/upload", upload.single("file"), async (req, res) => {
     //   return res.status(400).json({ error: "Invalid evidenceType" });
     // }
 
-    console.log(evidenceType);
-    console.log("evidenceTypeNum:", evidenceTypeNum);
     if (
       !Number.isFinite(evidenceTypeNum) ||
       ![0, 1, 2, 3].includes(evidenceTypeNum)
