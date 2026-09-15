@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Card,
@@ -57,6 +57,8 @@ const ChainOfCustodyVerification = () => {
 
   const { evidence, verifyEvidence } = useEvidenceManager();
 
+  const evidenceMap = useMemo(() => new Map(evidence.map((e) => [e.id, e])), [evidence]);
+
   // Generate mock block number once per component instance
 
   const [mockBlockNumber] = React.useState(() => Math.floor(Math.random() * 9000000) + 1000000);
@@ -65,7 +67,7 @@ const ChainOfCustodyVerification = () => {
 
   useEffect(() => {
     if (evidenceId) {
-      const found = evidence.find((item) => item.id === evidenceId);
+      const found = evidenceMap.get(evidenceId);
       if (found) {
         setTimeout(() => setSelectedEvidence(found), 0);
 
@@ -114,7 +116,7 @@ const ChainOfCustodyVerification = () => {
         setTimeout(() => setCustodyChain([]), 0);
       }
     }
-  }, [evidenceId, evidence]);
+  }, [evidenceId, evidenceMap]);
 
   const handleSearch = () => {
     if (!evidenceId.trim()) {
@@ -125,7 +127,7 @@ const ChainOfCustodyVerification = () => {
       return;
     }
 
-    const found = evidence.find((item) => item.id === evidenceId);
+    const found = evidenceMap.get(evidenceId);
     if (!found) {
       toast({
         title: "Evidence not found",
@@ -179,9 +181,7 @@ const ChainOfCustodyVerification = () => {
         ]);
 
         // Update selected evidence to show verified status
-        const updatedEvidence = evidence.find(
-          (item) => item.id === selectedEvidence.id,
-        );
+        const updatedEvidence = evidenceMap.get(selectedEvidence.id);
         if (updatedEvidence) {
           setSelectedEvidence(updatedEvidence);
         }
