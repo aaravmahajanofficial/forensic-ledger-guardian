@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabaseClient";
 import { roleManagementService } from "@/services/roleManagementService";
 import web3Service, { Role } from "@/services/web3Service";
-import { getRoleTitle } from "@/config/roles";
+import { getRoleTitle, hasPermission } from "@/config/roles";
 import { toast } from "@/hooks/use-toast";
 
 export interface AuthUser {
@@ -248,20 +248,7 @@ class AuthService {
     // Court role has all permissions
     if (this.currentUser.role === Role.Court) return true;
 
-    // TODO: Implement granular permissions based on role
-    // For now, simplified role-based access
-    switch (this.currentUser.role) {
-      case Role.Officer:
-        return resource === "cases" || resource === "evidence";
-      case Role.Forensic:
-        return resource === "evidence" || resource === "analysis";
-      case Role.Lawyer:
-        return (
-          resource === "cases" || (resource === "evidence" && action === "view")
-        );
-      default:
-        return false;
-    }
+    return hasPermission(this.currentUser.role, action, resource);
   }
 
   // Check if user can access specific role areas
