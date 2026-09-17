@@ -101,7 +101,6 @@ const CreateCase = () => {
         const officersList =
           await roleManagementService.getRoleAssignmentsByRole(Role.Officer);
         setOfficers(officersList);
-        console.log("Loaded officers:", officersList);
       } catch (err) {
         console.error("Failed to fetch officers", err);
       }
@@ -211,10 +210,6 @@ const CreateCase = () => {
     setIsAssigning(true);
 
     try {
-      console.log(
-        `Assigning officer ${selectedOfficer} to case ${createdCaseId}`,
-      );
-
       const success = await web3Service.assignCaseRole(
         createdCaseId,
         selectedOfficer,
@@ -268,7 +263,6 @@ const CreateCase = () => {
     }
 
     setIsLoading(true);
-    console.log("Initiating case creation...");
 
     const generateCaseId = () => {
       const now = new Date();
@@ -282,18 +276,18 @@ const CreateCase = () => {
     const caseId = generateCaseId();
 
     try {
-      // Pre-checks before case creation
-      console.log("Pre-flight checks...");
-
       // Test contract connection
       const contractConnected = await web3Service.testContractConnection();
       if (!contractConnected) {
         const networkInfo = await web3Service.getNetworkInfo();
         const contractAddress = web3Service.getContractAddress();
 
-        console.log("Diagnostic Information:");
-        console.log("Network:", networkInfo);
-        console.log("Contract Address:", contractAddress);
+        console.error(
+          "Diagnostic Information - Network:",
+          networkInfo,
+          "Contract Address:",
+          contractAddress,
+        );
 
         toast({
           title: "Connection Error",
@@ -306,7 +300,6 @@ const CreateCase = () => {
 
       // Check user role
       const userRole = await web3Service.getUserRole();
-      console.log("User role:", web3Service.getRoleString(userRole));
 
       if (userRole !== Role.Officer && userRole !== Role.Court) {
         if (userRole === Role.None) {
@@ -334,7 +327,6 @@ const CreateCase = () => {
 
       // Check if FIR exists
       const fir = await web3Service.getFIR(firIdToUse);
-      console.log("FIR check result:", fir);
 
       if (fir.promotedToCase) {
         toast({
@@ -344,15 +336,6 @@ const CreateCase = () => {
         });
         return;
       }
-
-      console.log("Step 1: Creating case with the following details:");
-      console.log({
-        caseId,
-        firId: firIdToUse,
-        caseTitle,
-        description,
-        tags: [caseType, priority, jurisdiction],
-      });
 
       try {
         let token = "";
@@ -450,7 +433,6 @@ const CreateCase = () => {
       });
     } finally {
       setIsLoading(false);
-      console.log("Case creation process finished.");
     }
   };
 
