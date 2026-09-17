@@ -102,7 +102,7 @@ const CreateCase = () => {
           await roleManagementService.getRoleAssignmentsByRole(Role.Officer);
         setOfficers(officersList);
         console.log("Loaded officers:", officersList);
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Failed to fetch officers", err);
       }
     }
