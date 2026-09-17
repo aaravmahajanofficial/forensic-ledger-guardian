@@ -13,6 +13,9 @@ import { ethers } from "ethers";
 import fs from "fs";
 import path from "path";
 import url from "url";
+import { sanitizeInput } from "./utils/sanitizer.js";
+
+export { sanitizeInput };
 
 const pipeline = promisify(stream.pipeline);
 
@@ -562,8 +565,15 @@ app.post("/fir/:firId/upload", upload.single("file"), async (req, res) => {
 // 3. Promote FIR to Case
 app.post("/fir/:firId/promote", async (req, res) => {
   try {
-    const { firId } = req.params;
-    const { caseId, title, type, description, tags } = req.body;
+    const firId = sanitizeInput(req.params.firId);
+    const caseId = sanitizeInput(req.body.caseId);
+    const title = sanitizeInput(req.body.title);
+    const type = sanitizeInput(req.body.type);
+    const description = sanitizeInput(req.body.description);
+    const rawTags = req.body.tags;
+    const tags = Array.isArray(rawTags)
+      ? rawTags.map((t) => sanitizeInput(t))
+      : [];
 
     if (!firId || !caseId || !title || !description || !type)
       return res.status(400).json({ error: "Missing required data" });
