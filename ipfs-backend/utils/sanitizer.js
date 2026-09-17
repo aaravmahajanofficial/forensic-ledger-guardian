@@ -1,8 +1,13 @@
-// General text input sanitizer
+// General text input sanitizer (strips angle brackets, quotes, and control characters)
 export function sanitizeInput(str) {
   if (typeof str !== "string") return str;
   return str
-    .replace(/<[^>]*>?/gm, "") // Strip HTML tags
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // Strip control characters
+    .replace(/[<>"'\r\n\x00-\x1F\x7F]/g, "")
     .trim();
+}
+
+// Log sanitizer to prevent log injection vulnerabilities
+export function sanitizeLog(str) {
+  if (typeof str !== "string") return String(str || "");
+  return encodeURIComponent(str.replace(/[\r\n\x00-\x1F\x7F]/g, ""));
 }

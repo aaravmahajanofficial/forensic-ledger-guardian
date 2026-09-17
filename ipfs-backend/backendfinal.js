@@ -13,9 +13,9 @@ import { ethers } from "ethers";
 import fs from "fs";
 import path from "path";
 import url from "url";
-import { sanitizeInput } from "./utils/sanitizer.js";
+import { sanitizeInput, sanitizeLog } from "./utils/sanitizer.js";
 
-export { sanitizeInput };
+export { sanitizeInput, sanitizeLog };
 
 const pipeline = promisify(stream.pipeline);
 
@@ -565,8 +565,10 @@ app.post("/fir/:firId/upload", upload.single("file"), async (req, res) => {
 // 3. Promote FIR to Case
 app.post("/fir/:firId/promote", async (req, res) => {
   try {
-    const firId = sanitizeInput(req.params.firId);
-    const caseId = sanitizeInput(req.body.caseId);
+    const rawFirId = String(req.params.firId || "").replace(/[^a-zA-Z0-9_-]/g, "");
+    const rawCaseId = String(req.body.caseId || "").replace(/[^a-zA-Z0-9_-]/g, "");
+    const firId = sanitizeInput(rawFirId);
+    const caseId = sanitizeInput(rawCaseId);
     const title = sanitizeInput(req.body.title);
     const type = sanitizeInput(req.body.type);
     const description = sanitizeInput(req.body.description);
@@ -577,12 +579,14 @@ app.post("/fir/:firId/promote", async (req, res) => {
 
     if (!firId || !caseId || !title || !description || !type)
       return res.status(400).json({ error: "Missing required data" });
-    console.log("PROMOTE: FIR ID =", firId);
+    const safeFirLog = sanitizeLog(firId);
+    const safeCaseLog = sanitizeLog(caseId);
+    console.log("PROMOTE: FIR ID =", safeFirLog);
     console.log(
       "PROMOTE: Raw FIR ID chars:",
       Array.from(firId).map((c) => c.charCodeAt(0)),
     );
-    console.log("PROMOTE: CASE ID =", caseId);
+    console.log("PROMOTE: CASE ID =", safeCaseLog);
     console.log(
       "PROMOTE: Raw CASE ID chars:",
       Array.from(caseId).map((c) => c.charCodeAt(0)),
