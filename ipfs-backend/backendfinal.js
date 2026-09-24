@@ -898,15 +898,26 @@ app.get("/sync", async (req, res) => {
     if (!records || records.length === 0)
       return res.json({ message: "No evidence records found" });
 
+    const containerIds = records.map((r) => r.container_id);
+    const evidenceIds = records.map((r) => r.evidence_id);
+
+    let onChainEvidences = [];
+    try {
+      onChainEvidences = await contract.getEvidenceByIds(
+        containerIds,
+        evidenceIds,
+      );
+    } catch (batchErr) {
+      console.error("Batch contract call failed:", batchErr.message);
+    }
+
     const results = [];
-    for (const record of records) {
+    for (let i = 0; i < records.length; i++) {
+      const record = records[i];
       const { container_id, evidence_id, key_encrypted, iv_encrypted } = record;
       try {
-        const evidenceOnChain = await contract.getEvidenceById(
-          container_id,
-          evidence_id,
-        );
-        if (!evidenceOnChain) {
+        const evidenceOnChain = onChainEvidences[i];
+        if (!evidenceOnChain || !evidenceOnChain.cid || evidenceOnChain.cid === "") {
           results.push({
             container_id,
             evidence_id,
