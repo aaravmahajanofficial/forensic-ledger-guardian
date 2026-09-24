@@ -387,6 +387,19 @@ contract ForensicChain {
         return e;
     }
 
+    function getEvidenceByIds(string[] memory containerIds, string[] memory evidenceIds) external view returns (Evidence[] memory) {
+        require(containerIds.length == evidenceIds.length, "Array lengths must match");
+        Evidence[] memory result = new Evidence[](containerIds.length);
+        for (uint256 i = 0; i < containerIds.length; i++) {
+            uint256 index = evidenceIndex[containerIds[i]][evidenceIds[i]];
+            Evidence memory e = evidenceMapping[containerIds[i]][index];
+            if (keccak256(bytes(e.evidenceId)) == keccak256(bytes(evidenceIds[i]))) {
+                result[i] = e;
+            }
+        }
+        return result;
+    }
+
 
     function getAllCases() external view returns (Case[] memory) {
         Case[] memory allCases = new Case[](caseIds.length);
