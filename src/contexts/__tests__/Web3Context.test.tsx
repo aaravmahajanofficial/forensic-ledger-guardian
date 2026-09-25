@@ -44,12 +44,30 @@ vi.mock("@/hooks/use-toast", () => ({
 
 describe("Web3Context - refreshRole database sync error handling", () => {
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  const mockAccount = "0x1234567890123456789012345678901234567890";
+
+  const renderAndRefreshWeb3Hook = async () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <Web3Provider>{children}</Web3Provider>
+    );
+
+    const hookResult = renderHook(() => useWeb3(), { wrapper });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      await hookResult.result.current.refreshRole();
+    });
+
+    return hookResult.result;
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    // Default window.ethereum mock
     Object.defineProperty(window, "ethereum", {
       value: {
         request: vi.fn().mockImplementation(async ({ method }: { method: string }) => {
@@ -62,6 +80,9 @@ describe("Web3Context - refreshRole database sync error handling", () => {
       writable: true,
       configurable: true,
     });
+
+    vi.mocked(web3Service.testContractConnection).mockResolvedValue(true);
+    vi.mocked(web3Service.getCurrentAccount).mockResolvedValue(mockAccount);
   });
 
   afterEach(() => {
@@ -69,38 +90,14 @@ describe("Web3Context - refreshRole database sync error handling", () => {
   });
 
   it("should catch and log error when roleManagementService.getRoleForWallet fails during secondary sync in refreshRole", async () => {
-    const mockAccount = "0x1234567890123456789012345678901234567890";
-    const mockBlockchainRole = Role.Officer;
     const dbError = new Error("Database connection error");
 
-    // Setup web3Service behavior
-    vi.mocked(web3Service.testContractConnection).mockResolvedValue(true);
-    vi.mocked(web3Service.getCurrentAccount).mockResolvedValue(mockAccount);
-    vi.mocked(web3Service.getUserRole).mockResolvedValue(mockBlockchainRole);
-
-    // Setup roleManagementService to throw an error
+    vi.mocked(web3Service.getUserRole).mockResolvedValue(Role.Officer);
     vi.mocked(roleManagementService.getRoleForWallet).mockRejectedValue(dbError);
 
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <Web3Provider>{children}</Web3Provider>
-    );
+    const contextVal = await renderAndRefreshWeb3Hook();
 
-    const { result } = renderHook(() => useWeb3(), { wrapper });
-
-    // Wait for initial useEffect checkConnection to complete
-    await act(async () => {
-      await Promise.resolve();
-    });
-
-    // Explicitly call refreshRole
-    await act(async () => {
-      await result.current.refreshRole();
-    });
-
-    // Check userRole is the blockchain role
-    expect(result.current.userRole).toBe(Role.Officer);
-
-    // Verify the specific error log at line 208 was called
+    expect(contextVal.current.userRole).toBe(Role.Officer);
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "Web3Context: Error checking database role for sync:",
       dbError
@@ -108,33 +105,15 @@ describe("Web3Context - refreshRole database sync error handling", () => {
   });
 
   it("should catch and log error when checking primary database role when blockchain role is None", async () => {
-    const mockAccount = "0x1234567890123456789012345678901234567890";
     const dbError = new Error("Database error during primary check");
 
-    // Setup web3Service behavior
-    vi.mocked(web3Service.testContractConnection).mockResolvedValue(true);
-    vi.mocked(web3Service.getCurrentAccount).mockResolvedValue(mockAccount);
     vi.mocked(web3Service.getUserRole).mockResolvedValue(Role.None);
     vi.mocked(web3Service.isContractOwner).mockResolvedValue(false);
-
-    // Setup roleManagementService to throw an error
     vi.mocked(roleManagementService.getRoleForWallet).mockRejectedValue(dbError);
 
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <Web3Provider>{children}</Web3Provider>
-    );
+    const contextVal = await renderAndRefreshWeb3Hook();
 
-    const { result } = renderHook(() => useWeb3(), { wrapper });
-
-    await act(async () => {
-      await Promise.resolve();
-    });
-
-    await act(async () => {
-      await result.current.refreshRole();
-    });
-
-    expect(result.current.userRole).toBe(Role.None);
+    expect(contextVal.current.userRole).toBe(Role.None);
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "Web3Context: Error checking database role:",
       dbError
