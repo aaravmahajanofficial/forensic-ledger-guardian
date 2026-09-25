@@ -208,21 +208,27 @@ const CaseAccessControl = () => {
 
     // Create new access matrix items based on selections
     const updatedMatrix = [...accessMatrix];
+    const indexMap = new Map<string, number>();
+
+    updatedMatrix.forEach((item, index) => {
+      indexMap.set(`${item.userId}_${item.caseId}`, index);
+    });
 
     selectedUsers.forEach((user) => {
       selectedCases.forEach((caseItem) => {
-        const existingItemIndex = updatedMatrix.findIndex(
-          (item) => item.userId === user.id && item.caseId === caseItem.id,
-        );
+        const key = `${user.id}_${caseItem.id}`;
+        const existingItemIndex = indexMap.get(key);
 
-        if (existingItemIndex >= 0) {
+        if (existingItemIndex !== undefined) {
           updatedMatrix[existingItemIndex].hasAccess = grantAccess;
         } else {
-          updatedMatrix.push({
-            userId: user.id,
-            caseId: caseItem.id,
-            hasAccess: grantAccess,
-          });
+          const newIndex =
+            updatedMatrix.push({
+              userId: user.id,
+              caseId: caseItem.id,
+              hasAccess: grantAccess,
+            }) - 1;
+          indexMap.set(key, newIndex);
         }
       });
     });
