@@ -30,6 +30,12 @@ describe("sanitizeInput", () => {
     expect(sanitizeInput(null as unknown as string)).toBeNull();
     expect(sanitizeInput(123 as unknown as string)).toBe(123);
   });
+
+  it("sanitizes route query parameters removing single quotes and special characters", () => {
+    const maliciousParam = "container-123' OR '1'='1";
+    const sanitized = sanitizeInput(maliciousParam);
+    expect(sanitized).toBe("container-123 OR 1=1");
+  });
 });
 
 describe("sanitizeLog", () => {
