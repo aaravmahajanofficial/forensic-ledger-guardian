@@ -1,79 +1,8 @@
 import { describe, it, expect } from "vitest";
-
-interface AccessMatrixItem {
-  userId: string;
-  caseId: string;
-  hasAccess: boolean;
-}
-
-// Function modeling the unoptimized O(N*M*K) logic
-function unoptimizedUpdateAccess(
-  accessMatrix: AccessMatrixItem[],
-  selectedUsers: Array<{ id: string }>,
-  selectedCases: Array<{ id: string }>,
-  grantAccess: boolean
-): AccessMatrixItem[] {
-  const updatedMatrix = [...accessMatrix];
-
-  selectedUsers.forEach((user) => {
-    selectedCases.forEach((caseItem) => {
-      const existingItemIndex = updatedMatrix.findIndex(
-        (item) => item.userId === user.id && item.caseId === caseItem.id
-      );
-
-      if (existingItemIndex >= 0) {
-        updatedMatrix[existingItemIndex].hasAccess = grantAccess;
-      } else {
-        updatedMatrix.push({
-          userId: user.id,
-          caseId: caseItem.id,
-          hasAccess: grantAccess,
-        });
-      }
-    });
-  });
-
-  return updatedMatrix;
-}
-
-// Function modeling the optimized O(K + N*M) Map-based logic
-function optimizedUpdateAccess(
-  accessMatrix: AccessMatrixItem[],
-  selectedUsers: Array<{ id: string }>,
-  selectedCases: Array<{ id: string }>,
-  grantAccess: boolean
-): AccessMatrixItem[] {
-  const updatedMatrix = [...accessMatrix];
-  const indexMap = new Map<string, number>();
-
-  updatedMatrix.forEach((item, index) => {
-    indexMap.set(`${item.userId}_${item.caseId}`, index);
-  });
-
-  selectedUsers.forEach((user) => {
-    selectedCases.forEach((caseItem) => {
-      const key = `${user.id}_${caseItem.id}`;
-      const existingItemIndex = indexMap.get(key);
-
-      if (existingItemIndex !== undefined) {
-        updatedMatrix[existingItemIndex].hasAccess = grantAccess;
-      } else {
-        const newIndex =
-          updatedMatrix.push({
-            userId: user.id,
-            caseId: caseItem.id,
-            hasAccess: grantAccess,
-          }) - 1;
-        indexMap.set(key, newIndex);
-      }
-    });
-  });
-
-  return updatedMatrix;
-}
+import { updateAccessMatrix, AccessMatrixItem } from "../CaseAccessControl";
 
 describe("CaseAccessControl Update Matrix Logic", () => {
-  it("should match correctness between unoptimized and optimized versions for existing & new entries", () => {
+  it("should correctly grant and revoke access permissions using Map lookup", () => {
     const initialMatrix: AccessMatrixItem[] = [
       { userId: "1", caseId: "C-2023-001", hasAccess: true },
       { userId: "2", caseId: "C-2023-001", hasAccess: true },
@@ -83,13 +12,19 @@ describe("CaseAccessControl Update Matrix Logic", () => {
     const selectedUsers = [{ id: "2" }, { id: "3" }];
     const selectedCases = [{ id: "C-2023-001" }, { id: "C-2023-003" }];
 
-    const res1 = unoptimizedUpdateAccess(initialMatrix, selectedUsers, selectedCases, false);
-    const res2 = optimizedUpdateAccess(initialMatrix, selectedUsers, selectedCases, false);
+    const updated = updateAccessMatrix(initialMatrix, selectedUsers, selectedCases, false);
 
-    expect(res1).toEqual(res2);
+    expect(updated).toEqual([
+      { userId: "1", caseId: "C-2023-001", hasAccess: true },
+      { userId: "2", caseId: "C-2023-001", hasAccess: false },
+      { userId: "2", caseId: "C-2023-002", hasAccess: true },
+      { userId: "2", caseId: "C-2023-003", hasAccess: false },
+      { userId: "3", caseId: "C-2023-001", hasAccess: false },
+      { userId: "3", caseId: "C-2023-003", hasAccess: false },
+    ]);
   });
 
-  it("should demonstrate significant performance improvement on moderate matrix sizes", () => {
+  it("should complete matrix updates for large datasets rapidly", () => {
     const K = 5000;
     const N = 100;
     const M = 100;
@@ -103,17 +38,11 @@ describe("CaseAccessControl Update Matrix Logic", () => {
     const selectedUsers = Array.from({ length: N }, (_, i) => ({ id: `user_${i * 2}` }));
     const selectedCases = Array.from({ length: M }, (_, i) => ({ id: `case_${i * 2}` }));
 
-    const start1 = performance.now();
-    const res1 = unoptimizedUpdateAccess(accessMatrix, selectedUsers, selectedCases, false);
-    const end1 = performance.now();
-    const durationUnoptimized = end1 - start1;
+    const start = performance.now();
+    const updated = updateAccessMatrix(accessMatrix, selectedUsers, selectedCases, false);
+    const duration = performance.now() - start;
 
-    const start2 = performance.now();
-    const res2 = optimizedUpdateAccess(accessMatrix, selectedUsers, selectedCases, false);
-    const end2 = performance.now();
-    const durationOptimized = end2 - start2;
-
-    expect(res1).toEqual(res2);
-    expect(durationOptimized).toBeLessThan(durationUnoptimized);
+    expect(updated.length).toBe(K + N * M - 100); // 100 overlapping items updated in place (user_0/2/.../198 and case_0/2/.../198 intersect for 100 entries: user_2k & case_2k where 0 <= k < 50)
+    expect(duration).toBeLessThan(1000);
   });
 });
