@@ -796,8 +796,8 @@ app.post("/case/:containerId/confirm", async (req, res) => {
 app.get("/retrieve/:containerId/:evidenceId", async (req, res) => {
   try {
     let { containerId, evidenceId } = req.params;
-    containerId = containerId.trim();
-    evidenceId = evidenceId.trim();
+    containerId = sanitizeInput(containerId);
+    evidenceId = sanitizeInput(evidenceId);
 
     // Fetch AES key + IV from Supabase
     const { data, error } = await supabase
@@ -995,8 +995,8 @@ app.get("/sync", async (req, res) => {
 app.get("/verify/:containerId/:evidenceId", async (req, res) => {
   try {
     let { containerId, evidenceId } = req.params;
-    containerId = containerId.trim();
-    evidenceId = evidenceId.trim();
+    containerId = sanitizeInput(containerId);
+    evidenceId = sanitizeInput(evidenceId);
 
     // 1. Fetch record from Supabase
     const { data, error } = await supabase
