@@ -286,7 +286,13 @@ class AuthService {
 
   private async performInitialization(): Promise<AuthUser | null> {
     try {
-      const storedUser = localStorage.getItem("forensicLedgerUser");
+      let storedUser = sessionStorage.getItem("forensicLedgerUser");
+      if (!storedUser) {
+        storedUser = localStorage.getItem("forensicLedgerUser");
+        if (storedUser) {
+          localStorage.removeItem("forensicLedgerUser");
+        }
+      }
       if (!storedUser) {
         return null;
       }
@@ -498,10 +504,11 @@ class AuthService {
 
   private saveAuthState(): void {
     if (this.currentUser) {
-      localStorage.setItem(
+      sessionStorage.setItem(
         "forensicLedgerUser",
         JSON.stringify(this.currentUser),
       );
+      localStorage.removeItem("forensicLedgerUser");
     }
   }
 }
