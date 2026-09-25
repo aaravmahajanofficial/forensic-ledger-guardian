@@ -548,12 +548,17 @@ class CheatcodesPrinter:
         self._p_comment(field.description)
         self._p_indented(lambda: self._p_str(f"{field.ty} {field.name};"))
 
+    def p_group_header(self, group_name: str):
+        self._p_indent()
+        self._p_str(f"// ======== {group(group_name)} ========")
+        self._p_nl()
+
     def p_functions(self, cheatcodes: list[Cheatcode]):
         current_group = None
         for cheatcode in cheatcodes:
             if cheatcode.group != current_group:
                 current_group = cheatcode.group
-                self._p_line(lambda: self._p_str(f"// ======== {group(current_group)} ========"))
+                self.p_group_header(current_group)
             self._p_line(lambda: self.p_function(cheatcode.func))
 
     def p_function(self, func: Function):
