@@ -178,11 +178,6 @@ class Web3Service {
             CONTRACT_ABI,
             signer as unknown as ethers.ContractRunner
           );
-          console.log(
-            "Web3 initialized successfully with account:",
-            this.account
-          );
-          console.log("Contract initialized at address:", contractAddress);
           return true;
         }
       } catch (error) {
