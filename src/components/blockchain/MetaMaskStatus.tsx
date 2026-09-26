@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -25,34 +25,47 @@ interface MetaMaskStatusComponentProps {
 const MetaMaskStatusComponent: React.FC<MetaMaskStatusComponentProps> = ({
   showDetails = true,
 }) => {
-  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
+  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(
+    () => typeof window !== "undefined" && typeof window.ethereum !== "undefined"
+  );
   const [isMetaMaskUnlocked, setIsMetaMaskUnlocked] = useState(false);
   const { isConnected, chainId, networkName, isCorrectNetwork, switchNetwork } =
     useWeb3();
 
-  const checkMetaMaskStatus = async () => {
-    if (typeof window.ethereum !== "undefined") {
-      setIsMetaMaskInstalled(true);
+  const checkMetaMaskStatus = useCallback(async () => {
+    const installed =
+      typeof window !== "undefined" && typeof window.ethereum !== "undefined";
+    let unlocked = false;
 
-      // Check if MetaMask is unlocked
+    if (installed) {
       try {
         const accounts = (await window.ethereum.request({
           method: "eth_accounts",
         })) as string[];
-        setIsMetaMaskUnlocked(accounts.length > 0);
+        unlocked = accounts.length > 0;
       } catch (error) {
-        setIsMetaMaskUnlocked(false);
+        unlocked = false;
       }
     } else {
-      setIsMetaMaskInstalled(false);
-      setIsMetaMaskUnlocked(false);
+      await Promise.resolve();
     }
-  };
+
+    setIsMetaMaskInstalled(installed);
+    setIsMetaMaskUnlocked(unlocked);
+  }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    checkMetaMaskStatus();
-  }, []);
+    let isMounted = true;
+    const fetchStatus = async () => {
+      if (isMounted) {
+        await checkMetaMaskStatus();
+      }
+    };
+    fetchStatus();
+    return () => {
+      isMounted = false;
+    };
+  }, [checkMetaMaskStatus]);
 
   const installMetaMask = () => {
     window.open("https://metamask.io/download/", "_blank");
