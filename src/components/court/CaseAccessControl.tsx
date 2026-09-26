@@ -70,11 +70,46 @@ interface CaseType {
   title: string;
 }
 
-interface AccessMatrixItem {
+export interface AccessMatrixItem {
   userId: string;
   caseId: string;
   hasAccess: boolean;
 }
+
+export const updateAccessMatrix = (
+  accessMatrix: AccessMatrixItem[],
+  selectedUsers: Array<{ id: string }>,
+  selectedCases: Array<{ id: string }>,
+  grantAccess: boolean,
+): AccessMatrixItem[] => {
+  const updatedMatrix = [...accessMatrix];
+  const indexMap = new Map<string, number>();
+
+  updatedMatrix.forEach((item, index) => {
+    indexMap.set(`${item.userId}_${item.caseId}`, index);
+  });
+
+  selectedUsers.forEach((user) => {
+    selectedCases.forEach((caseItem) => {
+      const key = `${user.id}_${caseItem.id}`;
+      const existingItemIndex = indexMap.get(key);
+
+      if (existingItemIndex !== undefined) {
+        updatedMatrix[existingItemIndex].hasAccess = grantAccess;
+      } else {
+        const newIndex =
+          updatedMatrix.push({
+            userId: user.id,
+            caseId: caseItem.id,
+            hasAccess: grantAccess,
+          }) - 1;
+        indexMap.set(key, newIndex);
+      }
+    });
+  });
+
+  return updatedMatrix;
+};
 
 const CaseAccessControl = () => {
   const { toast } = useToast();
@@ -206,26 +241,12 @@ const CaseAccessControl = () => {
       return;
     }
 
-    // Create new access matrix items based on selections
-    const updatedMatrix = [...accessMatrix];
-
-    selectedUsers.forEach((user) => {
-      selectedCases.forEach((caseItem) => {
-        const existingItemIndex = updatedMatrix.findIndex(
-          (item) => item.userId === user.id && item.caseId === caseItem.id,
-        );
-
-        if (existingItemIndex >= 0) {
-          updatedMatrix[existingItemIndex].hasAccess = grantAccess;
-        } else {
-          updatedMatrix.push({
-            userId: user.id,
-            caseId: caseItem.id,
-            hasAccess: grantAccess,
-          });
-        }
-      });
-    });
+    const updatedMatrix = updateAccessMatrix(
+      accessMatrix,
+      selectedUsers,
+      selectedCases,
+      grantAccess,
+    );
 
     setAccessMatrix(updatedMatrix);
 
