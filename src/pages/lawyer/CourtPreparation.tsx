@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -232,9 +232,26 @@ const CourtPreparation = () => {
   const [newTask, setNewTask] = useState("");
   const [taskDueDate, setTaskDueDate] = useState("");
 
+  // Memoized derived values to prevent redundant array traversals on render
+  const preparedEvidenceCount = useMemo(
+    () => evidenceItems.filter((e) => e.prepared).length,
+    [evidenceItems],
+  );
+
+  const completedDocumentsCount = useMemo(
+    () =>
+      documents.filter(
+        (d) => d.status === "completed" || d.status === "filed",
+      ).length,
+    [documents],
+  );
+
   // Calculate preparation progress
   const totalTasks = checklist.length;
-  const completedTasks = checklist.filter((item) => item.completed).length;
+  const completedTasks = useMemo(
+    () => checklist.filter((item) => item.completed).length,
+    [checklist],
+  );
   const progressPercentage = Math.round((completedTasks / totalTasks) * 100);
 
   const daysUntilCourt = Math.ceil(
@@ -391,7 +408,7 @@ const CourtPreparation = () => {
                         Prepared for Court
                       </p>
                       <p className="text-2xl font-bold text-forensic-success">
-                        {evidenceItems.filter((e) => e.prepared).length}
+                        {preparedEvidenceCount}
                       </p>
                     </div>
                   </div>
@@ -400,15 +417,12 @@ const CourtPreparation = () => {
                     <div className="flex justify-between text-sm">
                       <span>Court preparation</span>
                       <span>
-                        {evidenceItems.filter((e) => e.prepared).length} of{" "}
-                        {evidenceItems.length} ready
+                        {preparedEvidenceCount} of {evidenceItems.length} ready
                       </span>
                     </div>
                     <Progress
                       value={Math.round(
-                        (evidenceItems.filter((e) => e.prepared).length /
-                          evidenceItems.length) *
-                          100,
+                        (preparedEvidenceCount / evidenceItems.length) * 100,
                       )}
                       className="h-2"
                     />
@@ -446,12 +460,7 @@ const CourtPreparation = () => {
                     <div>
                       <p className="text-sm text-forensic-500">Completed</p>
                       <p className="text-2xl font-bold text-forensic-success">
-                        {
-                          documents.filter(
-                            (d) =>
-                              d.status === "completed" || d.status === "filed",
-                          ).length
-                        }
+                        {completedDocumentsCount}
                       </p>
                     </div>
                   </div>
@@ -460,23 +469,12 @@ const CourtPreparation = () => {
                     <div className="flex justify-between text-sm">
                       <span>Document completion</span>
                       <span>
-                        {
-                          documents.filter(
-                            (d) =>
-                              d.status === "completed" || d.status === "filed",
-                          ).length
-                        }{" "}
-                        of {documents.length} completed
+                        {completedDocumentsCount} of {documents.length} completed
                       </span>
                     </div>
                     <Progress
                       value={Math.round(
-                        (documents.filter(
-                          (d) =>
-                            d.status === "completed" || d.status === "filed",
-                        ).length /
-                          documents.length) *
-                          100,
+                        (completedDocumentsCount / documents.length) * 100,
                       )}
                       className="h-2"
                     />
@@ -512,7 +510,7 @@ const CourtPreparation = () => {
                     <div>
                       <p className="text-sm text-forensic-500">Completed</p>
                       <p className="text-2xl font-bold text-forensic-success">
-                        {checklist.filter((i) => i.completed).length}
+                        {completedTasks}
                       </p>
                     </div>
                   </div>
