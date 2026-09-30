@@ -64,7 +64,9 @@ const MetaMaskStatusComponent: React.FC<MetaMaskStatusComponentProps> = ({
         await checkMetaMaskStatus();
       }
     };
-    fetchStatus();
+    fetchStatus().catch((error) => {
+      console.error("Failed to check MetaMask status:", error);
+    });
     return () => {
       isMounted = false;
     };
