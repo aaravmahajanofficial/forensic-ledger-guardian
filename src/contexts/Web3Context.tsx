@@ -257,11 +257,11 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({
               );
               const initSuccess = await web3Service.initializeAdminRole();
               if (initSuccess) {
-                const newRole = await web3Service.getUserRole();
-                setUserRole(newRole);
+                // initializeAdminRole sets global role to Role.Court for owner
+                setUserRole(Role.Court);
                 console.log(
                   "Web3Context: Admin role initialized, role:",
-                  web3Service.getRoleString(newRole),
+                  web3Service.getRoleString(Role.Court),
                 );
               } else {
                 setUserRole(Role.None);
