@@ -25,25 +25,28 @@ interface MetaMaskStatusComponentProps {
 const MetaMaskStatusComponent: React.FC<MetaMaskStatusComponentProps> = ({
   showDetails = true,
 }) => {
+  const getEthereum = () =>
+    typeof window !== "undefined" ? window.ethereum : undefined;
+
   const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(
-    () => typeof window !== "undefined" && typeof window.ethereum !== "undefined"
+    () => Boolean(getEthereum())
   );
   const [isMetaMaskUnlocked, setIsMetaMaskUnlocked] = useState(false);
   const { isConnected, chainId, networkName, isCorrectNetwork, switchNetwork } =
     useWeb3();
 
   const checkMetaMaskStatus = useCallback(async () => {
-    const installed =
-      typeof window !== "undefined" && typeof window.ethereum !== "undefined";
+    const ethereum = getEthereum();
+    const installed = Boolean(ethereum);
     let unlocked = false;
 
-    if (installed) {
+    if (ethereum) {
       try {
-        const accounts = (await window.ethereum.request({
+        const accounts = (await ethereum.request({
           method: "eth_accounts",
         })) as string[];
         unlocked = accounts.length > 0;
-      } catch (error) {
+      } catch {
         unlocked = false;
       }
     } else {
