@@ -256,55 +256,59 @@ const EvidenceUpload = () => {
     setIsUploading(true);
 
     try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const progress = Math.round(((i + 1) / files.length) * 100);
-        setUploadProgress(progress);
-
-        const form = new FormData();
-        form.append("file", file, file.name);
-        form.append("evidenceType", EvidenceType[evidenceType]);
-
-        // send either case or FIR based on what is selected
-        if (selectedCase) {
-          form.append("caseId", selectedCase);
-          form.append("referenceType", "case");
-        } else if (selectedFir) {
-          form.append("firId", selectedFir);
-          form.append("referenceType", "fir");
-        }
-
-        if (description.trim()) form.append("description", description);
-        if (deviceSource.trim()) form.append("deviceSource", deviceSource);
-        if (location.trim()) form.append("location", location);
-
-        let token = "";
-        if (supabase) {
-          const { data: { session } } = await supabase.auth.getSession();
-          token = session?.access_token || "";
-        }
-
-        // choose appropriate backend route based on what you use on server
-        const referenceId = selectedCase || selectedFir;
-        const resp = await fetch(
-          `${BASE_URL}/${selectedCase ? "case" : "fir"}/${referenceId}/upload`,
-          {
-            method: "POST",
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-            body: form,
-          },
-        );
-
-        if (!resp.ok) {
-          const text = await resp.text();
-          throw new Error(text || `Upload failed for ${file.name}`);
-        }
-
-        const data = await resp.json();
-        console.log(
-          `Uploaded → CID: ${data.cid}, Evidence ID: ${data.evidenceId}`,
-        );
+      let token = "";
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        token = session?.access_token || "";
       }
+
+      let completedCount = 0;
+
+      await Promise.all(
+        files.map(async (file) => {
+          const form = new FormData();
+          form.append("file", file, file.name);
+          form.append("evidenceType", EvidenceType[evidenceType]);
+
+          // send either case or FIR based on what is selected
+          if (selectedCase) {
+            form.append("caseId", selectedCase);
+            form.append("referenceType", "case");
+          } else if (selectedFir) {
+            form.append("firId", selectedFir);
+            form.append("referenceType", "fir");
+          }
+
+          if (description.trim()) form.append("description", description);
+          if (deviceSource.trim()) form.append("deviceSource", deviceSource);
+          if (location.trim()) form.append("location", location);
+
+          // choose appropriate backend route based on what you use on server
+          const referenceId = selectedCase || selectedFir;
+          const resp = await fetch(
+            `${BASE_URL}/${selectedCase ? "case" : "fir"}/${referenceId}/upload`,
+            {
+              method: "POST",
+              headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+              body: form,
+            },
+          );
+
+          if (!resp.ok) {
+            const text = await resp.text();
+            throw new Error(text || `Upload failed for ${file.name}`);
+          }
+
+          const data = await resp.json();
+          console.log(
+            `Uploaded → CID: ${data.cid}, Evidence ID: ${data.evidenceId}`,
+          );
+
+          completedCount++;
+          const progress = Math.round((completedCount / files.length) * 100);
+          setUploadProgress(progress);
+        }),
+      );
 
       toast({
         title: "Evidence uploaded",
