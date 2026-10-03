@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEvidenceManager, EvidenceItem } from "@/hooks/useEvidenceManager";
+import { appConfig } from "@/config/appConfig";
 
 // // Format bytes to human-readable size
 // const formatBytes = (bytes: number) => {
@@ -161,7 +162,7 @@ const Evidence = () => {
       token = session?.access_token || "";
     }
     const response = await fetch(
-      `http://localhost:4000/verify/${evidence.caseId}/${evidence.id}`,
+      `${appConfig.backendUrl}/verify/${evidence.caseId}/${evidence.id}`,
       {
         method: "GET",
         credentials: "include",
