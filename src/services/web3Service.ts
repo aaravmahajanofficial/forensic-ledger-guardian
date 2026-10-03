@@ -416,13 +416,6 @@ class Web3Service {
     }
 
     try {
-      console.log("Calling createCaseFromFIR with params:", {
-        caseId,
-        firId,
-        title,
-        description,
-        tags,
-      });
       const tx = await this.contract.createCaseFromFIR(
         caseId,
         firId,
@@ -430,9 +423,7 @@ class Web3Service {
         description,
         tags
       );
-      console.log("Transaction sent:", tx.hash);
-      const receipt = await tx.wait();
-      console.log("Transaction confirmed:", receipt);
+      await tx.wait();
       return true;
     } catch (error: unknown) {
       console.error("Error creating case from FIR:", error);
