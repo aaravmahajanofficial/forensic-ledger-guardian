@@ -35,16 +35,21 @@ export const useCourtPreparationActions = () => {
     setItems: React.Dispatch<React.SetStateAction<ChecklistItem[]>>,
     itemId: string,
   ) => {
-    const updatedItems = items.map((item) =>
-      item.id === itemId ? { ...item, completed: !item.completed } : item,
-    );
+    let targetItem: ChecklistItem | undefined;
+    const updatedItems = items.map((item) => {
+      if (item.id === itemId) {
+        targetItem = { ...item, completed: !item.completed };
+        return targetItem;
+      }
+      return item;
+    });
+
     setItems(updatedItems);
 
-    const item = items.find((i) => i.id === itemId);
-    if (item) {
+    if (targetItem) {
       toast({
-        title: item.completed ? "Task Unmarked" : "Task Completed",
-        description: item.task,
+        title: targetItem.completed ? "Task Completed" : "Task Unmarked",
+        description: targetItem.task,
       });
     }
   };
@@ -75,16 +80,21 @@ export const useCourtPreparationActions = () => {
     setItems: React.Dispatch<React.SetStateAction<EvidenceItem[]>>,
     evidenceId: string,
   ) => {
-    const updatedItems = items.map((item) =>
-      item.id === evidenceId ? { ...item, prepared: true } : item,
-    );
+    let targetItem: EvidenceItem | undefined;
+    const updatedItems = items.map((item) => {
+      if (item.id === evidenceId) {
+        targetItem = item;
+        return { ...item, prepared: true };
+      }
+      return item;
+    });
+
     setItems(updatedItems);
 
-    const item = items.find((i) => i.id === evidenceId);
-    if (item) {
+    if (targetItem) {
       toast({
         title: "Evidence Prepared",
-        description: `${item.name} is now ready for court`,
+        description: `${targetItem.name} is now ready for court`,
       });
     }
   };
