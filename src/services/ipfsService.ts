@@ -5,12 +5,16 @@ class IPFSService {
   private client: IPFSHTTPClient | null = null;
 
   constructor() {
-    // Using Infura as an IPFS provider (in production, configure with API keys)
+    // Using IPFS provider (configured via env variables with defaults)
     try {
+      const host = import.meta.env.VITE_IPFS_HOST || "ipfs.infura.io";
+      const port = Number(import.meta.env.VITE_IPFS_PORT) || 5001;
+      const protocol = import.meta.env.VITE_IPFS_PROTOCOL || "https";
+
       this.client = create({
-        host: "ipfs.infura.io",
-        port: 5001,
-        protocol: "https",
+        host,
+        port,
+        protocol,
       });
     } catch (error) {
       console.error("Failed to create IPFS client:", error);
