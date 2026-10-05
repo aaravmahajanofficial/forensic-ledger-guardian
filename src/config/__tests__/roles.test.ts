@@ -1,8 +1,26 @@
 import { describe, it, expect } from "vitest";
-import { isValidRole } from "../roles";
+import { isValidRole, getRoleConfig, ROLE_CONFIGS } from "../roles";
 import { Role } from "@/services/web3Service";
 
 describe("roles config", () => {
+  describe("getRoleConfig", () => {
+    it("should return the correct RoleConfig for each valid Role enum", () => {
+      expect(getRoleConfig(Role.None)).toBe(ROLE_CONFIGS[Role.None]);
+      expect(getRoleConfig(Role.Court)).toBe(ROLE_CONFIGS[Role.Court]);
+      expect(getRoleConfig(Role.Officer)).toBe(ROLE_CONFIGS[Role.Officer]);
+      expect(getRoleConfig(Role.Forensic)).toBe(ROLE_CONFIGS[Role.Forensic]);
+      expect(getRoleConfig(Role.Lawyer)).toBe(ROLE_CONFIGS[Role.Lawyer]);
+    });
+
+    it("should return fallback ROLE_CONFIGS[Role.None] for invalid or unknown roles", () => {
+      expect(getRoleConfig(999 as Role)).toBe(ROLE_CONFIGS[Role.None]);
+      expect(getRoleConfig(-1 as Role)).toBe(ROLE_CONFIGS[Role.None]);
+      expect(getRoleConfig(undefined as unknown as Role)).toBe(
+        ROLE_CONFIGS[Role.None],
+      );
+    });
+  });
+
   describe("isValidRole", () => {
     it("should return true for valid numeric roles", () => {
       expect(isValidRole(Role.None)).toBe(true);
