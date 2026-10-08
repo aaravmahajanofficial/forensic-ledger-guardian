@@ -87,7 +87,7 @@ const CreateCase = () => {
         const { fetchFirIds } = await import("@/services/firService");
         const ids = await fetchFirIds();
         setFirIds(ids);
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Failed to fetch FIR IDs", err);
       }
     }
