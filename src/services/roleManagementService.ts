@@ -515,21 +515,23 @@ class RoleManagementService {
     }
 
     try {
-      const { data, error } = await supabase
-        .from("role_assignments")
-        .select("role")
-        .eq("is_active", true);
+      const roles = [Role.None, Role.Court, Role.Officer, Role.Forensic, Role.Lawyer];
 
-      if (error) {
-        console.error("Error counting users by role:", error);
-        return counts;
-      }
+      await Promise.all(
+        roles.map(async (role) => {
+          const { count, error } = await supabase
+            .from("role_assignments")
+            .select("*", { count: "exact", head: true })
+            .eq("is_active", true)
+            .eq("role", role);
 
-      for (const row of data ?? []) {
-        if (row.role in counts) {
-          counts[row.role as Role]++;
-        }
-      }
+          if (error) {
+            console.error(`Error counting users for role ${role}:`, error);
+          } else {
+            counts[role] = count || 0;
+          }
+        })
+      );
 
       return counts;
     } catch (error) {
