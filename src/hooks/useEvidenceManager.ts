@@ -3,6 +3,7 @@ import { toast } from "@/hooks/use-toast";
 import ipfsService from "@/services/ipfsService";
 import web3Service, { EvidenceType } from "@/services/web3Service";
 import { supabase } from "@/lib/supabaseClient";
+import { appConfig } from "@/config/appConfig";
 
 export type EvidenceItem = {
   id: string;
@@ -186,7 +187,7 @@ export const useEvidenceManager = (caseId?: string) => {
       const { data: { session } } = await supabase.auth.getSession();
       token = session?.access_token || "";
     }
-    const response = await fetch("http://localhost:4000/sync", {
+    const response = await fetch(`${appConfig.backendUrl}/sync`, {
       method: "GET",
       credentials: "include",
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -278,7 +279,7 @@ export const useEvidenceManager = (caseId?: string) => {
     }
 
     const response = await fetch(
-      `http://localhost:4000/retrieve/${evidence.caseId}/${evidence.id}`,
+      `${appConfig.backendUrl}/retrieve/${evidence.caseId}/${evidence.id}`,
       {
         method: "GET",
         credentials: "include",
