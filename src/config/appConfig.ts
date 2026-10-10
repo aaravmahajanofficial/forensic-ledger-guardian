@@ -1,4 +1,4 @@
-const validateEnv = () => {
+export const validateEnv = () => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   if (!backendUrl) {
     console.warn(
