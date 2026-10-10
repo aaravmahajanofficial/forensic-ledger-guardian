@@ -120,8 +120,6 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({
     }
 
     try {
-      console.log("Web3Context: Refreshing role for account:", account);
-
       // Use blockchain role as the source of truth
       const blockchainRole = await web3Service.getUserRole();
       console.log(
