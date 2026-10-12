@@ -2,11 +2,11 @@
 import { ethers } from "ethers";
 import EvidenceRegistryArtifact from "../contracts/EvidenceRegistry.json";
 
-const contractAddress = "0x195304e4c900e52543ace755dd02cfa6272cb79d"; // Replace with your deployed address
+const contractAddress = process.env.VITE_CONTRACT_ADDRESS || "0x195304e4c900e52543ace755dd02cfa6272cb79d"; // Replace with your deployed address
 
 // Create provider - detects MetaMask or falls back to localhost Anvil
 export function getProvider() {
-  if (typeof window.ethereum !== "undefined") {
+  if (typeof window !== "undefined" && typeof window.ethereum !== "undefined") {
     return new ethers.BrowserProvider(window.ethereum);
   }
   // Fallback to localhost (Anvil)
