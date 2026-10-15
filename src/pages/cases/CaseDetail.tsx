@@ -164,7 +164,7 @@ const CaseDetail = () => {
         let blockchainCase: BlockchainCase | null = null;
         try {
           blockchainCase = await web3Service.getCase(caseId);
-        } catch (err) {
+        } catch (err: unknown) {
           console.warn("Could not fetch blockchain case data:", err);
         }
 
@@ -205,7 +205,7 @@ const CaseDetail = () => {
               0,
               evidenceRows.length
             );
-          } catch (error) {
+          } catch (error: unknown) {
             console.error("Error fetching evidence batch from blockchain:", error);
           }
 
@@ -291,7 +291,7 @@ const CaseDetail = () => {
         );
 
         setTimeline(timelineEvents);
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Error fetching case details:", err);
         setError(
           err instanceof Error ? err.message : "Failed to load case details"
