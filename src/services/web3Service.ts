@@ -416,13 +416,6 @@ class Web3Service {
     }
 
     try {
-      console.log("Calling createCaseFromFIR with params:", {
-        caseId,
-        firId,
-        title,
-        description,
-        tags,
-      });
       const tx = await this.contract.createCaseFromFIR(
         caseId,
         firId,
@@ -819,11 +812,6 @@ class Web3Service {
 
   // Helper Functions
   public async testContractConnection(): Promise<boolean> {
-    console.log("Testing contract connection...");
-    console.log("Contract exists:", this.contract ? "Yes" : "No");
-    console.log("Account connected:", this.account || "No");
-    console.log("Provider available:", this.provider ? "Yes" : "No");
-
     if (!this.contract) {
       console.error("Contract not initialized");
 
