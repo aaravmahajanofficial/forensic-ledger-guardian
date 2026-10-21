@@ -600,8 +600,6 @@ app.post("/fir/:firId/promote", async (req, res) => {
 
     if (select_error) {
       console.error(select_error);
-    } else {
-      console.log("Filed by:", data.filed_by); // ← access value here
     }
 
     // Upsert FIR in Supabase
