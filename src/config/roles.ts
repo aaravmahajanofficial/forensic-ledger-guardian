@@ -369,7 +369,3 @@ export const getRoleTitle = (role: Role): string => {
 export const getRoleColor = (role: Role): string => {
   return getRoleConfig(role).color;
 };
-
-export const getRoleBackgroundColor = (role: Role): string => {
-  return getRoleConfig(role).bgColor;
-};
