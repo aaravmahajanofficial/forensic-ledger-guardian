@@ -45,14 +45,61 @@ class IPFSService {
     });
   }
 
-  // Simple encryption function (in real-world, use a more robust encryption)
-  private async encryptData(
+  private async deriveCryptoKey(keyString: string): Promise<CryptoKey> {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(keyString);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", keyData);
+    return crypto.subtle.importKey(
+      "raw",
+      hashBuffer,
+      { name: "AES-GCM" },
+      false,
+      ["encrypt", "decrypt"],
+    );
+  }
+
+  // Encrypt data using Web Crypto API (AES-GCM)
+  public async encryptData(
     data: ArrayBuffer,
     key: string,
   ): Promise<ArrayBuffer> {
-    // This is a placeholder. In a real app, implement proper encryption
-    // using Web Crypto API with the provided key
-    return data;
+    const cryptoKey = await this.deriveCryptoKey(key);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encryptedBuffer = await crypto.subtle.encrypt(
+      {
+        name: "AES-GCM",
+        iv,
+      },
+      cryptoKey,
+      data,
+    );
+
+    const result = new Uint8Array(iv.length + encryptedBuffer.byteLength);
+    result.set(iv, 0);
+    result.set(new Uint8Array(encryptedBuffer), iv.length);
+    return result.buffer;
+  }
+
+  // Decrypt data using Web Crypto API (AES-GCM)
+  public async decryptData(
+    encryptedData: ArrayBuffer,
+    key: string,
+  ): Promise<ArrayBuffer> {
+    if (encryptedData.byteLength < 12) {
+      throw new Error("Invalid encrypted data format");
+    }
+    const cryptoKey = await this.deriveCryptoKey(key);
+    const iv = new Uint8Array(encryptedData, 0, 12);
+    const ciphertext = new Uint8Array(encryptedData, 12);
+
+    return crypto.subtle.decrypt(
+      {
+        name: "AES-GCM",
+        iv,
+      },
+      cryptoKey,
+      ciphertext,
+    );
   }
 
   // Upload a file to IPFS and return the CID
