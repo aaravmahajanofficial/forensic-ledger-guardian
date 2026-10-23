@@ -255,13 +255,6 @@ class Web3Service {
       console.log(`getUserRole: Checking role for account ${this.account}`);
       const roleRaw = await this.contract.getGlobalRole(this.account);
       const role = this.toNumber(roleRaw) as Role;
-      console.log(
-        `getUserRole: Account ${
-          this.account
-        } has blockchain role ${this.getRoleString(
-          role
-        )} (raw value: ${roleRaw})`
-      );
 
       return role;
     } catch (error) {
@@ -414,9 +407,7 @@ class Web3Service {
         description,
         tags
       );
-      console.log("Transaction sent:", tx.hash);
-      const receipt = await tx.wait();
-      console.log("Transaction confirmed:", receipt);
+      await tx.wait();
       return true;
     } catch (error: unknown) {
       console.error("Error creating case from FIR:", error);
@@ -808,7 +799,6 @@ class Web3Service {
 
       // Try to connect wallet if not connected
       if (!this.account) {
-        console.log("Attempting to connect wallet...");
         const connected = await this.connectWallet();
         if (!connected) {
           console.error("Failed to connect wallet");
@@ -825,12 +815,7 @@ class Web3Service {
 
     try {
       // Try a simple read operation to test contract connection
-      console.log("Calling contract method isSystemLocked...");
-      const isLocked = await this.contract.isSystemLocked();
-      console.log(
-        "Contract connection test successful. System locked:",
-        isLocked
-      );
+      await this.contract.isSystemLocked();
       return true;
     } catch (error) {
       console.error("Contract connection test failed:", error);
