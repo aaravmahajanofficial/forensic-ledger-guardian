@@ -1,26 +1,3 @@
-import { EvidenceType } from "@/services/web3Service";
-
-// Determine evidence type from file MIME type
-export const getEvidenceTypeFromFile = (file: File): EvidenceType => {
-  const mimeType = file.type.toLowerCase();
-
-  if (mimeType.startsWith("image/")) {
-    return EvidenceType.Image;
-  } else if (mimeType.startsWith("video/")) {
-    return EvidenceType.Video;
-  } else if (
-    mimeType === "application/pdf" ||
-    mimeType === "text/plain" ||
-    mimeType === "application/msword" ||
-    mimeType.includes("document") ||
-    mimeType.includes("spreadsheet")
-  ) {
-    return EvidenceType.Document;
-  }
-
-  return EvidenceType.Other;
-};
-
 // Generate a unique evidence ID based on case and timestamp
 export const generateEvidenceId = (caseId: string): string => {
   const timestamp = Date.now();
