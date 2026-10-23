@@ -7,7 +7,9 @@ describe('cn utility', () => {
   });
 
   it('handles conditional classes', () => {
-    expect(cn('class1', true && 'class2', false && 'class3')).toBe('class1 class2');
+    const isTrue = Boolean(1);
+    const isFalse = Boolean(0);
+    expect(cn('class1', isTrue && 'class2', isFalse && 'class3')).toBe('class1 class2');
     expect(cn('class1', { class2: true, class3: false })).toBe('class1 class2');
   });
 
@@ -28,10 +30,11 @@ describe('cn utility', () => {
   });
 
   it('handles complex combinations', () => {
+    const isActive = Boolean(1);
     expect(
       cn(
         'base-class',
-        true && 'active-class',
+        isActive && 'active-class',
         { 'conditional-class': true, 'ignored-class': false },
         ['array-class1', 'array-class2'],
         'p-4',
