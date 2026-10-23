@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+// @vitest-environment jsdom
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import ipfsService from "../ipfsService";
 
 describe("IPFSService encryption & decryption", () => {
@@ -38,9 +39,8 @@ describe("IPFSService encryption & decryption", () => {
     await expect(
       ipfsService.decryptData(invalidBuffer, secretKey),
     ).rejects.toThrow("Invalid encrypted data format");
-// @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import ipfsService from "../ipfsService";
+  });
+});
 
 describe("IPFSService - generateFileHash", () => {
   beforeEach(() => {
