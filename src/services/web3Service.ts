@@ -247,12 +247,10 @@ class Web3Service {
 
   public async getUserRole(): Promise<Role> {
     if (!this.contract || !this.account) {
-      console.log("getUserRole: No contract or account available");
       return Role.None;
     }
 
     try {
-      console.log(`getUserRole: Checking role for account ${this.account}`);
       const roleRaw = await this.contract.getGlobalRole(this.account);
       const role = this.toNumber(roleRaw) as Role;
 
